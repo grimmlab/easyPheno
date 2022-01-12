@@ -1,2 +1,1 @@
-# phenotypeprediction
-Template Repo for Phenotype Prediction Framework
+# phenotype-pred-framework
