@@ -23,7 +23,7 @@ if __name__ == '__main__':
                         help="specify the name of the genotype matrix to be used. "
                              "Needs to be located at " + base_dir + '/data/genotype_matrices' +
                              "For more info regarding the required format see our documentation at GitHub")
-    parser.add_argument("-pheno_matrix", "--phenotype_matrix", type=str, default='tbd', #TODO: name anpassen
+    parser.add_argument("-pheno_matrix", "--phenotype_matrix", type=str, default='tbd', #TODO: name
                         help="specify the name of the phenotype matrix to be used. "
                              "Needs to be located at " + base_dir + '/data/phenotype_matrices' +
                              "For more info regarding the required format see our documentation at GitHub")
