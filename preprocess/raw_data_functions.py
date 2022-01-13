@@ -19,13 +19,3 @@ def genotype_phenotype_matching():
     # TODO: MAURA
     # first check if file already exists in matched_data subfolder
     # if not, match genotype and phenotype data and save .h5 file
-
-
-
-def some_function(parameter: int):
-    """
-    this is some function doing fancy stuff
-    :param parameter:
-    :return:
-    """
-
