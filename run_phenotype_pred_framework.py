@@ -41,7 +41,7 @@ if __name__ == '__main__':
     ### Model and Optimization Params ###
     parser.add_argument("-model", "--model", type=str, default='cnn',
                         help="specify the model(s) to optimize: 'all' or naming according to source file name "
-                             "(without .py) in subfolder model of this repo")
+                             "(without suffix .py) in subfolder model of this repo")
     parser.add_argument("-trials", "--n_trials", type=int, default=50,
                         help="number of trials for optuna")
 
