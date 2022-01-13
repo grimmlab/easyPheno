@@ -13,9 +13,7 @@ if __name__ == '__main__':
         6. Evaluation
     """
     # Insert your base directory here
-    base_dir = '/bit_storage/Workspace/Maura/PhenotypePred'
-    # Check and create subfolders
-    check_functions.check_and_create_paths(base_dir=base_dir)
+    base_dir = '/bit_storage/Workspace/Maura/PhenotypePred/'
 
     parser = argparse.ArgumentParser()
     ### Input Params ###
@@ -29,21 +27,35 @@ if __name__ == '__main__':
                              "For more info regarding the required format see our documentation at GitHub")
     parser.add_argument("-phenotype", "--phenotype", type=str, default='FT10',
                         help="specify the name of the phenotype to be predicted")
+    # TODO: Immer den exakten Namen von der genotype, phenotype matrix und vom phenotype selbst anzugeben könnte als Nutzer nervig werden
+    #               - Sollen wir stattdessen im "data" folder unter base_dir parsen und dann eine Liste an möglichen genotype-matrizen ausgeben, aus denen gewählt werden kann?
+    #               - der nutzer muss dann nur eine Zahl angeben, welche von den Matrizen er haben will
+    #               - gleiches für phenotype matrix
+    #               - dann matchen wir ggfs. oder öffnen die gematchte datei und geben aus welcher phänotyp mit wie vielen samples vorhanden wäre (das matching wird ja nicht so oft neu gemacht werden müssen, da oft schon vorhanden. falls nein, wie lang dauert so ein matching?
+    #               - der Nutzer kann dann wieder auswählen was er/sie haben will
+    #           Weiterer Vorteil: wir sparen uns das arguments checking für die Angaben, Dateien sind sicher vorhanden etc.
     ### preprocess Params ###
     parser.add_argument("-maf", "--maf_percentage", type=int, default=10,
                         help="specify the minor allele frequency (as percentage value)")
     parser.add_argument("-datasplit", "--datasplit", type=str, default='nested_cv',
                         help="specify the data slit to use: 'nested_cv' | 'cv-test' | 'train-val-test'"
                              "number of folds are fixed to 5, train-test-split to 80/20 and train-val-test to 60/20/20")
+    # TODO: siehe oben, könnten wir auch auswählen lassen. aber evtl. nicht ganz so wichtig
     ### Model and Optimization Params ###
     parser.add_argument("-model", "--model", type=str, default='cnn',
                         help="specify the model(s) to optimize: 'all' | 'cnn' | 'mlp' | 'xgb'")
+    # TODO: siehe oben, hier könnten wir anstatt Nutzereingabe auch auflisten was da wäre und auswählen lassen
     parser.add_argument("-trials", "--n_trials", type=int, default=50,
                         help="number of trials for optuna")
+    # TODO: simple Sachen wie maf filter oder trials, wo es auch keine spelling fehler geben kann, würde ich eingeben lassen direkt bei starten des skripts
+
+    args = parser.parse_args()
 
     # Check all arguments
-    args = parser.parse_args()
-    check_functions.check_all_specified_arguments()
+    check_functions.check_all_specified_arguments(arguments=args)
+
+    # Check and create subdirectories
+    check_functions.check_and_create_directories(base_dir=base_dir, arguments=args)
 
     # Check and possibly transform genotype matrix format
     raw_data_functions.check_transform_format_genotype_matrix()
