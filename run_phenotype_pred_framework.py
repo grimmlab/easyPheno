@@ -12,11 +12,14 @@ if __name__ == '__main__':
         5. Bayesian Optimization (Optuna)
         6. Evaluation
     """
-    # Insert your base directory here
-    base_dir = '/bit_storage/Workspace/Maura/PhenotypePred/'
 
+    ### User Input ###
     parser = argparse.ArgumentParser()
-    ### Input Params ###
+    # Input Params #
+    parser.add_argument("-base_dir", "--base_dir", type=str, default='/bit_storage/Workspace/Maura/PhenotypePred/',
+                        help="Provide the full path of your base directory (parent directory of the data folder that"
+                             "contains your genotype and phenotype data). "
+                             "Results will be saved in subdirectories starting there.")
     parser.add_argument("-geno_matrix", "--genotype_matrix", type=str, default='FT10_small.h5',
                         help="specify the name of the genotype matrix to be used. "
                              "Needs to be located at " + base_dir + 'data/' +
@@ -28,7 +31,7 @@ if __name__ == '__main__':
     parser.add_argument("-phenotype", "--phenotype", type=str, default='FT10',
                         help="specify the name of the phenotype to be predicted")
 
-    ### preprocess Params ###
+    # Preprocess Params #
     parser.add_argument("-maf", "--maf_percentage", type=int, default=1,
                         help="specify the minor allele frequency (as percentage value). "
                              "specify 0 if you do not want a maf filter.")
@@ -38,29 +41,31 @@ if __name__ == '__main__':
                         help="specify the data slit to use: 'nested_cv' | 'cv-test' | 'train-val-test'"
                              "number of folds are fixed to 5, train-test-split to 80/20 and train-val-test to 60/20/20")
 
-    ### Model and Optimization Params ###
+    # Model and Optimization Params #
     parser.add_argument("-model", "--model", type=str, default='cnn',
                         help="specify the model(s) to optimize: 'all' or naming according to source file name "
                              "(without suffix .py) in subfolder model of this repo")
     parser.add_argument("-trials", "--n_trials", type=int, default=50,
                         help="number of trials for optuna")
-
     args = parser.parse_args()
 
+    ### Checks and Raw Data Input Preparation ###
     # Check all arguments
-    check_functions.check_all_specified_arguments(base_dir=base_dir, arguments=args)
-
+    check_functions.check_all_specified_arguments(arguments=args)
     # Check and create subdirectories
-    check_functions.check_and_create_directories(base_dir=base_dir, arguments=args)
-
+    check_functions.check_and_create_directories(arguments=args)
     # Check and possibly transform genotype matrix format
-    raw_data_functions.check_transform_format_genotype_matrix()
-
+    raw_data_functions.check_transform_format_genotype_matrix() # TODO: @Maura: die Funktion macht vmlt. weiter Sinn, dass wir das erst mal wie besprochen ins einheitliche .h5 Format übertragen
+    # TODO: @Maura: vllt. gleich noch eine 2. Funktion, die die phenotype_matrix transformiert in den Standard .csv? Aktuell dann eher als "Dummy" und "Reminder". In der Funktion könnten wir dann aber schon mal beschreiben, wie das Format aussehen soll, das wir erwarten
     # Match genotype and phenotype matrix
-    raw_data_functions.genotype_phenotype_matching()
-
+    raw_data_functions.genotype_phenotype_matching()  # TODO: @Maura: Das brauchen wir vmtl. nicht mehr oder? ggfs. dafür dann andere Funktionen, irgendwas wie raw_data_functions.prepare_index_files() oder sowas
     # Print info for current config
     print_functions.print_config_info()
 
+    ### Optimization Pipeline ###
+    # Daten in einheitlichem Format mit Zusatzinfos (z. B. data splits) laden --> Klasse erstellen
 
+    # Modelle instantiieren und in einer Liste von BaseModels speichern
+
+    # Über alle Modelle iterieren und Optimierungen laufen lassen --> eigenes Skript aufrufen
 
