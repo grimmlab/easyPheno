@@ -35,8 +35,6 @@ if __name__ == '__main__':
     parser.add_argument("-maf", "--maf_percentage", type=int, default=1,
                         help="specify the minor allele frequency (as percentage value). "
                              "specify 0 if you do not want a maf filter.")
-    # TODO: Als Standard werden 1, 3, 5 und 10 Prozent in den .h5 Dateien abgespeichert
-    #  -> wenn ein neuer Wert von einem Nutzer dazu kommt, wird der in der .h5 nochmal hinzugefügt?
     parser.add_argument("-datasplit", "--datasplit", type=str, default='nested_cv',
                         help="specify the data slit to use: 'nested_cv' | 'cv-test' | 'train-val-test'"
                              "Default values are 5 folds, train-test-split to 80/20 and train-val-test to 60/20/20")
