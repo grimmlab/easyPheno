@@ -32,14 +32,14 @@ def check_all_specified_arguments(arguments: argparse.Namespace):
     :param arguments: all arguments provided by the user
     """
     # Check existence of genotype and phenotype file
-    if not os.path.isfile(arguments.base_dir + 'data/' + arguments.genotype_matrix):
+    if not os.path.isfile(arguments.base_dir + '/data/' + arguments.genotype_matrix):
         raise Exception('Specified genotype file ' + arguments.genotype_matrix + ' does not exist in '
                         + arguments.base_dir + 'data/. Please check spelling.')
-    if not os.path.isfile(arguments.base_dir + 'data/' + arguments.phenotype_matrix):
+    if not os.path.isfile(arguments.base_dir + '/data/' + arguments.phenotype_matrix):
         raise Exception('Specified phenotype file ' + arguments.phenotype_matrix + ' does not exist in '
                         + arguments.base_dir + 'data/. Please check spelling.')
     # Check existence of specified phenotype in phenotype file
-    phenotype_file = pd.read_csv(arguments.base_dir + 'data/' + arguments.phenotype_matrix)
+    phenotype_file = pd.read_csv(arguments.base_dir + '/data/' + arguments.phenotype_matrix)
     if arguments.phenotype not in phenotype_file.columns:
         raise Exception('Specified phenotype ' + arguments.phenotype + ' does not exist in phenotype file '
                         + arguments.base_dir + 'data/' + arguments.phenotype_matrix + '. Check spelling.')
@@ -47,6 +47,18 @@ def check_all_specified_arguments(arguments: argparse.Namespace):
     # Check meaningfulness of specified values
     if not(0 <= arguments.maf_percentage <= 20):
         raise Exception('Specified maf value of ' + str(arguments.maf) + ' is invalid, has to be between 0 and 20.')
+    if not(5 <= arguments.test_set_size_percentage <= 30):
+        raise Exception('Specified test set size in percentage ' + str(arguments.test_set_size_percentage) +
+                        ' is invalid, has to be between 5 and 30.')
+    if not(5 <= arguments.validation_set_size_percentage <= 30):
+        raise Exception('Specified validation set size in percentage ' + str(arguments.validation_set_size_percentage) +
+                        ' is invalid, has to be between 5 and 30.')
+    if not(3 <= arguments.n_outerfolds <= 10):
+        raise Exception('Specified number of outerfolds ' + str(arguments.n_outerfolds) +
+                        ' is invalid, has to be between 3 and 10.')
+    if not(3 <= arguments.n_innerfolds <= 10):
+        raise Exception('Specified number of innerfolds/folds ' + str(arguments.n_innerfolds) +
+                        ' is invalid, has to be between 3 and 10.')
     if arguments.n_trials < 10:  # TODO: Sinnvoll?
         raise Exception('Specified number of trials with ' + str(arguments.n_trials) + ' is invalid, at least 10.')
 

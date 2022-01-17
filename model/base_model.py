@@ -18,6 +18,7 @@ class BaseModel:
             self.loss = torch.nn.CrossEntropyLoss
         else:
             self.loss = torch.nn.MSELoss  #tbd. do we want to fix the loss function to use or also adjust it?
+        self.required_encoding = ... # TBD. wie kann das mandatory werden?
         self.model = self.define_model()
         self.optimizer = self.define_optimizer()
 
