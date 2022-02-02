@@ -75,11 +75,11 @@ class Dataset:
             split_param_string = \
                 f'{100 - (arguments.val_set_size_percentage + arguments.test_set_size_percentage)}' \
                 f'-{arguments.val_set_size_percentage}-{arguments.test_set_size_percentage}'
-        elif self.datasplit == 'cv_test':
+        elif self.datasplit == 'cv-test':
             n_outerfolds = 1
             n_innerfolds = arguments.n_innerfolds
             split_param_string = f'{arguments.n_innerfolds}-{arguments.test_set_size_percentage}'
-        elif self.datasplit == 'nested_cv':
+        elif self.datasplit == 'nested-cv':
             n_outerfolds = arguments.n_outerfolds
             n_innerfolds = arguments.n_innerfolds
             split_param_string = f'{arguments.n_outerfolds}-{arguments.n_innerfolds}'

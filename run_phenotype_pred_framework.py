@@ -43,8 +43,8 @@ if __name__ == '__main__':
     parser.add_argument("-maf", "--maf_percentage", type=int, default=1,
                         help="specify the minor allele frequency (as percentage value). "
                              "specify 0 if you do not want a maf filter.")
-    parser.add_argument("-datasplit", "--datasplit", type=str, default='nested_cv',
-                        help="specify the data slit to use: 'nested_cv' | 'cv-test' | 'train-val-test'"
+    parser.add_argument("-datasplit", "--datasplit", type=str, default='cv-test',
+                        help="specify the data slit to use: 'nested-cv' | 'cv-test' | 'train-val-test'"
                              "Default values are 5 folds, train-test-split to 80/20 and train-val-test to 60/20/20")
     parser.add_argument("-testperc", "--test_set_size_percentage", type=int, default=20,
                         help="specify the size of the test set in percentage. "
@@ -78,12 +78,14 @@ if __name__ == '__main__':
     print_functions.print_config_info()
 
     ### Optimization Pipeline ###
+    helper_functions.set_all_seeds()
     models_to_optimize = helper_functions.get_list_of_implemented_models() if args.model == 'all' else [args.model]
-    for current_model in models_to_optimize:
+    for current_model_name in models_to_optimize:
         encoding = args.encoding if args.encoding is not None \
-            else helper_functions.get_mapping_name_to_class()[current_model].standard_encoding
+            else helper_functions.get_mapping_name_to_class()[current_model_name].standard_encoding
         # data = preprocess.base_dataset.Dataset(arguments=args, encoding=encoding)
         task = 'classification' # if helper_functions.test_likely_categorical(data.y_full) else 'regression'
-        optuna_run = optimization.optuna_optim.OptunaOptim(arguments=args, task=task, current_model=current_model)
+        optuna_run = optimization.optuna_optim.OptunaOptim(arguments=args, task=task, current_model=current_model_name)
         print('### Starting Optuna Optimizzation ###')
         optuna_run.run_optuna_optimization(arguments=args)
+        print('### Finished Optuna Optimization for ' + current_model_name + ' ###')

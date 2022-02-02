@@ -7,8 +7,8 @@ import utils
 class OptunaOptim:
     """Class that contains all info for the whole optimization using optuna for one model and dataset"""
 
-    def __init__(self, arguments: argparse.Namespace, task: str, current_model: str):
-        self.current_model = current_model
+    def __init__(self, arguments: argparse.Namespace, task: str, current_model_name: str):
+        self.current_model_name = current_model_name
         self.task = task
         self.study_name = str(datetime.datetime.now()) + '_' + \
             arguments.genotype_matrix + '-' + arguments.phenotype_matrix + '-' + arguments.phenotype + '-' + \
@@ -16,7 +16,7 @@ class OptunaOptim:
             '-TRIALS' + str(arguments.n_trials)
         self.save_path = arguments.base_dir + 'results/' + \
             arguments.genotype_matrix + '/' + arguments.phenotype_matrix + '/' + arguments.phenotype + \
-            '/' + current_model + '/'
+            '/' + current_model_name + '/'
         storage = optuna.storages.RDBStorage(
             "sqlite:////" + self.save_path + self.study_name + ".db", heartbeat_interval=10
             )
@@ -33,10 +33,16 @@ class OptunaOptim:
         model = utils.helper_functions.get_mapping_name_to_class()[self.current_model](
             task=self.task, optuna_trial=trial
         )
+
+        # iterieren über folds
+        # modell aufrufen und einen trainingslauf durchführen
+        # mean bilden und zurückgeben
+        # modelle + ergebnisse abspeichern --> solche die nicht der beste run waren wieder löschen vom val
         return 0
 
     def run_optuna_optimization(self, arguments: argparse.Namespace):
 
+        # über outer folds iterieren
         # Start optimization run
         self.study.optimize(
             lambda trial: self.objective(trial),
@@ -58,4 +64,5 @@ class OptunaOptim:
         for key, value in trial.params.items():
             print("    {}: {}".format(key, value))
 
-        #TODO: validierungsergebnisse wieder löschen, die nicht best trial sind
+        # TODO: validierungsergebnisse wieder löschen, die nicht best trial sind
+        # TODO: retrain und test - Ergebnisse + finales Modell abspeichern

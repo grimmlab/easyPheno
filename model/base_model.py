@@ -1,5 +1,6 @@
 import abc
 import optuna
+import joblib
 
 
 class BaseModel(abc.ABC):
@@ -110,6 +111,7 @@ class BaseModel(abc.ABC):
             raise Exception(hyperparam_name + ' not found in all_hyperparams dictionary.')
 
         # Check if the hyperparameter already exists in the trial and needs a suffix
+        # (e.g. same dropout specification for multiple layers that should be optimized individually)
         if hyperparam_name in self.optuna_trial.params:
             counter = 1
             while True:
@@ -163,8 +165,26 @@ class BaseModel(abc.ABC):
             self.suggest_hyperparam_to_optuna(param_name)
         return self.optuna_trial.params
 
+    # TODO: save und load testen
+    def save_model(self, path: str, filename: str):
+        """
+        Method to persist the model on a hard drive
+        :param path: path where the model will be saved
+        :param filename: filename of the model
+        """
+        joblib.dump(self.model, path + filename)
+
+    def load_model(self, path: str, filename: str):
+        """
+        Method to load a persisted model and assign to the attribute model
+        :param path: path where the model is stored
+        :param filename: filename of the model
+        """
+        self.model = joblib.load(path + filename)
+
     # Funktion für einen Trainingsdurchlauf
     # Funktion für Evaluierung usw.
+
+    ### Methods needed for PyTorh models ###
     # Funktion für eine Epoche
     # Funktion für einen Batch
-    # Funktion zum Speichern von einem Modell

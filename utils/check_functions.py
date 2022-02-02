@@ -14,12 +14,24 @@ def check_and_create_directories(arguments: argparse.Namespace):
     required_subdirs = [
         'results/' + arguments.genotype_matrix + '/' + arguments.phenotype_matrix + '/' + arguments.phenotype
     ]
+
+    # construct subpath due to the specified datasplit
+    if arguments.datasplit == 'train-val-test':
+        datasplit_string = f'{arguments.datasplit}-' \
+                           f'{100 - (arguments.val_set_size_percentage + arguments.test_set_size_percentage)}-' \
+                           f'{arguments.val_set_size_percentage}-{arguments.test_set_size_percentage}'
+    elif arguments.datasplit == 'cv-test':
+        datasplit_string = f'{arguments.datasplit}-{arguments.n_innerfolds}-{arguments.test_set_size_percentage}'
+    elif arguments.datasplit == 'nested-cv':
+        datasplit_string = f'{arguments.datasplit}-{arguments.n_outerfolds}-{arguments.n_innerfolds}'
+
+    # add subfolder for each model in case 'all' models shoudl be optimized
     if arguments.model == 'all':
         implemented_models = helper_functions.get_list_of_implemented_models()
         for model_name in implemented_models:
-            required_subdirs.append(required_subdirs[0] + '/' + model_name)
+            required_subdirs.append(required_subdirs[0] + '/' + model_name + '/' + datasplit_string)
     else:
-        required_subdirs[0] += '/' + arguments.model
+        required_subdirs[0] += '/' + arguments.model + '/' + datasplit_string
     for subdir in required_subdirs:
         if not os.path.exists(arguments.base_dir + subdir):
             os.makedirs(arguments.base_dir + subdir)
@@ -63,7 +75,7 @@ def check_all_specified_arguments(arguments: argparse.Namespace):
         raise Exception('Specified number of trials with ' + str(arguments.n_trials) + ' is invalid, at least 10.')
 
     # Check spelling of datasplit and model
-    if arguments.datasplit not in ['nested_cv', 'cv-test', 'train-val-test']:
+    if arguments.datasplit not in ['nested-cv', 'cv-test', 'train-val-test']:
         raise Exception('Specified datasplit ' + arguments.datasplit + ' is invalid, '
                                                                        'has to be: nested_cv | cv-test | train-val-test')
     if (arguments.model != 'all') and (arguments.model not in helper_functions.get_list_of_implemented_models()):
