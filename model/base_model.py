@@ -1,47 +1,190 @@
-import torch
+import abc
+import optuna
+import joblib
 
 
-class BaseModel:
+class BaseModel(abc.ABC):
     """
     Class for BaseModel parent class for all models that can be used within the framework
     """
+    ### Class attributes ###
+    @property
+    @classmethod
+    @abc.abstractmethod
+    def standard_encoding(cls):
+        """standard_encoding: the standard encoding for this model"""
+        raise NotImplementedError
 
-    def __init__(self, model_name: str, task: str):
+    @property
+    @classmethod
+    @abc.abstractmethod
+    def possible_encodings(cls):
+        """possible_encodings: a list of all encodings that are possible according to the model definition"""
+        raise NotImplementedError
+
+    @property
+    @classmethod
+    @abc.abstractmethod
+    def name(cls):
+        """name: the name of the model"""
+        raise NotImplementedError
+
+    ### Constructor super class ###
+    def __init__(self, task: str, optuna_trial: optuna.trial.Trial, encoding: str = None):
         """
-        Init for Base Model
-        :param model_name: name of the model
-        :param task: task (regression or classification)
+        Constructor of the base model class
+        :param task: ML task (regression or classification) depending on target variable
+        :param optuna_trial: Trial of optuna for optimization
+        :param encoding: the encoding to use (standard encoding or user-defined)
         """
-        self.name = model_name
-        self.task = task  #auto identification einbauen welcher Task gefordert ist anhand der Zielvariable
-        if self.task == 'classification':
-            self.loss = torch.nn.CrossEntropyLoss
-        else:
-            self.loss = torch.nn.MSELoss  #tbd. do we want to fix the loss function to use or also adjust it?
-        self.required_encoding = ... # TBD. wie kann das mandatory werden?
+        self.task = task
+        self.encoding = self.standard_encoding if encoding is None else encoding
+        self.optuna_trial = optuna_trial
+        self.all_hyperparams = self.define_hyperparams_to_tune()
         self.model = self.define_model()
-        self.optimizer = self.define_optimizer()
 
-    def define_model(self) -> torch.nn.Sequential:
-        """
-        Method for defining the model (architecture and parameter ranges). Needs to be implemented by every child class.
-        :return: Sequential model
-        """
-        raise NotImplementedError
+    # alter Stand: dann auch metaclass=better_abc.ABCMeta als Parent und better_abc import
+    # @better_abc.abstract_attribute
+    # def standard_encoding(self):
+    #     """Attribute providing standard encoding for the model - type: str"""
+    # @better_abc.abstract_attribute
+    # def possible_encodings(self):
+    #     """Attribute providing all possible encodings for the model - type: List[<str>]"""
+    # @better_abc.abstract_attribute
+    # def name(self):
+    #     """Attribute providing the name for the model - type: str"""
 
-    def define_optimizer(self) -> torch.optim.optimizer:
+    ### Methods required by each child class ###
+    @abc.abstractmethod
+    def define_model(self):
         """
-        Method for defining the optimizer for the model.
-        :return: optimizer
+        Method that defines the model that needs to be optimized
         """
-        raise NotImplementedError
 
-    def train_one_epoch(self, train_data_loader: torch.utils.data.DataLoader, device: torch.device):
-        self.model.train()
-        for batch_idx, (inputs, targets) in enumerate(train_data_loader):
-            inputs, targets = inputs.view(inputs.size(0), -1).to(device), targets.to(device)
-            self.optimizer.zero_grad()
-            output = self.model(inputs.float())
-            loss = self.loss_fn(output, torch.reshape(targets, (-1, 1)).float())
-            loss.backward()
-            self.optimizer.step()
+    @abc.abstractmethod
+    def define_hyperparams_to_tune(self) -> dict:
+        """
+        Method that defines the hyperparameters that should be tuned during optimization and their ranges.
+        Required format is a dictionary with:
+            {
+                'name_hyperparam_1':
+                    {
+                    # MANDATORY ITEMS
+                    'datatype': 'float' | 'int' | 'categorical',
+                    FOR DATATYPE 'categorical':
+                        'list_of_values': []  # List of all possible values
+                    FOR DATATYPE in [float, int]:
+                        'lower_bound': value_lower_bound, 'upper_bound': value_upper_bound,
+                        # OPTIONAL ITEMS (only for [float, int]):
+                        'log': True | False  # sample value from log domain or not
+                        'step': step_size # step of discretization.
+                                            # Caution: cannot be combined with log=True
+                                                            - in case of float in general and
+                                                            - for step!=1 in case of int
+                    },
+                'name_hyperparam_2':
+                    {
+                    ...
+                    },
+                ...
+                'name_hyperparam_k':
+                    {
+                    ...
+                    }
+            }
+        If you want to use a similar hyperparameter multiple times (e.g. Dropout after several layers),
+        you only need to specify the hyperparameter once. Individual parameters for every suggestion will be created.
+        """
+        pass
+
+    ### General methods ###
+    def suggest_hyperparam_to_optuna(self, hyperparam_name):
+        """
+        Add a hyperparameter of hyperparam_dict to the optuna trial to optimize it.
+        If you want to add a parameter to your model / in your pipeline to be optimized, you need to call this method.
+        :param hyperparam_name: name of the hyperparameter to be tuned (see define_hyperparams_to_tune())
+        """
+        # Get specification of the hyperparameter
+        if hyperparam_name in self.all_hyperparams:
+            spec = self.all_hyperparams[hyperparam_name]
+        else:
+            raise Exception(hyperparam_name + ' not found in all_hyperparams dictionary.')
+
+        # Check if the hyperparameter already exists in the trial and needs a suffix
+        # (e.g. same dropout specification for multiple layers that should be optimized individually)
+        if hyperparam_name in self.optuna_trial.params:
+            counter = 1
+            while True:
+                current_name = hyperparam_name + '_' + str(counter)
+                if current_name not in self.optuna_trial.params:
+                    optuna_param_name = current_name
+                    break
+                counter += 1
+        else:
+            optuna_param_name = hyperparam_name
+
+        # Read dict with specification for the hyperparamater and suggest it to the trial
+        if spec['datatype'] == 'categorical':
+            if 'list_of_values' not in spec:
+                raise Exception(
+                    '"list of values" for ' + hyperparam_name + ' not in hyperparams_dict. '
+                    'Check define_hyperparams_to_tune() of the model.'
+                )
+            self.optuna_trial.suggest_categorical(name=optuna_param_name, choices=spec['list_of_values'])
+        elif spec['datatype'] in ['float', 'int']:
+            if 'step' in spec:
+                step = spec['step']
+            else:
+                step = None if spec['datatype'] == 'float' else 1
+            log = spec['log'] if 'log' in spec else False
+            if 'lower_bound' not in spec or 'upper_bound' not in spec:
+                raise Exception(
+                    '"lower_bound" or "upper_bound" for ' + hyperparam_name + ' not in all_hyperparams. '
+                    'Check define_hyperparams_to_tune() of the model.'
+                )
+            if spec['datatype'] == 'int':
+                self.optuna_trial.suggest_int(
+                    name=optuna_param_name, low=spec['lower_bound'], high=spec['upper_bound'], step=step, log=log
+                )
+            else:
+                self.optuna_trial.suggest_float(
+                    name=optuna_param_name, low=spec['lower_bound'], high=spec['upper_bound'], step=step, log=log
+                )
+        else:
+            raise Exception(
+                spec['datatype'] + ' is not a valid parameter. Check define_hyperparams_to_tune() of the model.'
+            )
+
+    def suggest_all_hyperparams_to_optuna(self) -> dict:
+        """
+        Several libraray models require a dictionary with the model parameters.
+        This method suggests all hyperparameters in all_hyperparams and gives back a dictionary containing them.
+        :return: dictionary with suggested hyperparameters
+        """
+        for param_name in self.all_hyperparams.keys():
+            self.suggest_hyperparam_to_optuna(param_name)
+        return self.optuna_trial.params
+
+    # TODO: save und load testen
+    def save_model(self, path: str, filename: str):
+        """
+        Method to persist the model on a hard drive
+        :param path: path where the model will be saved
+        :param filename: filename of the model
+        """
+        joblib.dump(self.model, path + filename)
+
+    def load_model(self, path: str, filename: str):
+        """
+        Method to load a persisted model and assign to the attribute model
+        :param path: path where the model is stored
+        :param filename: filename of the model
+        """
+        self.model = joblib.load(path + filename)
+
+    # Funktion für einen Trainingsdurchlauf
+    # Funktion für Evaluierung usw.
+
+    ### Methods needed for PyTorh models ###
+    # Funktion für eine Epoche
+    # Funktion für einen Batch
