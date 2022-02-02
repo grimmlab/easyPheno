@@ -1,3 +1,4 @@
+import argparse
 import os
 import inspect
 import importlib
@@ -77,3 +78,21 @@ def set_all_seeds(seed: int = 42):
     np.random.seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+
+
+def get_subpath_for_datasplit(arguments: argparse.Namespace) -> str:
+    """
+    Method to construct the subpath according to the datasplit
+    :param arguments: arguments specified by the user
+    :return: string with the subpath
+    """
+    # construct subpath due to the specified datasplit
+    if arguments.datasplit == 'train-val-test':
+        datasplit_string = f'{100 - (arguments.val_set_size_percentage + arguments.test_set_size_percentage)}-' \
+                           f'{arguments.val_set_size_percentage}-{arguments.test_set_size_percentage}'
+    elif arguments.datasplit == 'cv-test':
+        datasplit_string = f'{arguments.n_innerfolds}-{arguments.test_set_size_percentage}'
+    elif arguments.datasplit == 'nested-cv':
+        datasplit_string = f'{arguments.n_outerfolds}-{arguments.n_innerfolds}'
+
+    return datasplit_string

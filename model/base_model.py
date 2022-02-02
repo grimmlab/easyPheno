@@ -1,6 +1,7 @@
 import abc
 import optuna
 import joblib
+import numpy as np
 
 
 class BaseModel(abc.ABC):
@@ -74,7 +75,8 @@ class BaseModel(abc.ABC):
                     FOR DATATYPE 'categorical':
                         'list_of_values': []  # List of all possible values
                     FOR DATATYPE in [float, int]:
-                        'lower_bound': value_lower_bound, 'upper_bound': value_upper_bound,
+                        'lower_bound': value_lower_bound,
+                        'upper_bound': value_upper_bound,
                         # OPTIONAL ITEMS (only for [float, int]):
                         'log': True | False  # sample value from log domain or not
                         'step': step_size # step of discretization.
@@ -95,10 +97,26 @@ class BaseModel(abc.ABC):
         If you want to use a similar hyperparameter multiple times (e.g. Dropout after several layers),
         you only need to specify the hyperparameter once. Individual parameters for every suggestion will be created.
         """
-        pass
+
+    @abc.abstractmethod
+    def train(self, X_train: np.array, y_train: np.array):
+        """
+        Method that runs one train iteration of the model
+        :param X_train: feature matrix for the training
+        :param y_train: target vector
+        """
+
+    @abc.abstractmethod
+    def predict(self, X_in: np.array) -> np.array:
+        """
+        Method that predicts target values based on the input X_in
+        :param X_in: feature matrix as input
+        :return: numpy array with the predicted values
+        """
+
 
     ### General methods ###
-    def suggest_hyperparam_to_optuna(self, hyperparam_name):
+    def suggest_hyperparam_to_optuna(self, hyperparam_name: str):
         """
         Add a hyperparameter of hyperparam_dict to the optuna trial to optimize it.
         If you want to add a parameter to your model / in your pipeline to be optimized, you need to call this method.
@@ -164,6 +182,8 @@ class BaseModel(abc.ABC):
         for param_name in self.all_hyperparams.keys():
             self.suggest_hyperparam_to_optuna(param_name)
         return self.optuna_trial.params
+
+    # TODO: Funktion schreiben zum reuse von einem PArameter, der schon suggested wurde
 
     # TODO: save und load testen
     def save_model(self, path: str, filename: str):
