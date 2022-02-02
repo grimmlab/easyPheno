@@ -2,6 +2,7 @@ import argparse
 import h5py
 import pandas as pd
 import numpy as np
+from utils import helper_functions
 
 
 class Dataset:
@@ -72,17 +73,13 @@ class Dataset:
         if self.datasplit == 'train-val-test':
             n_outerfolds = 1
             n_innerfolds = 1
-            split_param_string = \
-                f'{100 - (arguments.val_set_size_percentage + arguments.test_set_size_percentage)}' \
-                f'-{arguments.val_set_size_percentage}-{arguments.test_set_size_percentage}'
         elif self.datasplit == 'cv-test':
             n_outerfolds = 1
             n_innerfolds = arguments.n_innerfolds
-            split_param_string = f'{arguments.n_innerfolds}-{arguments.test_set_size_percentage}'
         elif self.datasplit == 'nested-cv':
             n_outerfolds = arguments.n_outerfolds
             n_innerfolds = arguments.n_innerfolds
-            split_param_string = f'{arguments.n_outerfolds}-{arguments.n_innerfolds}'
+        split_param_string = helper_functions.get_subpath_for_datasplit(arguments=arguments)
 
         datasplit_indices = {}
         with h5py.File(arguments.base_dir + '/data/' + self.get_index_file_name(), "r") as f:

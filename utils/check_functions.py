@@ -12,18 +12,11 @@ def check_and_create_directories(arguments: argparse.Namespace):
     """
     # add all required directories (directories within will be created automatically)
     required_subdirs = [
-        'results/' + arguments.genotype_matrix + '/' + arguments.phenotype_matrix + '/' + arguments.phenotype
+        'results/' + arguments.genotype_matrix.split('.')[0] + '/' + arguments.phenotype_matrix.split('.')[0] + '/' +
+        arguments.phenotype
     ]
 
-    # construct subpath due to the specified datasplit
-    if arguments.datasplit == 'train-val-test':
-        datasplit_string = f'{arguments.datasplit}-' \
-                           f'{100 - (arguments.val_set_size_percentage + arguments.test_set_size_percentage)}-' \
-                           f'{arguments.val_set_size_percentage}-{arguments.test_set_size_percentage}'
-    elif arguments.datasplit == 'cv-test':
-        datasplit_string = f'{arguments.datasplit}-{arguments.n_innerfolds}-{arguments.test_set_size_percentage}'
-    elif arguments.datasplit == 'nested-cv':
-        datasplit_string = f'{arguments.datasplit}-{arguments.n_outerfolds}-{arguments.n_innerfolds}'
+    datasplit_string = arguments.datasplit + helper_functions.get_subpath_for_datasplit(arguments=arguments)
 
     # add subfolder for each model in case 'all' models shoudl be optimized
     if arguments.model == 'all':

@@ -83,9 +83,10 @@ if __name__ == '__main__':
     for current_model_name in models_to_optimize:
         encoding = args.encoding if args.encoding is not None \
             else helper_functions.get_mapping_name_to_class()[current_model_name].standard_encoding
-        # data = preprocess.base_dataset.Dataset(arguments=args, encoding=encoding)
-        task = 'classification' # if helper_functions.test_likely_categorical(data.y_full) else 'regression'
-        optuna_run = optimization.optuna_optim.OptunaOptim(arguments=args, task=task, current_model=current_model_name)
+        dataset = preprocess.base_dataset.Dataset(arguments=args, encoding=encoding)
+        task = 'classification' # TODO: if helper_functions.test_likely_categorical(data.y_full) else 'regression'
+        optuna_run = optimization.optuna_optim.OptunaOptim(arguments=args, task=task,
+                                                           current_model_name=current_model_name, dataset=dataset)
         print('### Starting Optuna Optimizzation ###')
         optuna_run.run_optuna_optimization(arguments=args)
         print('### Finished Optuna Optimization for ' + current_model_name + ' ###')
