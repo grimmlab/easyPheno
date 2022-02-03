@@ -6,7 +6,8 @@ import numpy as np
 
 class BaseModel(abc.ABC):
     """
-    Class for BaseModel parent class for all models that can be used within the framework
+    BaseModel parent class for all models that can be used within the framework.
+    Every model must be based on BaseModel directly or BaseModel's child classes SklearnModel or TorchModel
     """
     ### Class attributes ###
     @property
@@ -34,6 +35,7 @@ class BaseModel(abc.ABC):
     def __init__(self, task: str, optuna_trial: optuna.trial.Trial, encoding: str = None):
         """
         Constructor of the base model class
+        # Please add super().__init__(PARAMS) to the constructor in case you override it in a child class #
         :param task: ML task (regression or classification) depending on target variable
         :param optuna_trial: Trial of optuna for optimization
         :param encoding: the encoding to use (standard encoding or user-defined)
@@ -43,17 +45,6 @@ class BaseModel(abc.ABC):
         self.optuna_trial = optuna_trial
         self.all_hyperparams = self.define_hyperparams_to_tune()
         self.model = self.define_model()
-
-    # alter Stand: dann auch metaclass=better_abc.ABCMeta als Parent und better_abc import
-    # @better_abc.abstract_attribute
-    # def standard_encoding(self):
-    #     """Attribute providing standard encoding for the model - type: str"""
-    # @better_abc.abstract_attribute
-    # def possible_encodings(self):
-    #     """Attribute providing all possible encodings for the model - type: List[<str>]"""
-    # @better_abc.abstract_attribute
-    # def name(self):
-    #     """Attribute providing the name for the model - type: str"""
 
     ### Methods required by each child class ###
     @abc.abstractmethod
@@ -114,6 +105,11 @@ class BaseModel(abc.ABC):
         :return: numpy array with the predicted values
         """
 
+    @abc.abstractmethod
+    def reset_model(self):
+        """
+        Method that resets a model to keep the hyperparameters but get a model that is not fitted
+        """
 
     ### General methods ###
     def suggest_hyperparam_to_optuna(self, hyperparam_name: str):
@@ -185,26 +181,10 @@ class BaseModel(abc.ABC):
 
     # TODO: Funktion schreiben zum reuse von einem PArameter, der schon suggested wurde
 
-    # TODO: save und load testen
     def save_model(self, path: str, filename: str):
         """
-        Method to persist the model on a hard drive
+        Method to persist the whole model object on a hard drive (can be loaded with joblib.load(filepath))
         :param path: path where the model will be saved
         :param filename: filename of the model
         """
-        joblib.dump(self.model, path + filename)
-
-    def load_model(self, path: str, filename: str):
-        """
-        Method to load a persisted model and assign to the attribute model
-        :param path: path where the model is stored
-        :param filename: filename of the model
-        """
-        self.model = joblib.load(path + filename)
-
-    # Funktion für einen Trainingsdurchlauf
-    # Funktion für Evaluierung usw.
-
-    ### Methods needed for PyTorh models ###
-    # Funktion für eine Epoche
-    # Funktion für einen Batch
+        joblib.dump(self, path + filename)
