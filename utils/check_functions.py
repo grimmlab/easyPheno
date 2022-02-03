@@ -12,7 +12,9 @@ def check_and_create_directories(arguments: argparse.Namespace):
     """
     # add all required directories (directories within will be created automatically)
     required_subdirs = [
-        'results/' + arguments.genotype_matrix + '/' + arguments.phenotype_matrix + '/' + arguments.phenotype
+        'results/' + arguments.genotype_matrix.split('.')[0]
+        + '/' + arguments.phenotype_matrix.split('.')[0]
+        + '/' + arguments.phenotype
     ]
     if arguments.model == 'all':
         implemented_models = helper_functions.get_list_of_implemented_models()
@@ -39,6 +41,9 @@ def check_all_specified_arguments(arguments: argparse.Namespace):
         raise Exception('Specified phenotype file ' + arguments.phenotype_matrix + ' does not exist in '
                         + arguments.base_dir + 'data/. Please check spelling.')
     # Check existence of specified phenotype in phenotype file
+    if arguments.phenotype_matrix.split('.')[-1] != 'csv':
+        raise NotImplementedError
+    # TODO anpassen, wenn wir auch andere Datentypen zulassen
     phenotype_file = pd.read_csv(arguments.base_dir + '/data/' + arguments.phenotype_matrix)
     if arguments.phenotype not in phenotype_file.columns:
         raise Exception('Specified phenotype ' + arguments.phenotype + ' does not exist in phenotype file '
