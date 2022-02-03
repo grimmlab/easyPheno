@@ -2,17 +2,14 @@ import optuna
 import xgboost
 import numpy as np
 
-from model import base_model
+from model import sklearn_model
 
 
-class XgBoost(base_model.BaseModel):
+class XgBoost(sklearn_model.SklearnModel):
     """See BaseModel for more information on the parameters"""
     standard_encoding = '012'
     possible_encodings = ['012', 'nuc']
     name = 'XGBoost'
-
-    def __init__(self, task: str, optuna_trial: optuna.trial.Trial, encoding: str = None):
-        super().__init__(task=task, optuna_trial=optuna_trial, encoding=encoding)
 
     def define_model(self) -> xgboost.XGBModel:
         """See BaseModel for more information"""
@@ -78,13 +75,3 @@ class XgBoost(base_model.BaseModel):
                 'upper_bound': 1000,
             }
         }
-
-    def train(self, X_train: np.array, y_train: np.array): #TODO: check if these can be unified in BaseModel as sklearn api is always the same
-        """See BaseModel for more information"""
-        self.model.fit(X_train, y_train)
-
-    def predict(self, X_in: np.array) -> np.array:
-        """See BaseModel for more information"""
-        return self.model.predict(X_in)
-
-
