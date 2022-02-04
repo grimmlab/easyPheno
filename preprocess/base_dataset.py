@@ -1,8 +1,8 @@
 import argparse
 import h5py
-import pandas as pd
 import numpy as np
 from utils import helper_functions
+from preprocess import raw_data_functions as raw
 
 
 class Dataset:
@@ -20,26 +20,33 @@ class Dataset:
         Load the full genotype and phenotype matrices specified and match them
         :param arguments: all arguments provided by the user
         """
-        # TODO: MAURA - Rohdaten in richtiger Codierung laden
         with h5py.File(arguments.base_dir + '/data/' + arguments.genotype_matrix.split('.')[0] + '.h5', "r") as f:
-            X_full_raw = f[f'X_full_{self.encoding}'][
-                         :]  # TODO: @Maura: bitte "Pfad in .h5" und Datei laden nochmal prüfen
-        phenotype_matrix = \
-            pd.read_csv(arguments.base_dir + '/data/' + arguments.phenotype_matrix.split('.')[0] + '.csv')
-        # TODO: @Maura: das laden von der .csv hab ich schon mal generisch gemacht, falls über phenotype_matrix mal ein anderes Format übergeben werden kann
-        # Please do the matching magic and return matched X_full and y_full ;-) Sinnvoll wäre da halt wieder eine Funktion in raw_data_functions, weil wir das zum Ertsellen der datasplits ja auch schon machen (und dann halt nicht speichern)
-        return ...
+            if 'X_nuc' in f:
+                if self.encoding == 'nuc':
+                    X = f['X_nuc'][:]
+                else:
+                    X_nuc = f['X_nuc'][:]
+                    X = raw.encode_raw_genotype(X_nuc, self.encoding)
+            elif 'X_012' in f:
+                if self.encoding in ('nuc', 'onehot'):
+                    raise Exception('Genotype in required encoding not in genotype file. Can not create required'
+                                    'encoding. See documentation for help.')
+                else:
+                    X = f['X_012'][:]  # TODO adapt when we have additional encodings
+
+        with h5py.File(arguments.base_dir + '/data/' + self.get_index_file_name(arguments), "r") as f:
+            X = raw.get_matched_data(X, f['matched_data/X_index'][:])
+            y = f['matched_data/y']  # TODO change if multiple phenotypes
+        return X, y
 
     def maf_filter_raw_data(self, arguments: argparse.Namespace):
         """
         Apply maf filter to full raw data
         :param arguments: all arguments provided by the user
         """
-        with h5py.File(arguments.base_dir + '/data/' + self.get_index_file_name(), "r") as f:
+        with h5py.File(arguments.base_dir + '/data/' + self.get_index_file_name(arguments), "r") as f:
             if f'maf_filter/maf_{arguments.maf_percentage}' in f:
                 filter_indices = f[f'maf_filter/maf_{arguments.maf_percentage}'][:]
-                # TODO: @MAURA Bitte Pfad prüfen! percentage ohne führende 0 (z. B. bei 1 Prozent) vmtl. einfacher)
-                # "nicht-standard-maf-filter" sollten schon vorher angelegt werden, wenn wir die "index_files" bauen bzw. prüfen
         self.X_full = np.delete(self.X_full, filter_indices, axis=1)
 
     def load_datasplit_indices(self, arguments: argparse.Namespace):
@@ -69,7 +76,6 @@ class Dataset:
         :param arguments: all arguments provided by the user
         :return: dictionary with the above-described structure containing all indices for the specified data split
         """
-        # TODO: @MAURA: Bitte überprüf die Logik mal ob das so zur Dateistruktur passt
         if self.datasplit == 'train-val-test':
             n_outerfolds = 1
             n_innerfolds = 1
@@ -82,7 +88,7 @@ class Dataset:
         split_param_string = helper_functions.get_subpath_for_datasplit(arguments=arguments)
 
         datasplit_indices = {}
-        with h5py.File(arguments.base_dir + '/data/' + self.get_index_file_name(), "r") as f:
+        with h5py.File(arguments.base_dir + '/data/' + self.get_index_file_name(arguments), "r") as f:
             for m in range(n_outerfolds):
                 outerfold_path = \
                     f'datasplits/{self.datasplit}/{split_param_string}/outerfold_{m}/'
