@@ -8,7 +8,22 @@ class BaseModel(abc.ABC):
     """
     BaseModel parent class for all models that can be used within the framework.
     Every model must be based on BaseModel directly or BaseModel's child classes SklearnModel or TorchModel
+
+    ## Attributes ##
+        # Class attributes #
+        standard_encoding: str : the standard encoding for this model
+        possible_encodings: List<str> : a list of all encodings that are possible according to the model definition
+        name: str : name of the model
+
+        # Instance attributes #
+        task: str : ML task (regression or classification) depending on target variable
+        optuna_trial: optuna.trial.Trial : trial of optuna for optimization
+        encoding: str : the encoding to use (standard encoding or user-defined)
+        all_hyperparams: dict : dictionary with all hyperparameters with related info that can be tuned
+                                (structure see define_hyperparams_to_tune())
+        model: model object
     """
+
     ### Class attributes ###
     @property
     @classmethod
@@ -28,7 +43,7 @@ class BaseModel(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def name(cls):
-        """name: the name of the model"""
+        """name: name of the model"""
         raise NotImplementedError
 
     ### Constructor super class ###
@@ -50,7 +65,14 @@ class BaseModel(abc.ABC):
     @abc.abstractmethod
     def define_model(self):
         """
-        Method that defines the model that needs to be optimized
+        Method that defines the model that needs to be optimized.
+        Hyperparams to tune have to be specified in all_hyperparams and suggested via suggest_hyperparam_to_optuna().
+        The hyperparameters have to be included directly in the model definiton to be optimized.
+            e.g. if you want to optimize the number of layers, do something like
+                n_layers = self.suggest_hyperparam_to_optuna('n_layers') # same name in define_hyperparams_to_tune()
+                for layer in n_layers:
+                    do something
+            Then the number of layers will be optimized by optuna.
         """
 
     @abc.abstractmethod
@@ -105,18 +127,13 @@ class BaseModel(abc.ABC):
         :return: numpy array with the predicted values
         """
 
-    @abc.abstractmethod
-    def reset_model(self):
-        """
-        Method that resets a model to keep the hyperparameters but get a model that is not fitted
-        """
-
     ### General methods ###
     def suggest_hyperparam_to_optuna(self, hyperparam_name: str):
         """
         Add a hyperparameter of hyperparam_dict to the optuna trial to optimize it.
-        If you want to add a parameter to your model / in your pipeline to be optimized, you need to call this method.
+        If you want to add a parameter to your model / in your pipeline to be optimized, you need to call this method
         :param hyperparam_name: name of the hyperparameter to be tuned (see define_hyperparams_to_tune())
+        :return: suggsted value
         """
         # Get specification of the hyperparameter
         if hyperparam_name in self.all_hyperparams:
@@ -144,7 +161,8 @@ class BaseModel(abc.ABC):
                     '"list of values" for ' + hyperparam_name + ' not in hyperparams_dict. '
                     'Check define_hyperparams_to_tune() of the model.'
                 )
-            self.optuna_trial.suggest_categorical(name=optuna_param_name, choices=spec['list_of_values'])
+            suggested_value = \
+                self.optuna_trial.suggest_categorical(name=optuna_param_name, choices=spec['list_of_values'])
         elif spec['datatype'] in ['float', 'int']:
             if 'step' in spec:
                 step = spec['step']
@@ -157,17 +175,18 @@ class BaseModel(abc.ABC):
                     'Check define_hyperparams_to_tune() of the model.'
                 )
             if spec['datatype'] == 'int':
-                self.optuna_trial.suggest_int(
+                suggested_value = self.optuna_trial.suggest_int(
                     name=optuna_param_name, low=spec['lower_bound'], high=spec['upper_bound'], step=step, log=log
                 )
             else:
-                self.optuna_trial.suggest_float(
+                suggested_value = self.optuna_trial.suggest_float(
                     name=optuna_param_name, low=spec['lower_bound'], high=spec['upper_bound'], step=step, log=log
                 )
         else:
             raise Exception(
                 spec['datatype'] + ' is not a valid parameter. Check define_hyperparams_to_tune() of the model.'
             )
+        return suggested_value
 
     def suggest_all_hyperparams_to_optuna(self) -> dict:
         """
@@ -176,7 +195,7 @@ class BaseModel(abc.ABC):
         :return: dictionary with suggested hyperparameters
         """
         for param_name in self.all_hyperparams.keys():
-            self.suggest_hyperparam_to_optuna(param_name)
+            _ = self.suggest_hyperparam_to_optuna(param_name)
         return self.optuna_trial.params
 
     # TODO: Funktion schreiben zum reuse von einem PArameter, der schon suggested wurde

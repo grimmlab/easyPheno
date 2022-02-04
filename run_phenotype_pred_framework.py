@@ -88,5 +88,5 @@ if __name__ == '__main__':
         optuna_run = optimization.optuna_optim.OptunaOptim(arguments=args, task=task,
                                                            current_model_name=current_model_name, dataset=dataset)
         print('### Starting Optuna Optimizzation ###')
-        optuna_run.run_optuna_optimization(arguments=args)
+        optuna_run.run_optuna_optimization()
         print('### Finished Optuna Optimization for ' + current_model_name + ' ###')

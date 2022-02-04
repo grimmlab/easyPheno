@@ -34,26 +34,11 @@ def test_likely_categorical(vector_to_test: list, threshold: float = 0.1):
     return len(set(vector_to_test)) / len(vector_to_test) <= threshold
 
 
-def get_classes_in_model():
-    try:
-        files = os.listdir('../model')
-    except:
-        files = os.listdir('model')
-    modules = []
-    for file in files:
-        if file not in ['__init__.py', '__pycache__']:
-            if file[-3:] != '.py':
-                continue
-
-            file_name = file[:-3]
-            module_name = 'model.' + file_name
-            for name, cls in inspect.getmembers(importlib.import_module(module_name), inspect.isclass):
-                if cls.__module__ == module_name:
-                    modules.append(cls)
-    return modules
-
-
 def get_mapping_name_to_class():
+    """
+    Get a mapping from model name (naming in package model without .py) to class name
+    :return: dictionary with mapping model name to class name
+    """
     try:
         files = os.listdir('../model')
     except:
@@ -73,6 +58,10 @@ def get_mapping_name_to_class():
 
 
 def set_all_seeds(seed: int = 42):
+    """
+    Set all seeds of libs with a specific function for reproducability of results
+    :param seed: seed to use
+    """
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.cuda.manual_seed(seed)
