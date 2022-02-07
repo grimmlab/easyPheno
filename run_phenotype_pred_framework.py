@@ -73,7 +73,7 @@ if __name__ == '__main__':
     # Check and create subdirectories
     check_functions.check_and_create_directories(arguments=args)
     # prepare all data files
-    # raw_data_functions.prepare_data_files(arguments=args)
+    #  raw_data_functions.prepare_data_files(arguments=args)
     # Print info for current config
     print_functions.print_config_info()
 
