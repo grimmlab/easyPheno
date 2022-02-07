@@ -79,8 +79,8 @@ def get_subpath_for_datasplit(arguments: argparse.Namespace) -> str:
     """
     # construct subpath due to the specified datasplit
     if arguments.datasplit == 'train-val-test':
-        datasplit_string = f'{100 - (arguments.val_set_size_percentage + arguments.test_set_size_percentage)}-' \
-                           f'{arguments.val_set_size_percentage}-{arguments.test_set_size_percentage}'
+        datasplit_string = f'{100 - (arguments.validation_set_size_percentage + arguments.test_set_size_percentage)}-' \
+                           f'{arguments.validation_set_size_percentage}-{arguments.test_set_size_percentage}'
     elif arguments.datasplit == 'cv-test':
         datasplit_string = f'{arguments.n_innerfolds}-{arguments.test_set_size_percentage}'
     elif arguments.datasplit == 'nested-cv':
