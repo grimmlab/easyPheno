@@ -36,7 +36,7 @@ class Dataset:
 
         with h5py.File(arguments.base_dir + '/data/' + self.get_index_file_name(arguments), "r") as f:
             X = raw.get_matched_data(X, f['matched_data/X_index'][:])
-            y = f['matched_data/y']  # TODO change if multiple phenotypes
+            y = f['matched_data/y'][:]  # TODO change if multiple phenotypes
         return X, y
 
     def maf_filter_raw_data(self, arguments: argparse.Namespace):

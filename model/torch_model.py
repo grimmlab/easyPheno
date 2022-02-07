@@ -1,4 +1,4 @@
-import base_model
+from model import base_model
 import abc
 import numpy as np
 

@@ -24,7 +24,6 @@ def get_evaluation_report(y_pred: np.array, y_true: np.array, task: str, prefix:
             prefix + 'mse': sklearn.metrics.mean_squared_error(y_true=y_true, y_pred=y_pred),
             prefix + 'rmse': sklearn.metrics.mean_squared_error(y_true=y_true, y_pred=y_pred, squared=False),
             prefix + 'r2_score': sklearn.metrics.r2_score(y_true=y_true, y_pred=y_pred),
-            prefix + 'mape': sklearn.metrics.mean_absolute_percentage_error(y_true=y_true, y_pred=y_pred),
             prefix + 'explained_variance': sklearn.metrics.explained_variance_score(y_true=y_true, y_pred=y_pred)
         }
 

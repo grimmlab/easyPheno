@@ -4,7 +4,7 @@ import model.xgboost
 import optimization.optuna_optim
 import preprocess.base_dataset
 from utils import check_functions, print_functions, helper_functions
-# from preprocess import raw_data_functions
+from preprocess import raw_data_functions
 from model import *
 
 if __name__ == '__main__':
@@ -25,15 +25,15 @@ if __name__ == '__main__':
                         help="Provide the full path of your base directory (parent directory of the data folder that"
                              "contains your genotype and phenotype data). "
                              "Results will be saved in subdirectories starting there.")
-    parser.add_argument("-geno_matrix", "--genotype_matrix", type=str, default='FT10_small.h5',
+    parser.add_argument("-geno_matrix", "--genotype_matrix", type=str, default='x_matrix.h5',
                         help="specify the name (including data type suffix) of the genotype matrix to be used. "
                              "Needs to be located in the subfolder data/ of the specified base directory" +
                              "For more info regarding the required format see our documentation at GitHub")
-    parser.add_argument("-pheno_matrix", "--phenotype_matrix", type=str, default='study_12_values.csv',
+    parser.add_argument("-pheno_matrix", "--phenotype_matrix", type=str, default='y_matrix.csv',
                         help="specify the name (including data type suffix) of the phenotype matrix to be used. "
                              "Needs to be located in the subfolder data/ of the specified base directory" +
                              "For more info regarding the required format see our documentation at GitHub")
-    parser.add_argument("-phenotype", "--phenotype", type=str, default='FT10',
+    parser.add_argument("-phenotype", "--phenotype", type=str, default='y_value',
                         help="specify the name of the phenotype to be predicted")
     parser.add_argument("-enc", "--encoding", type=str, default=None,
                         help="specify the encoding to use. Caution: has to be a possible encoding for the model to use."
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     parser.add_argument("-maf", "--maf_percentage", type=int, default=1,
                         help="specify the minor allele frequency (as percentage value). "
                              "specify 0 if you do not want a maf filter.")
-    parser.add_argument("-datasplit", "--datasplit", type=str, default='cv-test',
+    parser.add_argument("-datasplit", "--datasplit", type=str, default='train-val-test',
                         help="specify the data slit to use: 'nested-cv' | 'cv-test' | 'train-val-test'"
                              "Default values are 5 folds, train-test-split to 80/20 and train-val-test to 60/20/20")
     parser.add_argument("-testperc", "--test_set_size_percentage", type=int, default=20,
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     # Check and create subdirectories
     check_functions.check_and_create_directories(arguments=args)
     # prepare all data files
-    #  raw_data_functions.prepare_data_files(arguments=args)
+    # raw_data_functions.prepare_data_files(arguments=args)
     # Print info for current config
     print_functions.print_config_info()
 

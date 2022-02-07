@@ -43,10 +43,11 @@ class OptunaOptim:
         self.task = task
         self.arguments = arguments
         self.dataset = dataset
-        self.base_path = arguments.base_dir + 'results/' + \
-            arguments.genotype_matrix + '/' + arguments.phenotype_matrix + '/' + arguments.phenotype + \
-            '/' + current_model_name + '/' + helper_functions.get_subpath_for_datasplit(arguments=arguments) + '/' + \
-            str(datetime.datetime.now()) + '/'
+        self.base_path = arguments.base_dir + 'results/' + arguments.genotype_matrix.split('.')[0] + \
+            '/' + arguments.phenotype_matrix.split('.')[0] + '/' + arguments.phenotype + \
+            '/' + current_model_name + '/' + arguments.datasplit + '/' + \
+            helper_functions.get_subpath_for_datasplit(arguments=arguments) + '/' + \
+            datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + '/'
         if not os.path.exists(self.base_path):
             os.makedirs(self.base_path)
         self.save_path = self.base_path
@@ -57,15 +58,16 @@ class OptunaOptim:
         Method to create a new optuna study
         :return: optuna study
         """
-        outerfold_suffix = '-OUTER' + self.save_path[-2] if 'outerfold' in self.save_path else ''
-        study_name = str(datetime.datetime.now()) + '_' + self.arguments.genotype_matrix + '-' + \
-                     self.arguments.phenotype_matrix + '-' + self.arguments.phenotype + '-' + \
+        outerfold_prefix = 'OUTER' + self.save_path[-2] + '-' if 'outerfold' in self.save_path else ''
+        study_name = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + '_' + outerfold_prefix + \
+                     self.arguments.genotype_matrix.split('.')[0] + '-' + \
+                     self.arguments.phenotype_matrix.split('.')[0] + '-' + self.arguments.phenotype + '-' + \
                      'MAF' + str(self.arguments.maf_percentage) + \
                      '-SPLIT' + self.arguments.datasplit + \
                      helper_functions.get_subpath_for_datasplit(arguments=self.arguments) + \
-                     '-MODEL' + self.arguments.model + '-TRIALS' + str(self.arguments.n_trials) + outerfold_suffix
+                     '-MODEL' + self.arguments.model + '-TRIALS' + str(self.arguments.n_trials)
         storage = optuna.storages.RDBStorage(
-            "sqlite:////" + self.save_path + study_name + ".db", heartbeat_interval=10
+            "sqlite:////" + self.save_path + 'Optuna_DB-' + study_name + ".db", heartbeat_interval=10
             )
         study = optuna.create_study(
             storage=storage, study_name=study_name,
@@ -87,11 +89,11 @@ class OptunaOptim:
         # in case a model has attributes not part of the base class hand them over in a dictionary to keep the same call
         # (name of the attribute and key in the dictionary have to match)
         additional_attributes_dict = {}
-        model = utils.helper_functions.get_mapping_name_to_class()[self.current_model](
+        model = utils.helper_functions.get_mapping_name_to_class()[self.current_model_name](
             task=self.task, optuna_trial=trial, **additional_attributes_dict
         )
         # save the unfitted model
-        os.makedirs(self.save_path + 'temp/')
+        os.makedirs(self.save_path + 'temp/', exist_ok=True)
         model.save_model(path=self.save_path + 'temp/',
                          filename='unfitted_model_trial' + str(trial.number))
 
@@ -120,7 +122,8 @@ class OptunaOptim:
                 else sklearn.metrics.mean_squared_error(y_true=y_val, y_pred=y_pred)
             # report value for pruning
             # step has an offset based on outerfold_number as same study is used for all outerfolds
-            trial.report(value=objective_value, step=int(innerfold_name[-1]))
+            trial.report(value=objective_value,
+                         step=0 if self.dataset.datasplit == 'train-val-test' else int(innerfold_name[-1]))
             if trial.should_prune():
                 raise optuna.exceptions.TrialPruned()
             # store results and persist model
