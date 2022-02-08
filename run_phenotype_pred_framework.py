@@ -63,7 +63,7 @@ if __name__ == '__main__':
     parser.add_argument("-model", "--model", type=str, default='xgboost',
                         help="specify the model(s) to optimize: 'all' or naming according to source file name "
                              "(without suffix .py) in subfolder model of this repo")
-    parser.add_argument("-trials", "--n_trials", type=int, default=50,
+    parser.add_argument("-trials", "--n_trials", type=int, default=10,
                         help="number of trials for optuna")
     args = parser.parse_args()
 
@@ -87,6 +87,6 @@ if __name__ == '__main__':
         task = 'classification' if helper_functions.test_likely_categorical(dataset.y_full) else 'regression'
         optuna_run = optimization.optuna_optim.OptunaOptim(arguments=args, task=task,
                                                            current_model_name=current_model_name, dataset=dataset)
-        print('### Starting Optuna Optimizzation ###')
+        print('### Starting Optuna Optimization ###')
         optuna_run.run_optuna_optimization()
         print('### Finished Optuna Optimization for ' + current_model_name + ' ###')
