@@ -6,8 +6,8 @@ import sklearn
 import numpy as np
 import os
 import glob
-import shutil
 import joblib
+import shutil
 
 import utils
 from preprocess import base_dataset
@@ -67,7 +67,8 @@ class OptunaOptim:
                      helper_functions.get_subpath_for_datasplit(arguments=self.arguments) + \
                      '-MODEL' + self.arguments.model + '-TRIALS' + str(self.arguments.n_trials)
         storage = optuna.storages.RDBStorage(
-            "sqlite:////" + self.save_path + 'Optuna_DB-' + study_name + ".db", heartbeat_interval=10
+            "sqlite:////" + self.save_path + 'Optuna_DB-' + study_name + ".db", heartbeat_interval=60, grace_period=120,
+            failed_trial_callback=optuna.storages.RetryFailedTrialCallback(max_retry=3)
             )
         study = optuna.create_study(
             storage=storage, study_name=study_name,
@@ -134,9 +135,11 @@ class OptunaOptim:
                                                                          prefix=innerfold_name + '_'))
             model.save_model(path=self.save_path + 'temp/',
                              filename=innerfold_name + '-validation_model_trial' + str(trial.number))
+            # TODO: callback für Absturz einbauen
         # persist results
         pd.DataFrame(columns=validation_results.keys()).append(validation_results, ignore_index=True).to_csv(
-            self.save_path + 'temp/validation_results_trial' + str(trial.number) + '.csv')
+            self.save_path + 'temp/validation_results_trial' + str(trial.number) + '.csv',
+            sep=',', decimal='.', float_format='%.10f')
 
         return np.mean(objective_values)
 
@@ -159,13 +162,14 @@ class OptunaOptim:
             # Start optimization run
             self.study.optimize(
                 lambda trial: self.objective(trial=trial, train_val_indices=outerfold_info),
-                n_trials=self.arguments.n_trials,
-                n_jobs=-1
+                n_trials=self.arguments.n_trials
             )
             # Print statistics after run
             print("## Optuna Study finished ##")
             print("Study statistics: ")
-            print("  Number of finished trials: ", len(self.study.trials))
+            print("  Finished trials: ", len(self.study.trials))
+            print("  Pruned trials: ", len(self.study.get_trials(states=(optuna.trial.TrialState.PRUNED,))))
+            print("  Completed trials: ", len(self.study.get_trials(states=(optuna.trial.TrialState.COMPLETE,))))
             print("  Best Trial: ", self.study.best_trial.number)
             print("  Value: ", self.study.best_trial.value)
             print("  Params: ")
@@ -175,26 +179,28 @@ class OptunaOptim:
             # Only keep validation results and models of best trial
             files_to_keep = glob.glob(self.save_path + 'temp/' + '*trial' + str(self.study.best_trial.number) + '*')
             for file in files_to_keep:
-                shutil.copy2(file, self.save_path)
+                shutil.copyfile(file, self.save_path + file.split('/')[-1])
             shutil.rmtree(self.save_path + 'temp/')
 
             # Retrain on full train + val data with best hyperparams and apply on test
             X_test, y_test = self.dataset.X_full[outerfold_info['test']], self.dataset.y_full[outerfold_info['test']]
             X_retrain, y_retrain = \
-                self.dataset.X_full[~outerfold_info['test']], self.dataset.y_full[~outerfold_info['test']]
+                self.dataset.X_full[~np.isin(np.arange(len(self.dataset.X_full)), outerfold_info['test'])], \
+                self.dataset.y_full[~np.isin(np.arange(len(self.dataset.y_full)), outerfold_info['test'])]
             final_model = joblib.load(self.save_path + 'unfitted_model_trial' + str(self.study.best_trial.number))
             final_model.train(X_train=X_retrain, y_train=y_retrain)
             y_pred_retrain = final_model.predict(X_retrain)
             y_pred_test = final_model.predict(X_test)
 
             # Evaluate and save results
-            eval_scores = eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test, task=self.task)
+            eval_scores = \
+                eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test, task=self.task, prefix='test_')
             print('## Results on test set ##')
             print(eval_scores)
             final_results = {'y_pred_test': y_pred_test, 'y_true_test': y_test,
                              'y_pred_retrain': y_pred_retrain, 'y_true_retrain': y_retrain}
             final_results.update(eval_scores)
             pd.DataFrame(columns=final_results.keys()).append(final_results, ignore_index=True).to_csv(
-                self.save_path + 'final_model_test_results.csv')
+                self.save_path + 'final_model_test_results.csv', sep=',', decimal='.', float_format='%.10f')
             final_model.save_model(path=self.save_path,
                                    filename='final_retrained_model')
