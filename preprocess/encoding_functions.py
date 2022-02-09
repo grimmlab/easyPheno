@@ -1,4 +1,6 @@
 import numpy as np
+import torch
+from torch.nn.functional import one_hot
 
 def encode_raw_genotype(X: np.array, encoding: str):
     """
@@ -40,9 +42,27 @@ def get_additive_encoding(X: np.array):
 
 def get_onehot_encoding(X: np.array):
     """
-    generate genotype matrix in one-hot encoding.
+    Generate genotype matrix in one-hot encoding. If genotype matrix is homozygous, create 3d torch tensor with
+    (samples, SNPs, 4), with 4 as the one-hot encoding
+    A : [1,0,0,0]
+    C : [0,1,0,0]
+    G : [0,0,1,0]
+    T : [0,0,0,1]
+    If genotype matrix is heterozygous, create 3d torch tensor with (samples, SNPs, 10), with 10 as the one-hot encoding
+    A : [1,0,0,0,0,0,0,0,0,0]
+    C : [0,1,0,0,0,0,0,0,0,0]
+    G : [0,0,1,0,0,0,0,0,0,0]
+    K : [0,0,0,1,0,0,0,0,0,0]
+    M : [0,0,0,0,1,0,0,0,0,0]
+    R : [0,0,0,0,0,1,0,0,0,0]
+    S : [0,0,0,0,0,0,1,0,0,0]
+    T : [0,0,0,0,0,0,0,1,0,0]
+    W : [0,0,0,0,0,0,0,0,1,0]
+    Y : [0,0,0,0,0,0,0,0,0,1]
     :param X: genotype matrix in raw encoding, i.e. containing the alleles
     :return: X_onehot
     """
-    # TODO
-    raise NotImplementedError
+    unique, inverse = np.unique(X, return_inverse=True)
+    inverse = inverse.reshape(X.shape)
+    X_onehot = one_hot(torch.from_numpy(inverse))
+    return X_onehot
