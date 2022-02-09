@@ -8,7 +8,7 @@ from model import sklearn_model
 class XgBoost(sklearn_model.SklearnModel):
     """See BaseModel for more information on the parameters"""
     standard_encoding = '012'
-    possible_encodings = ['012', 'nuc']
+    possible_encodings = ['012', 'raw']
     name = 'XGBoost'
 
     def define_model(self) -> xgboost.XGBModel:

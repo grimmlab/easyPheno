@@ -6,6 +6,7 @@ import os
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
 from utils.helper_functions import test_likely_categorical
+from encoding_functions import encode_raw_genotype
 
 
 def prepare_data_files(arguments: argparse.Namespace):
@@ -31,30 +32,33 @@ def check_transform_format_genotype_matrix(arguments: argparse.Namespace):
                 SNP_ids: vector with SNP identifiers of genotype matrix,
                 X_{enc}: (samples x SNPs)-genotype matrix in enc encoding, where enc might refer to:
                     '012': additive (number of minor alleles)
-                    'nuc': nucleotide (ATCG)
-                    'onehot': one-hot
+                    'raw': raw  (alleles)
     optional:   genotype in additional encodings
+    Accepts .h5, .hdf5, .h5py, .csv, PLINK binary and PLINK files. .h5, .hdf5, .h5py files must satisfy the unified
+    format. If the genotype matrix contains constant SNPs, those will be removed and a new file will be saved.
+    Will open .csv, PLINK and binary PLINK files and generate required .h5 format.
     :param arguments: all arguments specified by the user
     :return: sample_ids, X_012
     """
     suffix = arguments.genotype_matrix.split('.')[-1]
     encoding = []  # TODO Liste aller Codierungen die überprüft werden müssen
     if suffix in ('h5', 'hdf5', 'h5py'):
-        sample_ids, X_012 = check_genotype_h5_file(arguments, encoding)
+        sample_ids, snp_ids, X_012, X_raw = check_genotype_h5_file(arguments, encoding)
     else:
         if suffix == 'csv':
-            sample_ids, snp_ids, X_012, X_nuc = check_genotype_csv_file(arguments, encoding)
+            sample_ids, snp_ids, X_012, X_raw = check_genotype_csv_file(arguments, encoding)
 
         elif suffix in ('bed', 'bim', 'fam'):
-            sample_ids, snp_ids, X_012, X_nuc = check_genotype_binary_plink_file(arguments)
+            sample_ids, snp_ids, X_012, X_raw = check_genotype_binary_plink_file(arguments)
 
         elif suffix in ('map', 'ped'):
-            sample_ids, snp_ids, X_012, X_nuc = check_genotype_plink_file(arguments)
+            sample_ids, snp_ids, X_012, X_raw = check_genotype_plink_file(arguments)
         else:
             raise Exception('Only accept .h5, .hdf5, .h5py, .csv, binary PLINK and PLINK genotype files. '
                             'See documentation for help.')
-        X_012, X_nuc, snp_ids = filter_non_informative_snps(X_012, X_nuc, snp_ids)
-        create_genotype_h5_file(arguments, sample_ids, snp_ids, X_012, X_nuc)
+        X_012, X_raw, snp_ids = filter_non_informative_snps(X_012, X_raw, snp_ids)
+    if snp_ids is not None:
+        create_genotype_h5_file(arguments, sample_ids, snp_ids, X_012, X_raw)
     return X_012, sample_ids
 
 
@@ -65,94 +69,98 @@ def check_genotype_h5_file(arguments: argparse.Namespace, encoding: list):
     snp_ids: vector with SNP identifiers of genotype matrix,
     X_{enc}: (samples x SNPs)-genotype matrix in enc encoding, where enc might refer to:
             '012': additive (number of minor alleles)
-            'nuc': nucleotide (ATCG)
-    In order to work with other encodings X_nuc is required.
+            'raw': raw (alleles)
+    In order to work with other encodings X_raw is required.
+    If genotype matrix contains non-informative SNPs (with standard deviation = 0) returns matrix without those SNPs
     :param arguments: all arguments specified by the user
     :param encoding: list of needed encodings
-    :return: sample_ids, X_012
+    :return: sample_ids, snp_ids, X_012, X_raw;
+    snp_ids and X_raw might be None if matrix does not contain non-informative SNPs
     """
     with h5py.File(arguments.base_dir + '/data/' + arguments.genotype_matrix, "r") as f:
         keys = list(f.keys())
         if {'sample_ids', 'snp_ids'}.issubset(keys):
             sample_ids = f['sample_ids'][:]
-            # snp_ids = f['snp_ids'][:]
-            if 'X_nuc' in keys:
-                if 'X_012' in keys:
-                    X_012 = f['X_012'][:]
-                else:
-                    X_nuc = f['X_nuc'][:]
-                    X_012 = encode_raw_genotype(X_nuc, '012')
-            elif any(z in encoding for z in ['nuc', 'onehot']):  # TODO adapt when we have additional encodings
-                raise Exception('Genotype in nucleotide encoding missing in ' + arguments.genotype_matrix +
+            snp_ids = f['snp_ids'][:]
+            if 'X_raw' in keys:
+                    X_raw = f['X_raw'][:]
+                    X_012 = encode_raw_genotype(X_raw, '012')
+            elif any(z in encoding for z in ['raw', 'onehot']):  # TODO adapt when we have additional encodings
+                raise Exception('Genotype in raw encoding missing in ' + arguments.genotype_matrix +
                                 '. Can not create required encodings. See documentation for help.')
             elif 'X_012' in keys:
                 X_012 = f['X_012'][:]
+                X_raw = None
             else:
                 raise Exception('No genotype matrix in file ' + arguments.genotype_matrix + '. Need genotype matrix in '
-                                'nucleotide or additive encoding. See documentation for help')
+                                'raw or additive encoding. See documentation for help')
+            m = X_012.shape[1]
+            X_012, X_raw, snp_ids = filter_non_informative_snps(X_012, X_raw, snp_ids)
+            if X_012.shape[1] != m:
+                return sample_ids, snp_ids, X_012, X_raw
+            else:
+                return sample_ids, None, X_012, None
         else:
             raise Exception('keys "sample_ids" and/or "SNP_ids" are missing in' + arguments.genotype_matrix)
-    return sample_ids, X_012
-# TODO filter non inf snps
 
 
 def check_genotype_csv_file(arguments: argparse.Namespace, encoding: list):
     """
     Function to load .csv genotype file. File must have the following structure:
     First column must contain the sample ids, the column names should be the SNP ids.
-    The values should be the genotype matrix either in additive encoding or in nucleotide encoding.
-    If the genotype is in nucleotide encoding, additive and one hot encoding will be calculated.
+    The values should be the genotype matrix either in additive encoding or in raw encoding.
+    If the genotype is in raw encoding, additive encoding will be calculated.
     If genotype is in additive encoding, only this encoding will be returned.
     :param arguments: all arguments specified by the user
     :param encoding: list of needed encodings
-    :return: sample ids, SNP ids and genotype in additive and nucleotide encoding (if available)
+    :return: sample ids, SNP ids and genotype in additive and raw encoding (if available)
     """
     gt = pd.read_csv(arguments.base_dir + '/data/' + arguments.genotype_matrix, index_col=0)
     snp_ids = np.asarray(gt.columns.values)
     sample_ids = np.asarray(gt.index)
     X = np.asarray(gt.values)
-    # check encoding of X, only accept additive or nucleotides
+    # check encoding of X, only accept additive or raw (alleles)
     unique = np.unique(X)
     if all(z in ['A', 'C', 'G', 'T'] for z in unique):  # TODO heterozygous!?
         X_012 = encode_raw_genotype(X, '012')
         return sample_ids, snp_ids, X_012, X
     elif all(z in [0, 1, 2] for z in unique):
-        if any(z in encoding for z in ['nuc', 'onehot']):
-            raise Exception('Genotype in ' + arguments.genotype_matrix + ' not in nucleotide encoding. Can not create'
+        if any(z in encoding for z in ['raw', 'onehot']):  # TODO adapt for additional encodings
+            raise Exception('Genotype in ' + arguments.genotype_matrix + ' not in raw encoding. Can not create'
                             ' required encodings. See documentation for help.')
         return sample_ids, snp_ids, X, None
     else:
-        raise Exception('Genotype in ' + arguments.genotype_matrix + ' is neither in additive nor in nucleotide '
+        raise Exception('Genotype in ' + arguments.genotype_matrix + ' is neither in additive nor in raw '
                                                                      'encoding. See documentation for help.')
 
 
 def check_genotype_binary_plink_file(arguments: argparse.Namespace):
     """
     Function to load binary PLINK file, .bim, .fam, .bed files with same prefix need to be in same folder.
-    Compute additive, nucleotide and one-hot encoding of genotype.
+    Compute additive and raw encoding of genotype.
     :param arguments: all arguments specified by the user
-    :return: sample ids, SNP ids and genotype in additive and nucleotide encoding
+    :return: sample ids, SNP ids and genotype in additive and raw encoding
     """
     gt_file = arguments.base_dir + '/data/' + arguments.genotype_matrix.split(".")[0]
     gt = read_plink1_bin(gt_file + '.bed', gt_file + '.bim', gt_file + '.fam', ref="a0", verbose=False)
     sample_ids = np.array(gt['fid'], dtype=np.int).flatten()
     snp_ids = np.array(gt['snp']).flatten()
-    # get nucleotide encoding
+    # get raw encoding
     a = np.stack(
         (np.array(gt.a1.values, dtype='S1'), np.zeros(gt.a0.shape, dtype='S1'), np.array(gt.a0.values, dtype='S1')))
     col = np.arange(len(a[0]))
     X_012 = np.array(gt.values)
-    X_nuc = a[X_012.astype(int), col]
-    return sample_ids, snp_ids, X_012, X_nuc
+    X_raw = a[X_012.astype(int), col]
+    return sample_ids, snp_ids, X_012, X_raw
 
 
 def check_genotype_plink_file(arguments: argparse.Namespace):
     """
     Function to load PLINK files, .map and .ped file with same prefix need to be in same folder. Accept GENOTYPENAME.ped
     and GENOTYPENAME.map as input.
-    Compute additive, nucleotide and one-hot encoding of genotype.
+    Compute additive and raw encoding of genotype.
     :param arguments: all arguments specified by the user
-    :return: sample ids, SNP ids and genotype in additive and nucleotide encoding
+    :return: sample ids, SNP ids and genotype in additive and raw encoding
     """
     gt_file = arguments.base_dir + '/data/' + arguments.genotype_matrix.split(".")[0]
     with open(gt_file + '.map', 'r') as f:
@@ -165,7 +173,7 @@ def check_genotype_plink_file(arguments: argparse.Namespace):
                  "CG": "S", "AT": "W", "TA": "W", "GT": "K", "TG": "K", "AC": "M", "CA": "M"}
     with open(gt_file + '.ped', 'r') as f:
         sample_ids = []
-        X_nuc = []
+        X_raw = []
         for line in f:
             tmp = line.strip().split(" ")
             sample_ids.append(int(tmp[1].strip()))
@@ -174,115 +182,70 @@ def check_genotype_plink_file(arguments: argparse.Namespace):
             while j < len(tmp) - 1:
                 snps.append(iupac_map[tmp[j] + tmp[j + 1]])
                 j += 2
-            X_nuc.append(snps)
+            X_raw.append(snps)
     sample_ids = np.array(sample_ids)
-    X_nuc = np.array(X_nuc)
-    X_012 = encode_raw_genotype(X_nuc, '012')
-    return sample_ids, snp_ids, X_012, X_nuc
+    X_raw = np.array(X_raw)
+    X_012 = encode_raw_genotype(X_raw, '012')
+    return sample_ids, snp_ids, X_012, X_raw
 
 
-def encode_raw_genotype(X: np.array, encoding: str):
-    if encoding == '012':
-        return get_additive_encoding(X)
-    elif encoding == 'onehot':
-        return get_onehot_encoding(X)
-    else:
-        raise Exception('Only able to create additive or one-hot encoding.')
-
-
-def get_additive_encoding(X: np.array):
-    """
-    generate genotype matrix in additive encoding:
-    0: homozygous major allele,
-    1: heterozygous
-    2: homozygous minor allele
-    :param X: genotype matrix in nucleotide encoding
-    :return: X_012
-    """
-    # TODO heterozygous
-    maj_min = []
-    index_arr = []
-    for col in np.transpose(X):
-        _, inv, counts = np.unique(col, return_counts=True, return_inverse=True)
-        tmp = np.where(counts == np.max(counts), 0., 2.)
-        maj_min.append(tmp)
-        index_arr.append(inv)
-    maj_min = np.transpose(np.array(maj_min))
-    ind_arr = np.transpose(np.array(index_arr))
-    cols = np.arange(maj_min.shape[1])
-    return maj_min[ind_arr, cols]
-
-
-def get_onehot_encoding(X: np.array):
-    """
-    generate genotype matrix in one-hot encoding.
-    :param X: genotype matrix in nucleotide encoding
-    :return: X_onehot
-    """
-    # TODO
-    raise NotImplementedError
-
-
-def filter_non_informative_snps(X_012, X_nuc, snp_ids):
+def filter_non_informative_snps(X_012: np.array, X_raw: np.array, snp_ids: np.array):
     """
     Function to remove constant SNPs, i.e. SNPs where all values are equal.
     :param X_012: genotype matrix in additive encoding
-    :param X_nuc: genotype matrix in nucleotide encoding
+    :param X_raw: genotype matrix in raw encoding
     :param snp_ids: array containing the SNP ids
     :return: filtered genotype matrices and SNP_ids
     """
     tmp = np.where(X_012.std(axis=0) == 0)[0]
     X_012 = np.delete(X_012, tmp, axis=1)
-    X_nuc = np.delete(X_nuc, tmp, axis=1)
     snp_ids = np.delete(snp_ids, tmp, axis=0)
-    return X_012, X_nuc, snp_ids
+    if X_raw is not None:
+        X_raw = np.delete(X_raw, tmp, axis=1)
+    return X_012, X_raw, snp_ids
 
 
 def create_genotype_h5_file(arguments: argparse.Namespace, sample_ids: np.array, snp_ids: np.array, X_012: np.array,
-                            X_nuc: np.array):
+                            X_raw: np.array):
     """
     Save genotype matrix in unified .h5 file.
     Structure:
                 sample_ids
                 snp_ids
-                X_nuc (or X_012 if X_nuc not available)
+                X_raw (or X_012 if X_raw not available)
     :param arguments:
     :param sample_ids: array containing sample ids of genotype data
     :param snp_ids: array containing snp ids of genotype data
     :param X_012: matrix containing genotype in additive encoding
-    :param X_nuc: matrix containing genotype in nucleotide encoding
+    :param X_raw: matrix containing genotype in raw encoding
     """
     with h5py.File(arguments.base_dir + '/data/' + arguments.genotype_matrix.split(".")[0] + '.h5', 'w') as f:
         f.create_dataset('sample_ids', data=sample_ids, chunks=True, compression="gzip")
         f.create_dataset('snp_ids', data=snp_ids, chunks=True, compression="gzip")
-        if X_nuc is not None:
-            f.create_dataset('X_nuc', data=X_nuc, chunks=True, compression="gzip", compression_opts=7)
+        if X_raw is not None:
+            f.create_dataset('X_raw', data=X_raw, chunks=True, compression="gzip", compression_opts=7)
         else:
             f.create_dataset('X_012', data=X_012, chunks=True, compression="gzip", compression_opts=7)
-
+    # TODO change name --> even if geno matrix is .h5 file, might need to save new file with filtered snps
 
 def check_and_load_phenotype_matrix(arguments: argparse.Namespace):
     """
-    Function to check and load the specified phenotype matrix. Only accept .csv files.
-    Column name of sample ids has to be "accession_id", remaining columns should contain phenotypic values
+    Function to check and load the specified phenotype matrix. Only accept .csv, .pheno, .txt files.
+    Sample ids need to be in first column, remaining columns should contain phenotypic values
     with phenotype name as column name.
     :param arguments: all arguments specified by the user
     :return: DataFrame with sample_ids as index and phenotype values as single column without NAN values
     """
-    if arguments.phenotype_matrix.split('.')[-1] == "csv":
+    if arguments.phenotype_matrix.split('.')[-1] in ("csv", "pheno", "txt"):
         y = pd.read_csv(arguments.base_dir + '/data/' + arguments.phenotype_matrix)
-        if 'accession_id' not in y.columns:
-            raise Exception('accession_ids are not in phenotype file ' + arguments.phenotype_matrix +
-                            '. See documentation for help.')
-        else:
-            y = y.sort_values(['accession_id']).groupby('accession_id').mean()
+        y = y.sort_values(y.columns[0]).groupby(y.columns[0]).mean()
         if arguments.phenotype not in y.columns:
             raise Exception('Phenotype ' + arguments.phenotype + ' is not in phenotype file '
                             + arguments.phenotype_matrix + ' See documentation for help')
         else:
             y = y[[arguments.phenotype]].dropna()
     else:
-        raise Exception('Only accept .csv phenotype files. See documentation for help')
+        raise Exception('Only accept .csv, .pheno, .txt phenotype files. See documentation for help')
     return y
 
 
@@ -398,6 +361,11 @@ def check_create_index_file(arguments: argparse.Namespace, X: np.array, y: np.ar
 
 
 def append_index_file(arguments: argparse.Namespace):
+    """
+    Function to check index file and append datasets if necessary.
+    :param arguments:
+    :return:
+    """
     matched_datasets = ['y', 'matched_sample_ids', 'X_index', 'y_index', 'ma_frequency']
     with h5py.File(arguments.base_dir + '/data/' + arguments.genotype_matrix.split('.')[0] + '-'
                    + arguments.phenotype_matrix.split('.')[0] + '-' + arguments.phenotype + '.h5', 'a') as f:
@@ -692,12 +660,10 @@ def make_train_test_split(y: np.array, test_size: int, val_size=None, val=False,
     """
     # TODO check for number of samples in test --> error if not enough
     x = np.arange(len(y))
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=test_size, stratify=y, random_state=random)
-    # x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=test_size, random_state=random)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=test_size/100, stratify=y, random_state=random)
     if not val:
         return x_train, x_test, y_train
     else:
-        x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=val_size, stratify=y_train,
+        x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=val_size/100, stratify=y_train,
                                                           random_state=random)
-        # x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=val_size, random_state=random)
         return x_train, x_val, x_test

@@ -37,7 +37,7 @@ if __name__ == '__main__':
                         help="specify the name of the phenotype to be predicted")
     parser.add_argument("-enc", "--encoding", type=str, default=None,
                         help="specify the encoding to use. Caution: has to be a possible encoding for the model to use."
-                             "Valid arguments are: 'nuc', '012', 'onehot'")
+                             "Valid arguments are: 'raw', '012', 'onehot'")
 
     # Preprocess Params #
     parser.add_argument("-maf", "--maf_percentage", type=int, default=1,
