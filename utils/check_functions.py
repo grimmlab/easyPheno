@@ -78,7 +78,7 @@ def check_all_specified_arguments(arguments: argparse.Namespace):
 
     # Check encoding
     if arguments.encoding is not None:
-        if arguments.encoding not in ['nuc', '012', 'onehot']:
+        if arguments.encoding not in ['raw', '012', 'onehot']:
             raise Exception('Specified encoding ' + arguments.encoding + ' is not valid. See help.')
         else:
             if arguments.model == 'all':

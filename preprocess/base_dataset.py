@@ -21,14 +21,14 @@ class Dataset:
         :param arguments: all arguments provided by the user
         """
         with h5py.File(arguments.base_dir + '/data/' + arguments.genotype_matrix.split('.')[0] + '.h5', "r") as f:
-            if 'X_nuc' in f:
-                if self.encoding == 'nuc':
-                    X = f['X_nuc'][:]
+            if 'X_raw' in f:
+                if self.encoding == 'raw':
+                    X = f['X_raw'][:]
                 else:
-                    X_nuc = f['X_nuc'][:]
-                    X = raw.encode_raw_genotype(X_nuc, self.encoding)
+                    X_raw = f['X_raw'][:]
+                    X = raw.encode_raw_genotype(X_raw, self.encoding)
             elif 'X_012' in f:
-                if self.encoding in ('nuc', 'onehot'):
+                if self.encoding in ('raw', 'onehot'):
                     raise Exception('Genotype in required encoding not in genotype file. Can not create required'
                                     'encoding. See documentation for help.')
                 else:
@@ -37,7 +37,8 @@ class Dataset:
         with h5py.File(arguments.base_dir + '/data/' + self.get_index_file_name(arguments), "r") as f:
             X = raw.get_matched_data(X, f['matched_data/X_index'][:])
             y = f['matched_data/y'][:]  # TODO change if multiple phenotypes
-        return X, y
+            sample_ids = f['matched_data/matched_sample_ids'][:]
+        return X, y, sample_ids
 
     def maf_filter_raw_data(self, arguments: argparse.Namespace):
         """
