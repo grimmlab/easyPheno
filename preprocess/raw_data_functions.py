@@ -5,8 +5,9 @@ import h5py
 import os
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
+from pandas_plink import read_plink1_bin
 from utils.helper_functions import test_likely_categorical
-from encoding_functions import encode_raw_genotype
+from preprocess.encoding_functions import encode_raw_genotype
 
 
 def prepare_data_files(arguments: argparse.Namespace):
@@ -582,11 +583,11 @@ def make_bins(y: np.array):
     if test_likely_categorical(y):
         return y
     else:
-    # TODO check for number of samples in bins --> join bins if not enough
-    _, edges = np.histogram(y)
-    edges = edges[:-1]
-    y_binned = np.digitize(y, edges)
-    return y_binned
+        # TODO check for number of samples in bins --> join bins if not enough
+        _, edges = np.histogram(y)
+        edges = edges[:-1]
+        y_binned = np.digitize(y, edges)
+        return y_binned
 
 
 def make_nested_cv(y: np.array, outerfolds: int, innerfolds: int):

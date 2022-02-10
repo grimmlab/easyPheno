@@ -25,15 +25,15 @@ if __name__ == '__main__':
                         help="Provide the full path of your base directory (parent directory of the data folder that"
                              "contains your genotype and phenotype data). "
                              "Results will be saved in subdirectories starting there.")
-    parser.add_argument("-geno_matrix", "--genotype_matrix", type=str, default='x_matrix.h5',
+    parser.add_argument("-geno_matrix", "--genotype_matrix", type=str, default='x_matrix_big.h5',
                         help="specify the name (including data type suffix) of the genotype matrix to be used. "
                              "Needs to be located in the subfolder data/ of the specified base directory" +
                              "For more info regarding the required format see our documentation at GitHub")
-    parser.add_argument("-pheno_matrix", "--phenotype_matrix", type=str, default='y_matrix.csv',
+    parser.add_argument("-pheno_matrix", "--phenotype_matrix", type=str, default='study_12_values.csv',
                         help="specify the name (including data type suffix) of the phenotype matrix to be used. "
                              "Needs to be located in the subfolder data/ of the specified base directory" +
                              "For more info regarding the required format see our documentation at GitHub")
-    parser.add_argument("-phenotype", "--phenotype", type=str, default='y_value',
+    parser.add_argument("-phenotype", "--phenotype", type=str, default='FT10',
                         help="specify the name of the phenotype to be predicted")
     parser.add_argument("-enc", "--encoding", type=str, default=None,
                         help="specify the encoding to use. Caution: has to be a possible encoding for the model to use."
