@@ -11,7 +11,7 @@ class Dataset:
 
     def __init__(self, arguments: argparse.Namespace, encoding: str):
         self.encoding = encoding
-        self.X_full, self.y_full = self.load_match_raw_data(arguments=arguments)
+        self.X_full, self.y_full, self.sample_ids_full = self.load_match_raw_data(arguments=arguments)
         self.maf_filter_raw_data(arguments=arguments)
         self.datasplit = arguments.datasplit
         self.datasplit_indices = self.load_datasplit_indices(arguments=arguments)
