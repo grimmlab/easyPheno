@@ -43,7 +43,8 @@ class OptunaOptim:
         self.task = task
         self.arguments = arguments
         self.dataset = dataset
-        self.base_path = arguments.base_dir + 'results/' + arguments.genotype_matrix.split('.')[0] + \
+        self.base_path = arguments.save_dir + \
+            'results/' + arguments.genotype_matrix.split('.')[0] + \
             '/' + arguments.phenotype_matrix.split('.')[0] + '/' + arguments.phenotype + \
             '/' + current_model_name + '/' + arguments.datasplit + '/' + \
             helper_functions.get_subpath_for_datasplit(arguments=arguments) + '/' + \
@@ -100,10 +101,8 @@ class OptunaOptim:
 
         # Iterate over all innerfolds
         objective_values = []
-        validation_results = pd.DataFrame()
+        validation_results = pd.DataFrame(index=range(0, self.dataset.y_full.shape[0]))
         for innerfold_name, innerfold_info in train_val_indices.items():
-            # load the unfitted model to prevent information leak between folds
-            model = joblib.load(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial.number))
             # skip test set (see structure described in base_dataset.Dataset)
             if innerfold_name == 'test':
                 continue
@@ -111,9 +110,15 @@ class OptunaOptim:
                 print('# Processing ' + innerfold_name + ' #')
             else:
                 innerfold_name = 'train-val'
-            X_train, y_train, X_val, y_val = \
-                self.dataset.X_full[innerfold_info['train']], self.dataset.y_full[innerfold_info['train']], \
-                self.dataset.X_full[innerfold_info['val']], self.dataset.y_full[innerfold_info['val']]
+            # load the unfitted model to prevent information leak between folds
+            model = joblib.load(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial.number))
+            X_train, y_train, sample_ids_train, X_val, y_val, sample_ids_val = \
+                self.dataset.X_full[innerfold_info['train']], \
+                self.dataset.y_full[innerfold_info['train']], \
+                self.dataset.sample_ids_full[innerfold_info['train']], \
+                self.dataset.X_full[innerfold_info['val']], \
+                self.dataset.y_full[innerfold_info['val']], \
+                self.dataset.sample_ids_full[innerfold_info['val']]
             # train model
             model.train(X_train=X_train, y_train=y_train)
             # validate model
@@ -129,6 +134,10 @@ class OptunaOptim:
                 raise optuna.exceptions.TrialPruned()
             # store results and persist model
             objective_values.append(objective_value)
+            validation_results.at[0:len(sample_ids_train)-1, innerfold_name + '_train_sampleids'] = sample_ids_train
+            validation_results.at[0:len(y_train) - 1, innerfold_name + '_train_true'] = y_train
+            validation_results.at[0:len(y_train) - 1, innerfold_name + '_train_pred'] = model.predict(X_in=X_train)
+            validation_results.at[0:len(sample_ids_val)-1, innerfold_name + '_val_sampleids'] = sample_ids_val
             validation_results.at[0:len(y_val)-1, innerfold_name + '_val_true'] = y_val
             validation_results.at[0:len(y_pred)-1, innerfold_name + '_val_pred'] = y_pred
             for metric, value in eval_metrics.get_evaluation_report(y_pred=y_pred, y_true=y_val, task=self.task,
@@ -138,7 +147,7 @@ class OptunaOptim:
                              filename=innerfold_name + '-validation_model_trial' + str(trial.number))
         # persist results
         validation_results.to_csv(self.save_path + 'temp/validation_results_trial' + str(trial.number) + '.csv',
-                                  sep=',', decimal='.', float_format='%.10f')
+                                  sep=',', decimal='.', float_format='%.10f', index=False)
 
         return np.mean(objective_values)
 
@@ -183,10 +192,14 @@ class OptunaOptim:
 
             print("## Retrain best model and test ##")
             # Retrain on full train + val data with best hyperparams and apply on test
-            X_test, y_test = self.dataset.X_full[outerfold_info['test']], self.dataset.y_full[outerfold_info['test']]
-            X_retrain, y_retrain = \
+            X_test, y_test, sample_ids_test = \
+                self.dataset.X_full[outerfold_info['test']], self.dataset.y_full[outerfold_info['test']], \
+                self.dataset.sample_ids_full[outerfold_info['test']]
+            X_retrain, y_retrain, sample_ids_retrain = \
                 self.dataset.X_full[~np.isin(np.arange(len(self.dataset.X_full)), outerfold_info['test'])], \
-                self.dataset.y_full[~np.isin(np.arange(len(self.dataset.y_full)), outerfold_info['test'])]
+                self.dataset.y_full[~np.isin(np.arange(len(self.dataset.y_full)), outerfold_info['test'])], \
+                self.dataset.sample_ids_full[~np.isin(np.arange(len(self.dataset.sample_ids_full)),
+                                                      outerfold_info['test'])],
             final_model = joblib.load(self.save_path + 'unfitted_model_trial' + str(self.study.best_trial.number))
             final_model.train(X_train=X_retrain, y_train=y_retrain)
             y_pred_retrain = final_model.predict(X_retrain)
@@ -197,14 +210,16 @@ class OptunaOptim:
                 eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test, task=self.task, prefix='test_')
             print('## Results on test set ##')
             print(eval_scores)
-            final_results = pd.DataFrame()
-            final_results.at[0:len(y_pred_retrain) - 1, 'y_pred_retrain'] = y_pred_retrain
-            final_results.at[0:len(y_retrain) - 1, 'y_true_retrain'] = y_retrain
+            final_results = pd.DataFrame(index=range(0, self.dataset.y_full.shape[0]))
+            final_results.at[0:len(sample_ids_retrain)-1, 'sample_ids_retrain'] = sample_ids_retrain
+            final_results.at[0:len(y_pred_retrain)-1, 'y_pred_retrain'] = y_pred_retrain
+            final_results.at[0:len(y_retrain)-1, 'y_true_retrain'] = y_retrain
+            final_results.at[0:len(sample_ids_test)-1, 'sample_ids_test'] = sample_ids_test
             final_results.at[0:len(y_pred_test)-1, 'y_pred_test'] = y_pred_test
             final_results.at[0:len(y_test)-1, 'y_true_test'] = y_test
             for metric, value in eval_scores.items():
                 final_results.at[0, metric] = value
             final_results.to_csv(self.save_path + 'final_model_test_results.csv',
-                                 sep=',', decimal='.', float_format='%.10f')
+                                 sep=',', decimal='.', float_format='%.10f', index=False)
             final_model.save_model(path=self.save_path,
                                    filename='final_retrained_model')
