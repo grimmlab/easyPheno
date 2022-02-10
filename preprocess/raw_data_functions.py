@@ -3,9 +3,9 @@ import pandas as pd
 import numpy as np
 import h5py
 import os
-from pandas_plink import read_plink1_bin
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
+from pandas_plink import read_plink1_bin
 from utils.helper_functions import test_likely_categorical
 from preprocess.encoding_functions import encode_raw_genotype
 
@@ -165,11 +165,11 @@ def check_genotype_plink_file(arguments: argparse.Namespace):
     """
     gt_file = arguments.base_dir + '/data/' + arguments.genotype_matrix.split(".")[0]
     with open(gt_file + '.map', 'r') as f:
-        snp_ids = []
+        SNP_ids = []
         for line in f:
             tmp = line.strip().split(" ")
-            snp_ids.append(tmp[1].strip())
-    snp_ids = np.array(snp_ids)
+            SNP_ids.append(tmp[1].strip())
+    snp_ids = np.array(SNP_ids)
     iupac_map = {"AA": "A", "GG": "G", "TT": "T", "CC": "C", "AG": "R", "GA": "R", "CT": "Y", "TC": "Y", "GC": "S",
                  "CG": "S", "AT": "W", "TA": "W", "GT": "K", "TG": "K", "AC": "M", "CA": "M"}
     with open(gt_file + '.ped', 'r') as f:
@@ -221,9 +221,8 @@ def create_genotype_h5_file(arguments: argparse.Namespace, sample_ids: np.array,
     :param X_raw: matrix containing genotype in raw encoding
     """
     with h5py.File(arguments.base_dir + '/data/' + arguments.genotype_matrix.split(".")[0] + '.h5', 'w') as f:
-        dt = h5py.string_dtype(encoding='utf-8')
         f.create_dataset('sample_ids', data=sample_ids, chunks=True, compression="gzip")
-        f.create_dataset('snp_ids', data=snp_ids, chunks=True, compression="gzip", dtype=dt)
+        f.create_dataset('snp_ids', data=snp_ids, chunks=True, compression="gzip")
         if X_raw is not None:
             f.create_dataset('X_raw', data=X_raw, chunks=True, compression="gzip", compression_opts=7)
         else:
@@ -234,24 +233,20 @@ def check_and_load_phenotype_matrix(arguments: argparse.Namespace):
     """
     Function to check and load the specified phenotype matrix. Only accept .csv, .pheno, .txt files.
     Sample ids need to be in first column, remaining columns should contain phenotypic values
-    with phenotype name as column name. .pheno and .txt files are assumed to have a single space as separator.
+    with phenotype name as column name.
     :param arguments: all arguments specified by the user
     :return: DataFrame with sample_ids as index and phenotype values as single column without NAN values
     """
-    suffix = arguments.phenotype_matrix.split('.')[-1]
-    if suffix == 'csv':
+    if arguments.phenotype_matrix.split('.')[-1] in ("csv", "pheno", "txt"):
         y = pd.read_csv(arguments.base_dir + '/data/' + arguments.phenotype_matrix)
         y = y.sort_values(y.columns[0]).groupby(y.columns[0]).mean()
-    elif suffix in ('pheno', 'txt'):
-        y = pd.read_csv(arguments.base_dir + '/data/' + arguments.phenotype_matrix, sep = " ")
-        y = y.sort_values(y.columns[0]).groupby(y.columns[0]).mean()
+        if arguments.phenotype not in y.columns:
+            raise Exception('Phenotype ' + arguments.phenotype + ' is not in phenotype file '
+                            + arguments.phenotype_matrix + ' See documentation for help')
+        else:
+            y = y[[arguments.phenotype]].dropna()
     else:
         raise Exception('Only accept .csv, .pheno, .txt phenotype files. See documentation for help')
-    if arguments.phenotype not in y.columns:
-        raise Exception('Phenotype ' + arguments.phenotype + ' is not in phenotype file '
-                        + arguments.phenotype_matrix + ' See documentation for help')
-    else:
-        y = y[[arguments.phenotype]].dropna()
     return y
 
 
@@ -588,11 +583,11 @@ def make_bins(y: np.array):
     if test_likely_categorical(y):
         return y
     else:
-    # TODO check for number of samples in bins --> join bins if not enough
+        # TODO check for number of samples in bins --> join bins if not enough
         _, edges = np.histogram(y)
         edges = edges[:-1]
         y_binned = np.digitize(y, edges)
-    return y_binned
+        return y_binned
 
 
 def make_nested_cv(y: np.array, outerfolds: int, innerfolds: int):
