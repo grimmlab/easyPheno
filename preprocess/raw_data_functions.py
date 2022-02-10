@@ -3,10 +3,11 @@ import pandas as pd
 import numpy as np
 import h5py
 import os
+from pandas_plink import read_plink1_bin
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
 from utils.helper_functions import test_likely_categorical
-from encoding_functions import encode_raw_genotype
+from preprocess.encoding_functions import encode_raw_genotype
 
 
 def prepare_data_files(arguments: argparse.Namespace):
