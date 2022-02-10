@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
 from pandas_plink import read_plink1_bin
 from utils.helper_functions import test_likely_categorical
-from preprocess.encoding_functions import encode_raw_genotype
+from preprocess import encoding_functions as enc
 
 
 def prepare_data_files(arguments: argparse.Namespace):
@@ -42,7 +42,7 @@ def check_transform_format_genotype_matrix(arguments: argparse.Namespace):
     :return: sample_ids, X_012
     """
     suffix = arguments.genotype_matrix.split('.')[-1]
-    encoding = []  # TODO Liste aller Codierungen die überprüft werden müssen
+    encoding = enc.get_encoding(arguments)
     if suffix in ('h5', 'hdf5', 'h5py'):
         sample_ids, snp_ids, X_012, X_raw = check_genotype_h5_file(arguments, encoding)
     else:
@@ -63,7 +63,7 @@ def check_transform_format_genotype_matrix(arguments: argparse.Namespace):
     return X_012, sample_ids
 
 
-def check_genotype_h5_file(arguments: argparse.Namespace, encoding: list):
+def check_genotype_h5_file(arguments: argparse.Namespace, encodings: list):
     """
     Function to load and check .h5 genotype file. Should contain:
     sample_ids: vector with sample names of genotype matrix,
@@ -74,7 +74,7 @@ def check_genotype_h5_file(arguments: argparse.Namespace, encoding: list):
     In order to work with other encodings X_raw is required.
     If genotype matrix contains non-informative SNPs (with standard deviation = 0) returns matrix without those SNPs
     :param arguments: all arguments specified by the user
-    :param encoding: list of needed encodings
+    :param encodings: list of needed encodings
     :return: sample_ids, snp_ids, X_012, X_raw;
     snp_ids and X_raw might be None if matrix does not contain non-informative SNPs
     """
@@ -83,18 +83,22 @@ def check_genotype_h5_file(arguments: argparse.Namespace, encoding: list):
         if {'sample_ids', 'snp_ids'}.issubset(keys):
             sample_ids = f['sample_ids'][:]
             snp_ids = f['snp_ids'][:]
-            if 'X_raw' in keys:
-                    X_raw = f['X_raw'][:]
-                    X_012 = encode_raw_genotype(X_raw, '012')
-            elif any(z in encoding for z in ['raw', 'onehot']):  # TODO adapt when we have additional encodings
-                raise Exception('Genotype in raw encoding missing in ' + arguments.genotype_matrix +
-                                '. Can not create required encodings. See documentation for help.')
-            elif 'X_012' in keys:
+            # check if required encoding is available or can be created
+            for elem in encodings:  # TODO what if several base encodings are possible?
+                if f'X_{elem}' not in f and f'X_{enc.get_base_encoding(elem)}' not in f:
+                    raise Exception('Genotype in ' + elem + ' encoding missing. Can not create required encoding. '
+                                                            'See documentation for help')
+            # load X_012 for further processing
+            if 'X_raw' in f:
+                X_raw = f['X_raw'][:]
+                X_012 = enc.encode_genotype(X_raw, '012', 'raw')
+            elif 'X_012' in f:
                 X_012 = f['X_012'][:]
                 X_raw = None
             else:
                 raise Exception('No genotype matrix in file ' + arguments.genotype_matrix + '. Need genotype matrix in '
                                 'raw or additive encoding. See documentation for help')
+            # check if genotype contains constant SNPs
             m = X_012.shape[1]
             X_012, X_raw, snp_ids = filter_non_informative_snps(X_012, X_raw, snp_ids)
             if X_012.shape[1] != m:
@@ -102,10 +106,10 @@ def check_genotype_h5_file(arguments: argparse.Namespace, encoding: list):
             else:
                 return sample_ids, None, X_012, None
         else:
-            raise Exception('keys "sample_ids" and/or "SNP_ids" are missing in' + arguments.genotype_matrix)
+            raise Exception('sample_ids and/or snp_ids are missing in' + arguments.genotype_matrix)
 
 
-def check_genotype_csv_file(arguments: argparse.Namespace, encoding: list):
+def check_genotype_csv_file(arguments: argparse.Namespace, encodings: list):
     """
     Function to load .csv genotype file. File must have the following structure:
     First column must contain the sample ids, the column names should be the SNP ids.
@@ -113,26 +117,29 @@ def check_genotype_csv_file(arguments: argparse.Namespace, encoding: list):
     If the genotype is in raw encoding, additive encoding will be calculated.
     If genotype is in additive encoding, only this encoding will be returned.
     :param arguments: all arguments specified by the user
-    :param encoding: list of needed encodings
+    :param encodings: list of needed encodings
     :return: sample ids, SNP ids and genotype in additive and raw encoding (if available)
     """
     gt = pd.read_csv(arguments.base_dir + '/data/' + arguments.genotype_matrix, index_col=0)
     snp_ids = np.asarray(gt.columns.values)
     sample_ids = np.asarray(gt.index)
     X = np.asarray(gt.values)
-    # check encoding of X, only accept additive or raw (alleles)
-    unique = np.unique(X)
-    if all(z in ['A', 'C', 'G', 'T'] for z in unique):  # TODO heterozygous!?
-        X_012 = encode_raw_genotype(X, '012')
+    # check encoding of X, only accept additive or raw and check if required encoding can be created
+    enc_of_X = enc.check_encoding_of_genotype(X)
+    for elem in encodings:
+        if elem != enc_of_X and enc.get_base_encoding(elem) != enc_of_X:
+            raise Exception('Genotype in ' + arguments.genotype_matrix + ' in wrong encoding. Can not create'
+                            ' required encoding. See documentation for help.')
+    # create 012 encoding for further processing
+    if enc_of_X == 'raw':
+        X_012 = enc.encode_genotype(X, '012', 'raw')
         return sample_ids, snp_ids, X_012, X
-    elif all(z in [0, 1, 2] for z in unique):
-        if any(z in encoding for z in ['raw', 'onehot']):  # TODO adapt for additional encodings
-            raise Exception('Genotype in ' + arguments.genotype_matrix + ' not in raw encoding. Can not create'
-                            ' required encodings. See documentation for help.')
+    elif enc_of_X == '012':
         return sample_ids, snp_ids, X, None
     else:
         raise Exception('Genotype in ' + arguments.genotype_matrix + ' is neither in additive nor in raw '
-                                                                     'encoding. See documentation for help.')
+                        'encoding. Currently only accept additive or raw encoding for .csv files. '
+                        'See documentation for help.')
 
 
 def check_genotype_binary_plink_file(arguments: argparse.Namespace):
@@ -186,7 +193,7 @@ def check_genotype_plink_file(arguments: argparse.Namespace):
             X_raw.append(snps)
     sample_ids = np.array(sample_ids)
     X_raw = np.array(X_raw)
-    X_012 = encode_raw_genotype(X_raw, '012')
+    X_012 = enc.encode_raw_genotype(X_raw, '012')
     return sample_ids, snp_ids, X_012, X_raw
 
 
@@ -228,6 +235,7 @@ def create_genotype_h5_file(arguments: argparse.Namespace, sample_ids: np.array,
         else:
             f.create_dataset('X_012', data=X_012, chunks=True, compression="gzip", compression_opts=7)
     # TODO change name --> even if geno matrix is .h5 file, might need to save new file with filtered snps
+
 
 def check_and_load_phenotype_matrix(arguments: argparse.Namespace):
     """
@@ -618,6 +626,7 @@ def make_nested_cv(y: np.array, outerfolds: int, innerfolds: int):
     index_dict = {}
     outer_fold = 0
     for train_index, test_index in outer_cv.split(np.zeros(len(y)), y):
+        np.random.shuffle(test_index)
         index_dict[f'outerfold_{outer_fold}_test'] = test_index
         index_dict[f'outerfold_{outer_fold}'] = make_stratified_cv(train_index, y[train_index], split_number=innerfolds)
         outer_fold += 1
@@ -642,9 +651,10 @@ def make_stratified_cv(x: np.array, y: np.array, split_number: int):
     index_dict = {}
     fold = 0
     for train_index, test_index in cv.split(x, y):
-        index_dict[f'fold_{fold}_train'] = x[train_index]
-        index_dict[f'fold_{fold}_test'] = x[test_index]
-        fold += 1
+        np.random.shuffle(train_index)
+        np.random.shuffle(test_index)
+        index_dict[f'fold_{fold}_train'] = train_index
+        index_dict[f'fold_{fold}_test'] = test_index
     return index_dict
 
 

@@ -1,23 +1,70 @@
+import argparse
 import numpy as np
 import torch
 from torch.nn.functional import one_hot
 
-def encode_raw_genotype(X: np.array, encoding: str):
+def get_encoding(arguments:  argparse.Namespace):
+    """
+    Get a list of all required encodings
+    :param arguments:
+    :return: list of encodings
+    """
+    if arguments.model == 'all':
+        return get_list_of_encodings()
+    else:
+        return [arguments.encoding]
+
+
+def get_list_of_encodings():
+    """
+    Get a list of all implemented encodings
+    adapt if new encoding is added
+    :return: List of all possible encodings
+    """
+    return ['raw', '012', 'onehot']
+
+def get_base_encoding(encoding: str):
+    """
+    Function that checks which base encoding is needed to create required encoding
+    adapt if new encoding is added
+    :param encoding: required encoding
+    :return: base encoding
+    """
+    if encoding in ('raw', '012', 'onehot'):
+        return 'raw'
+    else:  # adapt if new encoding is added
+        raise Exception('No valid encoding. Can not determine base encoding')
+
+
+def check_encoding_of_genotype(X: np.array):
+    """
+    FUnction to check the encoding of the genotype matrix
+    :param X: genotype matrix
+    :return: name of encoding
+    """
+    unique = np.unique(X)
+    if all(z in ['A', 'C', 'G', 'T'] for z in unique): # TODO heterozygous
+        return 'raw'
+    elif all(z in [0, 1, 2] for z in unique):
+        return '012'
+
+
+def encode_genotype(X: np.array, required_encoding: str, base_encoding: str):
     """
 
     :param X:
     :param encoding:
     :return:
     """
-    if encoding == '012':
-        return get_additive_encoding(X)
-    elif encoding == 'onehot':
+    if required_encoding == '012':
+        return get_additive_encoding(X, base_encoding)
+    elif required_encoding == 'onehot':
         return get_onehot_encoding(X)
     else:
         raise Exception('Only able to create additive or one-hot encoding.')
 
 
-def get_additive_encoding(X: np.array):
+def get_additive_encoding(X: np.array, base_encoding: str):
     """
     generate genotype matrix in additive encoding:
     0: homozygous major allele,
