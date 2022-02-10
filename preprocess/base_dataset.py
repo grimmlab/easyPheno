@@ -3,6 +3,7 @@ import h5py
 import numpy as np
 from utils import helper_functions
 from preprocess import raw_data_functions as raw
+from preprocess.encoding_functions import encode_raw_genotype
 
 
 class Dataset:
@@ -26,7 +27,7 @@ class Dataset:
                     X = f['X_raw'][:]
                 else:
                     X_raw = f['X_raw'][:]
-                    X = raw.encode_raw_genotype(X_raw, self.encoding)
+                    X = encode_raw_genotype(X_raw, self.encoding)
             elif 'X_012' in f:
                 if self.encoding in ('raw', 'onehot'):
                     raise Exception('Genotype in required encoding not in genotype file. Can not create required'

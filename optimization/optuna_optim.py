@@ -100,7 +100,7 @@ class OptunaOptim:
 
         # Iterate over all innerfolds
         objective_values = []
-        validation_results = {}
+        validation_results = pd.DataFrame()
         for innerfold_name, innerfold_info in train_val_indices.items():
             # load the unfitted model to prevent information leak between folds
             model = joblib.load(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial.number))
@@ -129,17 +129,16 @@ class OptunaOptim:
                 raise optuna.exceptions.TrialPruned()
             # store results and persist model
             objective_values.append(objective_value)
-            validation_results[innerfold_name + '_val_true'] = y_val
-            validation_results[innerfold_name + '_val_pred'] = y_pred
-            validation_results.update(eval_metrics.get_evaluation_report(y_pred=y_pred, y_true=y_val, task=self.task,
-                                                                         prefix=innerfold_name + '_'))
+            validation_results.at[0:len(y_val)-1, innerfold_name + '_val_true'] = y_val
+            validation_results.at[0:len(y_pred)-1, innerfold_name + '_val_pred'] = y_pred
+            for metric, value in eval_metrics.get_evaluation_report(y_pred=y_pred, y_true=y_val, task=self.task,
+                                                                    prefix=innerfold_name + '_').items():
+                validation_results.at[0, metric] = value
             model.save_model(path=self.save_path + 'temp/',
                              filename=innerfold_name + '-validation_model_trial' + str(trial.number))
-            # TODO: callback für Absturz einbauen
         # persist results
-        pd.DataFrame(columns=validation_results.keys()).append(validation_results, ignore_index=True).to_csv(
-            self.save_path + 'temp/validation_results_trial' + str(trial.number) + '.csv',
-            sep=',', decimal='.', float_format='%.10f')
+        validation_results.to_csv(self.save_path + 'temp/validation_results_trial' + str(trial.number) + '.csv',
+                                  sep=',', decimal='.', float_format='%.10f')
 
         return np.mean(objective_values)
 
@@ -182,6 +181,7 @@ class OptunaOptim:
                 shutil.copyfile(file, self.save_path + file.split('/')[-1])
             shutil.rmtree(self.save_path + 'temp/')
 
+            print("## Retrain best model and test ##")
             # Retrain on full train + val data with best hyperparams and apply on test
             X_test, y_test = self.dataset.X_full[outerfold_info['test']], self.dataset.y_full[outerfold_info['test']]
             X_retrain, y_retrain = \
@@ -197,10 +197,14 @@ class OptunaOptim:
                 eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test, task=self.task, prefix='test_')
             print('## Results on test set ##')
             print(eval_scores)
-            final_results = {'y_pred_test': y_pred_test, 'y_true_test': y_test,
-                             'y_pred_retrain': y_pred_retrain, 'y_true_retrain': y_retrain}
-            final_results.update(eval_scores)
-            pd.DataFrame(columns=final_results.keys()).append(final_results, ignore_index=True).to_csv(
-                self.save_path + 'final_model_test_results.csv', sep=',', decimal='.', float_format='%.10f')
+            final_results = pd.DataFrame()
+            final_results.at[0:len(y_pred_retrain) - 1, 'y_pred_retrain'] = y_pred_retrain
+            final_results.at[0:len(y_retrain) - 1, 'y_true_retrain'] = y_retrain
+            final_results.at[0:len(y_pred_test)-1, 'y_pred_test'] = y_pred_test
+            final_results.at[0:len(y_test)-1, 'y_true_test'] = y_test
+            for metric, value in eval_scores.items():
+                final_results.at[0, metric] = value
+            final_results.to_csv(self.save_path + 'final_model_test_results.csv',
+                                 sep=',', decimal='.', float_format='%.10f')
             final_model.save_model(path=self.save_path,
                                    filename='final_retrained_model')
