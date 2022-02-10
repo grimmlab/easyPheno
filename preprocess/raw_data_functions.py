@@ -193,7 +193,7 @@ def check_genotype_plink_file(arguments: argparse.Namespace):
             X_raw.append(snps)
     sample_ids = np.array(sample_ids)
     X_raw = np.array(X_raw)
-    X_012 = enc.encode_raw_genotype(X_raw, '012')
+    X_012 = enc.encode_genotype(X_raw, '012', 'raw')
     return sample_ids, snp_ids, X_012, X_raw
 
 
@@ -559,7 +559,7 @@ def check_datasplit_user_input(arguments: argparse.Namespace, split: str, param:
         param.append(user_input)
         return param
 
-
+# TODO sanity checks: number of samples in index sets
 def check_train_test_splits(split: str, y: np.array, param: list):
     """
     Function to create stratified train-test splits. Continuous values will be grouped into bins and stratified
@@ -669,7 +669,6 @@ def make_train_test_split(y: np.array, test_size: int, val_size=None, val=False,
     :return: either train, val and test index arrays or
     train and test index arrays and corresponding binned target values
     """
-    # TODO check for number of samples in test --> error if not enough
     x = np.arange(len(y))
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=test_size/100, stratify=y, random_state=random)
     if not val:
