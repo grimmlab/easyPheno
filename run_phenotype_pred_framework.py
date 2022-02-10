@@ -23,8 +23,10 @@ if __name__ == '__main__':
     # Input Params #
     parser.add_argument("-base_dir", "--base_dir", type=str, default='/bit_storage/Workspace/Maura/PhenotypePred/',
                         help="Provide the full path of your base directory (parent directory of the data folder that"
-                             "contains your genotype and phenotype data). "
-                             "Results will be saved in subdirectories starting there.")
+                             "contains your genotype and phenotype data).")
+    parser.add_argument("-save_dir", "--save_dir", type=str, default='/home/fhaselbeck/Work/phenotypepred/',
+                        help="Provide the full path of the directory in which you want to save your results. "
+                             "Default is same as base_dir")
     parser.add_argument("-geno_matrix", "--genotype_matrix", type=str, default='x_matrix_big.h5',
                         help="specify the name (including data type suffix) of the genotype matrix to be used. "
                              "Needs to be located in the subfolder data/ of the specified base directory" +
@@ -43,7 +45,7 @@ if __name__ == '__main__':
     parser.add_argument("-maf", "--maf_percentage", type=int, default=1,
                         help="specify the minor allele frequency (as percentage value). "
                              "specify 0 if you do not want a maf filter.")
-    parser.add_argument("-datasplit", "--datasplit", type=str, default='train-val-test',
+    parser.add_argument("-datasplit", "--datasplit", type=str, default='nested-cv',
                         help="specify the data slit to use: 'nested-cv' | 'cv-test' | 'train-val-test'"
                              "Default values are 5 folds, train-test-split to 80/20 and train-val-test to 60/20/20")
     parser.add_argument("-testperc", "--test_set_size_percentage", type=int, default=20,
@@ -66,6 +68,9 @@ if __name__ == '__main__':
     parser.add_argument("-trials", "--n_trials", type=int, default=10,
                         help="number of trials for optuna")
     args = parser.parse_args()
+
+    # set save directory
+    args.save_dir = args.base_dir if args.save_dir is None else args.save_dir
 
     ### Checks and Raw Data Input Preparation ###
     # Check all arguments
