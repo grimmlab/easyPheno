@@ -90,6 +90,7 @@ if __name__ == '__main__':
             else helper_functions.get_mapping_name_to_class()[current_model_name].standard_encoding
         dataset = preprocess.base_dataset.Dataset(arguments=args, encoding=encoding)
         task = 'classification' if helper_functions.test_likely_categorical(dataset.y_full) else 'regression'
+        # maybe print function would make sense here as dataset is already loaded
         optuna_run = optimization.optuna_optim.OptunaOptim(arguments=args, task=task,
                                                            current_model_name=current_model_name, dataset=dataset)
         print('### Starting Optuna Optimization ###')
