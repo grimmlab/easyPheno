@@ -13,7 +13,6 @@ class BaseModel(abc.ABC):
         # Class attributes #
         standard_encoding: str : the standard encoding for this model
         possible_encodings: List<str> : a list of all encodings that are possible according to the model definition
-        name: str : name of the model
 
         # Instance attributes #
         task: str : ML task (regression or classification) depending on target variable
@@ -37,13 +36,6 @@ class BaseModel(abc.ABC):
     @abc.abstractmethod
     def possible_encodings(cls):
         """possible_encodings: a list of all encodings that are possible according to the model definition"""
-        raise NotImplementedError
-
-    @property
-    @classmethod
-    @abc.abstractmethod
-    def name(cls):
-        """name: name of the model"""
         raise NotImplementedError
 
     ### Constructor super class ###

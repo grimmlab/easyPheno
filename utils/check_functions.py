@@ -16,7 +16,8 @@ def check_and_create_directories(arguments: argparse.Namespace):
         arguments.phenotype
     ]
 
-    datasplit_string = arguments.datasplit + '/' + helper_functions.get_subpath_for_datasplit(arguments=arguments)
+    datasplit_string = arguments.datasplit + '/' \
+                       + helper_functions.get_subpath_for_datasplit(arguments=arguments, datasplit=arguments.datasplit)
 
     # add subfolder for each model in case 'all' models shoudl be optimized
     if arguments.model == 'all':
