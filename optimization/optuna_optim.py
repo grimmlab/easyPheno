@@ -13,6 +13,7 @@ import utils
 from preprocess import base_dataset
 from utils import helper_functions
 from evaluation import eval_metrics
+from model import torch_model
 
 
 class OptunaOptim:
@@ -47,7 +48,7 @@ class OptunaOptim:
             'results/' + arguments.genotype_matrix.split('.')[0] + \
             '/' + arguments.phenotype_matrix.split('.')[0] + '/' + arguments.phenotype + \
             '/' + current_model_name + '/' + arguments.datasplit + '/' + \
-            helper_functions.get_subpath_for_datasplit(arguments=arguments) + '/' + \
+            helper_functions.get_subpath_for_datasplit(arguments=arguments, datasplit=arguments.datasplit) + '/' + \
             datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + '/'
         if not os.path.exists(self.base_path):
             os.makedirs(self.base_path)
@@ -65,7 +66,8 @@ class OptunaOptim:
                      self.arguments.phenotype_matrix.split('.')[0] + '-' + self.arguments.phenotype + '-' + \
                      'MAF' + str(self.arguments.maf_percentage) + \
                      '-SPLIT' + self.arguments.datasplit + \
-                     helper_functions.get_subpath_for_datasplit(arguments=self.arguments) + \
+                     helper_functions.get_subpath_for_datasplit(arguments=self.arguments,
+                                                                datasplit=self.arguments.datasplit) + \
                      '-MODEL' + self.arguments.model + '-TRIALS' + str(self.arguments.n_trials)
         storage = optuna.storages.RDBStorage(
             "sqlite:////" + self.save_path + 'Optuna_DB-' + study_name + ".db", heartbeat_interval=60, grace_period=120,
@@ -91,6 +93,10 @@ class OptunaOptim:
         # in case a model has attributes not part of the base class hand them over in a dictionary to keep the same call
         # (name of the attribute and key in the dictionary have to match)
         additional_attributes_dict = {}
+        if issubclass(utils.helper_functions.get_mapping_name_to_class()[self.current_model_name],
+                      torch_model.TorchModel):
+            # all torch models have the number of input features as attribute
+            additional_attributes_dict['n_features'] = self.dataset.X_full.shape[1]
         model = utils.helper_functions.get_mapping_name_to_class()[self.current_model_name](
             task=self.task, optuna_trial=trial, **additional_attributes_dict
         )

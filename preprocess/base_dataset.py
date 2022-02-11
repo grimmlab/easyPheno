@@ -87,7 +87,8 @@ class Dataset:
         elif self.datasplit == 'nested-cv':
             n_outerfolds = arguments.n_outerfolds
             n_innerfolds = arguments.n_innerfolds
-        split_param_string = helper_functions.get_subpath_for_datasplit(arguments=arguments)
+        split_param_string = helper_functions.get_subpath_for_datasplit(arguments=arguments,
+                                                                        datasplit=arguments.datasplit)
 
         datasplit_indices = {}
         with h5py.File(arguments.base_dir + '/data/' + self.get_index_file_name(arguments), "r") as f:
