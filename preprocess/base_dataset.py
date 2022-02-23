@@ -39,7 +39,7 @@ class Dataset:
             X = raw.get_matched_data(X, f['matched_data/X_index'][:])
             y = f['matched_data/y'][:]  # TODO change if multiple phenotypes
             sample_ids = f['matched_data/matched_sample_ids'][:]
-        return X, y, sample_ids
+        return X, np.reshape(y, (-1, 1)), np.reshape(sample_ids, (-1, 1))
 
     def maf_filter_raw_data(self, arguments: argparse.Namespace):
         """

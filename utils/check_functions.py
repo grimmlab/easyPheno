@@ -89,3 +89,13 @@ def check_all_specified_arguments(arguments: argparse.Namespace):
                         helper_functions.get_mapping_name_to_class()[arguments.model].possible_encodings:
                     raise Exception(arguments.encoding + ' is not valid for ' + arguments.model +
                                     '. Check possible_encodings in model file.')
+
+    # Only relevant for neural networks
+    if arguments.batch_size is not None:
+        if not (2**3 <= arguments.batch_size <= 2**8):
+            raise Exception('Specified batch size ' + str(arguments.batch_size) +
+                            ' is invalid, has to be between 8 and 256.')
+    if arguments.n_epochs is not None:
+        if not (50 <= arguments.n_epochs <= 1000000):
+            raise Exception('Specified number of epochs ' + str(arguments.n_epochs) +
+                            ' is invalid, has to be between 50 and 1.000.000.')
