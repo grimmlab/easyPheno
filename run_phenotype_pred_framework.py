@@ -67,6 +67,10 @@ if __name__ == '__main__':
                              "(without suffix .py) in subfolder model of this repo")
     parser.add_argument("-trials", "--n_trials", type=int, default=10,
                         help="number of trials for optuna")
+    parser.add_argument("-save_final_model", "--save_final_model", type=bool, default=False,
+                        help="save the final model to hard drive "
+                             "(caution: some models may use a lot of disk space, "
+                             "unfitted models that can be retrained are already saved by default)")
 
     # Only relevant for Neural Networks #
     parser.add_argument("-batch_size", "--batch_size", type=int, default=None,
