@@ -108,7 +108,7 @@ class OptunaOptim:
         os.makedirs(self.save_path + 'temp/', exist_ok=True)
         model.save_model(path=self.save_path + 'temp/',
                          filename='unfitted_model_trial' + str(trial.number))
-
+        print("Params for Trial " + str(trial.number) + ": " + trial.params)
         # Iterate over all innerfolds
         objective_values = []
         validation_results = pd.DataFrame(index=range(0, self.dataset.y_full.shape[0]))
