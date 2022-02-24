@@ -31,7 +31,7 @@ def test_likely_categorical(vector_to_test: list, threshold: float = 0.1):
     :param threshold: threshold of unique values' ratio to declare vector categorical
     :return: True if the vector is most likely categorical, False otherwise
     """
-    return len(set(vector_to_test)) / len(vector_to_test) <= threshold
+    return np.unique(vector_to_test).shape[0] / vector_to_test.shape[0] <= threshold
 
 
 def get_mapping_name_to_class():

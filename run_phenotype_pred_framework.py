@@ -45,7 +45,7 @@ if __name__ == '__main__':
     parser.add_argument("-maf", "--maf_percentage", type=int, default=1,
                         help="specify the minor allele frequency (as percentage value). "
                              "specify 0 if you do not want a maf filter.")
-    parser.add_argument("-datasplit", "--datasplit", type=str, default='nested-cv',
+    parser.add_argument("-datasplit", "--datasplit", type=str, default='cv-test',
                         help="specify the data slit to use: 'nested-cv' | 'cv-test' | 'train-val-test'"
                              "Default values are 5 folds, train-test-split to 80/20 and train-val-test to 60/20/20")
     parser.add_argument("-testperc", "--test_set_size_percentage", type=int, default=20,
@@ -62,11 +62,23 @@ if __name__ == '__main__':
                              "Standard is 5, only relevant 'nested_cv' and 'cv-test'")
 
     # Model and Optimization Params #
-    parser.add_argument("-model", "--model", type=str, default='xgboost',
+    parser.add_argument("-model", "--model", type=str, default='mlp',
                         help="specify the model(s) to optimize: 'all' or naming according to source file name "
                              "(without suffix .py) in subfolder model of this repo")
     parser.add_argument("-trials", "--n_trials", type=int, default=10,
                         help="number of trials for optuna")
+    parser.add_argument("-save_final_model", "--save_final_model", type=bool, default=False,
+                        help="save the final model to hard drive "
+                             "(caution: some models may use a lot of disk space, "
+                             "unfitted models that can be retrained are already saved by default)")
+
+    # Only relevant for Neural Networks #
+    parser.add_argument("-batch_size", "--batch_size", type=int, default=None,
+                        help="Only relevant for neural networks: define the batch size. If nothing is specified,"
+                             "it will be considered as a hyperparameter for optimization")
+    parser.add_argument("-n_epochs", "--n_epochs", type=int, default=None,
+                        help="Only relevant for neural networks: define the number of epochs. If nothing is specified,"
+                             "it will be considered as a hyperparameter for optimization")
     args = parser.parse_args()
 
     # set save directory

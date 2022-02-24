@@ -6,14 +6,13 @@ import sklearn
 import numpy as np
 import os
 import glob
-import joblib
 import shutil
 
 import utils
 from preprocess import base_dataset
 from utils import helper_functions
 from evaluation import eval_metrics
-from model import torch_model
+from model import torch_model, base_model
 
 
 class OptunaOptim:
@@ -54,6 +53,7 @@ class OptunaOptim:
             os.makedirs(self.base_path)
         self.save_path = self.base_path
         self.study = None
+        self.current_best_val_result = None
 
     def create_new_study(self) -> optuna.study.Study:
         """
@@ -97,7 +97,11 @@ class OptunaOptim:
                       torch_model.TorchModel):
             # all torch models have the number of input features as attribute
             additional_attributes_dict['n_features'] = self.dataset.X_full.shape[1]
-        model = utils.helper_functions.get_mapping_name_to_class()[self.current_model_name](
+            additional_attributes_dict['n_outputs'] = \
+                len(np.unique(self.dataset.y_full)) if self.task == 'classification' else 1
+            additional_attributes_dict['batch_size'] = self.arguments.batch_size
+            additional_attributes_dict['n_epochs'] = self.arguments.n_epochs
+        model: base_model.BaseModel = utils.helper_functions.get_mapping_name_to_class()[self.current_model_name](
             task=self.task, optuna_trial=trial, **additional_attributes_dict
         )
         # save the unfitted model
@@ -117,7 +121,8 @@ class OptunaOptim:
             else:
                 innerfold_name = 'train-val'
             # load the unfitted model to prevent information leak between folds
-            model = joblib.load(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial.number))
+            model = base_model.load_model(path=self.save_path + 'temp/',
+                                          filename='unfitted_model_trial' + str(trial.number))
             X_train, y_train, sample_ids_train, X_val, y_val, sample_ids_val = \
                 self.dataset.X_full[innerfold_info['train']], \
                 self.dataset.y_full[innerfold_info['train']], \
@@ -125,10 +130,8 @@ class OptunaOptim:
                 self.dataset.X_full[innerfold_info['val']], \
                 self.dataset.y_full[innerfold_info['val']], \
                 self.dataset.sample_ids_full[innerfold_info['val']]
-            # train model
-            model.train(X_train=X_train, y_train=y_train)
-            # validate model
-            y_pred = model.predict(X_in=X_val)
+            # run train and validation loop for this fold
+            y_pred = model.train_val_loop(X_train=X_train, y_train=y_train, X_val=X_val, y_val=y_val)
             objective_value = \
                 sklearn.metrics.accuracy_score(y_true=y_val, y_pred=y_pred) if self.task == 'classification' \
                 else sklearn.metrics.mean_squared_error(y_true=y_val, y_pred=y_pred)
@@ -138,24 +141,39 @@ class OptunaOptim:
                          step=0 if self.dataset.datasplit == 'train-val-test' else int(innerfold_name[-1]))
             if trial.should_prune():
                 raise optuna.exceptions.TrialPruned()
-            # store results and persist model
+            # store results
             objective_values.append(objective_value)
-            validation_results.at[0:len(sample_ids_train)-1, innerfold_name + '_train_sampleids'] = sample_ids_train
-            validation_results.at[0:len(y_train) - 1, innerfold_name + '_train_true'] = y_train
-            validation_results.at[0:len(y_train) - 1, innerfold_name + '_train_pred'] = model.predict(X_in=X_train)
-            validation_results.at[0:len(sample_ids_val)-1, innerfold_name + '_val_sampleids'] = sample_ids_val
-            validation_results.at[0:len(y_val)-1, innerfold_name + '_val_true'] = y_val
-            validation_results.at[0:len(y_pred)-1, innerfold_name + '_val_pred'] = y_pred
+            validation_results.at[0:len(sample_ids_train)-1, innerfold_name + '_train_sampleids'] = \
+                sample_ids_train.flatten()
+            validation_results.at[0:len(y_train) - 1, innerfold_name + '_train_true'] = y_train.flatten()
+            validation_results.at[0:len(y_train) - 1, innerfold_name + '_train_pred'] = \
+                model.predict(X_in=X_train).flatten()
+            validation_results.at[0:len(sample_ids_val)-1, innerfold_name + '_val_sampleids'] = sample_ids_val.flatten()
+            validation_results.at[0:len(y_val)-1, innerfold_name + '_val_true'] = y_val.flatten()
+            validation_results.at[0:len(y_pred)-1, innerfold_name + '_val_pred'] = y_pred.flatten()
             for metric, value in eval_metrics.get_evaluation_report(y_pred=y_pred, y_true=y_val, task=self.task,
                                                                     prefix=innerfold_name + '_').items():
                 validation_results.at[0, metric] = value
-            model.save_model(path=self.save_path + 'temp/',
-                             filename=innerfold_name + '-validation_model_trial' + str(trial.number))
-        # persist results
-        validation_results.to_csv(self.save_path + 'temp/validation_results_trial' + str(trial.number) + '.csv',
-                                  sep=',', decimal='.', float_format='%.10f', index=False)
+            # model.save_model(path=self.save_path + 'temp/',
+            #                 filename=innerfold_name + '-validation_model_trial' + str(trial.number))
 
-        return np.mean(objective_values)
+        current_val_result = np.mean(objective_values)
+        if self.current_best_val_result is None or \
+                (self.task == 'classification' and current_val_result > self.current_best_val_result) or \
+                (self.task == 'regression' and current_val_result < self.current_best_val_result):
+            self.current_best_val_result = current_val_result
+            # persist results
+            validation_results.to_csv(self.save_path + 'temp/validation_results_trial' + str(trial.number) + '.csv',
+                                      sep=',', decimal='.', float_format='%.10f', index=False)
+            # delete previous results
+            for file in os.listdir(self.save_path + 'temp/'):
+                if 'trial' + str(trial.number) not in file:
+                    os.remove(self.save_path + 'temp/' + file)
+        else:
+            # delete unfitted model
+            os.remove(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial.number))
+
+        return current_val_result
 
     def run_optuna_optimization(self):
         """
@@ -173,6 +191,7 @@ class OptunaOptim:
                     os.makedirs(self.save_path)
             # Create a new study for each outerfold
             self.study = self.create_new_study()
+            self.current_best_val_result = None
             # Start optimization run
             self.study.optimize(
                 lambda trial: self.objective(trial=trial, train_val_indices=outerfold_info),
@@ -190,7 +209,7 @@ class OptunaOptim:
             for key, value in self.study.best_trial.params.items():
                 print("    {}: {}".format(key, value))
 
-            # Only keep validation results and models of best trial
+            # Move validation results and models of best trial
             files_to_keep = glob.glob(self.save_path + 'temp/' + '*trial' + str(self.study.best_trial.number) + '*')
             for file in files_to_keep:
                 shutil.copyfile(file, self.save_path + file.split('/')[-1])
@@ -206,10 +225,11 @@ class OptunaOptim:
                 self.dataset.y_full[~np.isin(np.arange(len(self.dataset.y_full)), outerfold_info['test'])], \
                 self.dataset.sample_ids_full[~np.isin(np.arange(len(self.dataset.sample_ids_full)),
                                                       outerfold_info['test'])],
-            final_model = joblib.load(self.save_path + 'unfitted_model_trial' + str(self.study.best_trial.number))
-            final_model.train(X_train=X_retrain, y_train=y_retrain)
-            y_pred_retrain = final_model.predict(X_retrain)
-            y_pred_test = final_model.predict(X_test)
+            final_model = base_model.load_retrain_model(
+                path=self.save_path, filename='unfitted_model_trial' + str(self.study.best_trial.number),
+                X_retrain=X_retrain, y_retrain=y_retrain)
+            y_pred_retrain = final_model.predict(X_in=X_retrain)
+            y_pred_test = final_model.predict(X_in=X_test)
 
             # Evaluate and save results
             eval_scores = \
@@ -217,15 +237,16 @@ class OptunaOptim:
             print('## Results on test set ##')
             print(eval_scores)
             final_results = pd.DataFrame(index=range(0, self.dataset.y_full.shape[0]))
-            final_results.at[0:len(sample_ids_retrain)-1, 'sample_ids_retrain'] = sample_ids_retrain
-            final_results.at[0:len(y_pred_retrain)-1, 'y_pred_retrain'] = y_pred_retrain
-            final_results.at[0:len(y_retrain)-1, 'y_true_retrain'] = y_retrain
-            final_results.at[0:len(sample_ids_test)-1, 'sample_ids_test'] = sample_ids_test
-            final_results.at[0:len(y_pred_test)-1, 'y_pred_test'] = y_pred_test
-            final_results.at[0:len(y_test)-1, 'y_true_test'] = y_test
+            final_results.at[0:len(sample_ids_retrain)-1, 'sample_ids_retrain'] = sample_ids_retrain.flatten()
+            final_results.at[0:len(y_pred_retrain)-1, 'y_pred_retrain'] = y_pred_retrain.flatten()
+            final_results.at[0:len(y_retrain)-1, 'y_true_retrain'] = y_retrain.flatten()
+            final_results.at[0:len(sample_ids_test)-1, 'sample_ids_test'] = sample_ids_test.flatten()
+            final_results.at[0:len(y_pred_test)-1, 'y_pred_test'] = y_pred_test.flatten()
+            final_results.at[0:len(y_test)-1, 'y_true_test'] = y_test.flatten()
             for metric, value in eval_scores.items():
                 final_results.at[0, metric] = value
             final_results.to_csv(self.save_path + 'final_model_test_results.csv',
                                  sep=',', decimal='.', float_format='%.10f', index=False)
-            final_model.save_model(path=self.save_path,
-                                   filename='final_retrained_model')
+            if self.arguments.save_final_model:
+                final_model.save_model(path=self.save_path,
+                                       filename='final_retrained_model')

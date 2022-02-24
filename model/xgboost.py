@@ -29,6 +29,7 @@ class XgBoost(sklearn_model.SklearnModel):
                     'datatype': 'float',
                     'lower_bound': 0,
                     'upper_bound': 0.5,
+                    'step': 0.05
             },
             'gamma': {
                 'datatype': 'int',
@@ -43,32 +44,36 @@ class XgBoost(sklearn_model.SklearnModel):
             },
             'subsample': {
                 'datatype': 'float',
-                'lower_bound': 0.01,
-                'upper_bound': 1
+                'lower_bound': 0.05,
+                'upper_bound': 1,
+                'step': 0.05
             },
             'colsample_bytree': {
                 'datatype': 'float',
-                'lower_bound': 0.01,
-                'upper_bound': 1
+                'lower_bound': 0.05,
+                'upper_bound': 1,
+                'step': 0.05
             },
             'colsample_bylevel': {
                 'datatype': 'float',
-                'lower_bound': 0.01,
-                'upper_bound': 1
+                'lower_bound': 0.05,
+                'upper_bound': 1,
+                'step': 0.05
             },
             'colsample_bynode': {
                 'datatype': 'float',
-                'lower_bound': 0.01,
-                'upper_bound': 1
+                'lower_bound': 0.05,
+                'upper_bound': 1,
+                'step': 0.05
             },
             'reg_lambda': {
                 'datatype': 'float',
                 'lower_bound': 0,
-                'upper_bound': 1000,
+                'upper_bound': 1000
             },
             'reg_alpha': {
                 'datatype': 'float',
                 'lower_bound': 0,
-                'upper_bound': 1000,
+                'upper_bound': 1000
             }
         }
