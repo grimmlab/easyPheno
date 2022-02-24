@@ -151,7 +151,7 @@ class TorchModel(base_model.BaseModel, abc.ABC):
             'batch_size_exp': {
                 'datatype': 'int',
                 'lower_bound': 3,
-                'upper_bound': 7
+                'upper_bound': 4 #7
             },
             'n_epochs': {
                 'datatype': 'categorical',
