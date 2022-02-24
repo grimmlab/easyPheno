@@ -29,7 +29,7 @@ class Mlp(torch_model.TorchModel):
             'n_layers': {
                 'datatype': 'int',
                 'lower_bound': 1,
-                'upper_bound': 10
+                'upper_bound': 5 #10
             },
             'n_units_per_layer_exp': {
                 'datatype': 'int',
