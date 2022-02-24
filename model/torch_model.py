@@ -96,6 +96,7 @@ class TorchModel(base_model.BaseModel, abc.ABC):
         """
         retrain_loader = self.get_dataloader(X=X_retrain, y=y_retrain)
         n_epochs_to_retrain = self.n_epochs if self.early_stopping_point is None else self.early_stopping_point
+        self.model.to(device=self.device)
         for epoch in range(n_epochs_to_retrain):
             self.train_one_epoch(retrain_loader)
 
