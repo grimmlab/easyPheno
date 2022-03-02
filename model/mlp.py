@@ -16,6 +16,7 @@ class Mlp(torch_model.TorchModel):
         for layer in range(n_layers):
             out_features = 2 ** self.suggest_hyperparam_to_optuna('n_units_per_layer_exp')
             model.append(torch.nn.Linear(in_features=in_features, out_features=out_features))
+            model.append(torch.nn.BatchNorm1d(num_features=out_features))
             model.append(act_function)
             p = self.suggest_hyperparam_to_optuna('dropout')
             model.append(torch.nn.Dropout(p))
