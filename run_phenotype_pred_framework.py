@@ -35,7 +35,7 @@ if __name__ == '__main__':
                         help="specify the name (including data type suffix) of the phenotype matrix to be used. "
                              "Needs to be located in the subfolder data/ of the specified base directory" +
                              "For more info regarding the required format see our documentation at GitHub")
-    parser.add_argument("-phenotype", "--phenotype", type=str, default='FT10',
+    parser.add_argument("-phenotype", "--phenotype", type=str, default='Fake',
                         help="specify the name of the phenotype to be predicted")
     parser.add_argument("-enc", "--encoding", type=str, default=None,
                         help="specify the encoding to use. Caution: has to be a possible encoding for the model to use."

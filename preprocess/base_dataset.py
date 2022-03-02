@@ -1,6 +1,8 @@
 import argparse
 import h5py
 import numpy as np
+import sklearn.preprocessing
+
 from utils import helper_functions
 from preprocess import raw_data_functions as raw
 from preprocess.encoding_functions import encode_raw_genotype
@@ -38,6 +40,10 @@ class Dataset:
         with h5py.File(arguments.base_dir + '/data/' + self.get_index_file_name(arguments), "r") as f:
             X = raw.get_matched_data(X, f['matched_data/X_index'][:])
             y = f['matched_data/y'][:]  # TODO change if multiple phenotypes
+            if helper_functions.test_likely_categorical(y):
+                if y.dtype.type is np.float64:
+                    y = y.astype(int)
+                y = sklearn.preprocessing.LabelEncoder().fit_transform(y)
             sample_ids = f['matched_data/matched_sample_ids'][:]
         return X, np.reshape(y, (-1, 1)), np.reshape(sample_ids, (-1, 1))
 
