@@ -14,7 +14,7 @@ class SklearnModel(base_model.BaseModel, abc.ABC):
         Implementation of the retraining for models with sklearn-like API.
         See BaseModel for more information
         """
-        self.model.fit(X_retrain, y_retrain)
+        self.model.fit(X_retrain, np.ravel(y_retrain))
 
     def predict(self, X_in: np.array) -> np.array:
         """
@@ -29,6 +29,6 @@ class SklearnModel(base_model.BaseModel, abc.ABC):
         See BaseModel for more information
         """
         # train model
-        self.model.fit(X_train, y_train)
+        self.model.fit(X_train, np.ravel(y_train))
         # validate model
         return self.predict(X_in=X_val)

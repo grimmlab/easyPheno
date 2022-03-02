@@ -70,7 +70,7 @@ class TorchModel(base_model.BaseModel, abc.ABC):
             inputs, targets = inputs.to(device=self.device), targets.to(device=self.device)
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
-            loss = self.loss_fn(outputs, targets)
+            loss = self.get_loss(outputs=outputs, targets=targets)
             loss.backward()
             self.optimizer.step()
 
@@ -86,7 +86,7 @@ class TorchModel(base_model.BaseModel, abc.ABC):
             for inputs, targets in val_loader:
                 inputs, targets = inputs.to(device=self.device), targets.to(device=self.device)
                 outputs = self.model(inputs)
-                total_loss += self.loss_fn(outputs, targets).item()
+                total_loss += self.get_loss(outputs=outputs, targets=targets).item()
         return total_loss / len(val_loader.dataset)
 
     def retrain(self, X_retrain: np.array, y_retrain: np.array):
@@ -117,6 +117,17 @@ class TorchModel(base_model.BaseModel, abc.ABC):
             _, predictions = torch.max(predictions, 1)
         return predictions.cpu().detach().numpy()
 
+    def get_loss(self, outputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+        """
+        Calculate the loss based on the outputs and targets
+        :param outputs: outputs of the model
+        :param targets: targets of the dataset
+        :return: loss
+        """
+        if type(self.loss_fn) in [torch.nn.CrossEntropyLoss, torch.nn.NLLLoss]:
+            targets = targets.long()
+        return self.loss_fn(outputs, targets)
+
     def get_dataloader(self, X: np.array, y: np.array = None, shuffle: bool = True) -> torch.utils.data.DataLoader:
         """
         Get a Pytorch DataLoader using the specified data and batch size
@@ -127,6 +138,7 @@ class TorchModel(base_model.BaseModel, abc.ABC):
         """
         X_tensor = torch.from_numpy(X).float()
         y_tensor = torch.reshape(torch.from_numpy(y).float(), (-1, 1)) if y is not None else None
+        y_tensor = y_tensor.flatten() if (self.task == 'classification' and y_tensor is not None) else y_tensor
         dataset = torch.utils.data.TensorDataset(X_tensor, y_tensor) if y_tensor is not None \
             else X_tensor
         return torch.utils.data.DataLoader(dataset=dataset, batch_size=self.batch_size, shuffle=shuffle)

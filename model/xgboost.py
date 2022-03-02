@@ -12,7 +12,9 @@ class XgBoost(sklearn_model.SklearnModel):
         """See BaseModel for more information"""
         # all hyperparameters defined for XGBoost are suggested for optimization
         if self.task == 'classification':
-            return xgboost.XGBClassifier(**self.suggest_all_hyperparams_to_optuna())
+            params = self.suggest_all_hyperparams_to_optuna()
+            params.update({'use_label_encoder': False})
+            return xgboost.XGBClassifier(**params)
         else:
             return xgboost.XGBRegressor(**self.suggest_all_hyperparams_to_optuna())
 
