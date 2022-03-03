@@ -26,7 +26,7 @@ class XgBoost(sklearn_model.SklearnModel):
             'n_estimators': {
                 'datatype': 'int',
                 'lower_bound': 10,
-                'upper_bound': 10000,
+                'upper_bound': 1000,
                 'log': True
             },
             'learning_rate': {
