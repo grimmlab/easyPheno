@@ -68,7 +68,6 @@ def set_all_seeds(seed: int = 42):
     random.seed(seed)
     np.random.seed(seed)
     torch.backends.cudnn.deterministic = True
-    torch.use_deterministic_algorithms(True)
     torch.backends.cudnn.benchmark = False
 
 
