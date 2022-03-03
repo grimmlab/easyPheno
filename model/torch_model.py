@@ -14,12 +14,11 @@ class TorchModel(base_model.BaseModel, abc.ABC):
     See BaseModel for more information
     """
 
-    def __init__(self, task: str, optuna_trial: optuna.trial.Trial, encoding: str = None,
-                 n_features: int = None, n_outputs: int = None, batch_size: int = None, n_epochs: int = None):
+    def __init__(self, task: str, optuna_trial: optuna.trial.Trial, encoding: str = None, n_outputs: int = 1,
+                 n_features: int = None, batch_size: int = None, n_epochs: int = None):
         self.all_hyperparams = self.common_hyperparams()  # add hyperparameters commonly optimized for all torch models
         self.n_features = n_features
-        self.n_outputs = n_outputs if task == 'classification' else 1
-        super().__init__(task=task, optuna_trial=optuna_trial, encoding=encoding)
+        super().__init__(task=task, optuna_trial=optuna_trial, encoding=encoding, n_outputs=n_outputs)
         self.loss_fn = torch.nn.CrossEntropyLoss() if task == 'classification' else torch.nn.MSELoss()
         self.batch_size = \
             batch_size if batch_size is not None else 2**self.suggest_hyperparam_to_optuna('batch_size_exp')

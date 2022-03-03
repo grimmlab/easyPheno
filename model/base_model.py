@@ -39,7 +39,7 @@ class BaseModel(abc.ABC):
         raise NotImplementedError
 
     ### Constructor super class ###
-    def __init__(self, task: str, optuna_trial: optuna.trial.Trial, encoding: str = None):
+    def __init__(self, task: str, optuna_trial: optuna.trial.Trial, encoding: str = None, n_outputs: int = 1):
         """
         Constructor of the base model class
         # Please add super().__init__(PARAMS) to the constructor in case you override it in a child class #
@@ -50,6 +50,7 @@ class BaseModel(abc.ABC):
         self.task = task
         self.encoding = self.standard_encoding if encoding is None else encoding
         self.optuna_trial = optuna_trial
+        self.n_outputs = n_outputs if task == 'classification' else 1
         if not hasattr(self, 'all_hyperparams'):
             self.all_hyperparams = self.define_hyperparams_to_tune()
         else:

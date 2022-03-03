@@ -97,12 +97,12 @@ class OptunaOptim:
                       torch_model.TorchModel):
             # all torch models have the number of input features as attribute
             additional_attributes_dict['n_features'] = self.dataset.X_full.shape[1]
-            additional_attributes_dict['n_outputs'] = \
-                len(np.unique(self.dataset.y_full)) if self.task == 'classification' else 1
             additional_attributes_dict['batch_size'] = self.arguments.batch_size
             additional_attributes_dict['n_epochs'] = self.arguments.n_epochs
         model: base_model.BaseModel = utils.helper_functions.get_mapping_name_to_class()[self.current_model_name](
-            task=self.task, optuna_trial=trial, **additional_attributes_dict
+            task=self.task, optuna_trial=trial,
+            n_outputs=len(np.unique(self.dataset.y_full)) if self.task == 'classification' else 1,
+            **additional_attributes_dict
         )
         # save the unfitted model
         os.makedirs(self.save_path + 'temp/', exist_ok=True)
