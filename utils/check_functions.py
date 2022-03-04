@@ -71,7 +71,7 @@ def check_all_specified_arguments(arguments: argparse.Namespace):
     # Check spelling of datasplit and model
     if arguments.datasplit not in ['nested-cv', 'cv-test', 'train-val-test']:
         raise Exception('Specified datasplit ' + arguments.datasplit + ' is invalid, '
-                        'has to be: nested_cv | cv-test | train-val-test')
+                        'has to be: nested-cv | cv-test | train-val-test')
     if (arguments.models != 'all') and \
             (any(model not in helper_functions.get_list_of_implemented_models() for model in arguments.models)):
         raise Exception('At least one specified model in "' + str(arguments.models) +

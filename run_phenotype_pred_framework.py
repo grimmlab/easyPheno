@@ -1,9 +1,9 @@
 import argparse
 
-import model.xgboost
 import optimization.optuna_optim
 import preprocess.base_dataset
 from utils import check_functions, print_functions, helper_functions
+import pprint
 from preprocess import raw_data_functions
 from model import *
 
@@ -99,6 +99,7 @@ if __name__ == '__main__':
     ### Optimization Pipeline ###
     helper_functions.set_all_seeds()
     models_to_optimize = helper_functions.get_list_of_implemented_models() if args.models == 'all' else args.models
+    model_overview = {}
     for current_model_name in models_to_optimize:
         encoding = args.encoding if args.encoding is not None \
             else helper_functions.get_mapping_name_to_class()[current_model_name].standard_encoding
@@ -107,6 +108,12 @@ if __name__ == '__main__':
         # maybe print function would make sense here as dataset is already loaded
         optuna_run = optimization.optuna_optim.OptunaOptim(arguments=args, task=task,
                                                            current_model_name=current_model_name, dataset=dataset)
-        print('### Starting Optuna Optimization ###')
-        optuna_run.run_optuna_optimization()
+        print('### Starting Optuna Optimization for ' + current_model_name + ' ###')
+        overall_results = optuna_run.run_optuna_optimization()
         print('### Finished Optuna Optimization for ' + current_model_name + ' ###')
+        model_overview[current_model_name] = overall_results
+    if len(models_to_optimize) > 1:
+        print('# Optimization runs done for models ' + str(models_to_optimize))
+        print('Results overview on the test set(s)')
+        pprint.PrettyPrinter(depth=4).pprint(model_overview)
+
