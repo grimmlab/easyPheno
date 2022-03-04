@@ -240,7 +240,8 @@ class OptunaOptim:
             # Evaluate and save results
             eval_scores = \
                 eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test, task=self.task, prefix='test_')
-            overall_results[outerfold_name] = {'best_params': self.study.best_trial.params, 'eval_metrics': eval_scores}
+            key = outerfold_name if self.dataset.datasplit == 'nested-cv' else 'Test'
+            overall_results[key] = {'best_params': self.study.best_trial.params, 'eval_metrics': eval_scores}
             print('## Results on test set ##')
             print(eval_scores)
             final_results = pd.DataFrame(index=range(0, self.dataset.y_full.shape[0]))
