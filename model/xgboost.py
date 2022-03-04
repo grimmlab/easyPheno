@@ -11,14 +11,15 @@ class XgBoost(sklearn_model.SklearnModel):
     def define_model(self) -> xgboost.XGBModel:
         """See BaseModel for more information"""
         # all hyperparameters defined for XGBoost are suggested for optimization
+        params = self.suggest_all_hyperparams_to_optuna()
+        params.update({'random_state': 42})
         if self.task == 'classification':
-            params = self.suggest_all_hyperparams_to_optuna()
             params.update({'use_label_encoder': False})
             eval_metric = 'mlogloss' if self.n_outputs > 2 else 'logloss'
             params.update({'eval_metric': eval_metric})
             return xgboost.XGBClassifier(**params)
         else:
-            return xgboost.XGBRegressor(**self.suggest_all_hyperparams_to_optuna())
+            return xgboost.XGBRegressor(**params)
 
     def define_hyperparams_to_tune(self) -> dict:
         """See BaseModel for more information on the format"""

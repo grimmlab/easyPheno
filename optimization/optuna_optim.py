@@ -131,33 +131,37 @@ class OptunaOptim:
                 self.dataset.X_full[innerfold_info['val']], \
                 self.dataset.y_full[innerfold_info['val']], \
                 self.dataset.sample_ids_full[innerfold_info['val']]
-            # run train and validation loop for this fold
-            y_pred = model.train_val_loop(X_train=X_train, y_train=y_train, X_val=X_val, y_val=y_val)
-            objective_value = \
-                sklearn.metrics.accuracy_score(y_true=y_val, y_pred=y_pred) if self.task == 'classification' \
-                else sklearn.metrics.mean_squared_error(y_true=y_val, y_pred=y_pred)
-            # report value for pruning
-            # step has an offset based on outerfold_number as same study is used for all outerfolds
-            trial.report(value=objective_value,
-                         step=0 if self.dataset.datasplit == 'train-val-test' else int(innerfold_name[-1]))
-            if trial.should_prune():
-                raise optuna.exceptions.TrialPruned()
-            # store results
-            objective_values.append(objective_value)
-            validation_results.at[0:len(sample_ids_train)-1, innerfold_name + '_train_sampleids'] = \
-                sample_ids_train.flatten()
-            validation_results.at[0:len(y_train) - 1, innerfold_name + '_train_true'] = y_train.flatten()
-            validation_results.at[0:len(y_train) - 1, innerfold_name + '_train_pred'] = \
-                model.predict(X_in=X_train).flatten()
-            validation_results.at[0:len(sample_ids_val)-1, innerfold_name + '_val_sampleids'] = sample_ids_val.flatten()
-            validation_results.at[0:len(y_val)-1, innerfold_name + '_val_true'] = y_val.flatten()
-            validation_results.at[0:len(y_pred)-1, innerfold_name + '_val_pred'] = y_pred.flatten()
-            for metric, value in eval_metrics.get_evaluation_report(y_pred=y_pred, y_true=y_val, task=self.task,
-                                                                    prefix=innerfold_name + '_').items():
-                validation_results.at[0, metric] = value
-            # model.save_model(path=self.save_path + 'temp/',
-            #                 filename=innerfold_name + '-validation_model_trial' + str(trial.number))
-
+            try:
+                # run train and validation loop for this fold
+                y_pred = model.train_val_loop(X_train=X_train, y_train=y_train, X_val=X_val, y_val=y_val)
+                objective_value = \
+                    sklearn.metrics.accuracy_score(y_true=y_val, y_pred=y_pred) if self.task == 'classification' \
+                    else sklearn.metrics.mean_squared_error(y_true=y_val, y_pred=y_pred)
+                # report value for pruning
+                # step has an offset based on outerfold_number as same study is used for all outerfolds
+                trial.report(value=objective_value,
+                             step=0 if self.dataset.datasplit == 'train-val-test' else int(innerfold_name[-1]))
+                if trial.should_prune():
+                    raise optuna.exceptions.TrialPruned()
+                # store results
+                objective_values.append(objective_value)
+                validation_results.at[0:len(sample_ids_train)-1, innerfold_name + '_train_sampleids'] = \
+                    sample_ids_train.flatten()
+                validation_results.at[0:len(y_train) - 1, innerfold_name + '_train_true'] = y_train.flatten()
+                validation_results.at[0:len(y_train) - 1, innerfold_name + '_train_pred'] = \
+                    model.predict(X_in=X_train).flatten()
+                validation_results.at[0:len(sample_ids_val)-1, innerfold_name + '_val_sampleids'] = sample_ids_val.flatten()
+                validation_results.at[0:len(y_val)-1, innerfold_name + '_val_true'] = y_val.flatten()
+                validation_results.at[0:len(y_pred)-1, innerfold_name + '_val_pred'] = y_pred.flatten()
+                for metric, value in eval_metrics.get_evaluation_report(y_pred=y_pred, y_true=y_val, task=self.task,
+                                                                        prefix=innerfold_name + '_').items():
+                    validation_results.at[0, metric] = value
+                # model.save_model(path=self.save_path + 'temp/',
+                #                 filename=innerfold_name + '-validation_model_trial' + str(trial.number))
+            except Exception as exc:
+                print('Trial failed')
+                print(exc)
+                break
         current_val_result = np.mean(objective_values)
         if self.current_best_val_result is None or \
                 (self.task == 'classification' and current_val_result > self.current_best_val_result) or \
