@@ -41,13 +41,13 @@ class SupportVectorMachine(sklearn_model.SklearnModel):
             'gamma': {
                 'datatype': 'float',
                 'lower_bound': 10**-3,
-                'upper_bound': 10**3,
+                'upper_bound': 10**1,
                 'log': True
             },
             'C': {
                 'datatype': 'float',
                 'lower_bound': 10**-3,
-                'upper_bound': 10**3,
+                'upper_bound': 10**1,
                 'log': True
             }
         }
