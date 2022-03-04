@@ -44,7 +44,7 @@ class OptunaOptim:
         self.arguments = arguments
         self.dataset = dataset
         self.base_path = arguments.save_dir + \
-            'results/' + arguments.genotype_matrix.split('.')[0] + \
+            '/results/' + arguments.genotype_matrix.split('.')[0] + \
             '/' + arguments.phenotype_matrix.split('.')[0] + '/' + arguments.phenotype + \
             '/' + current_model_name + '/' + arguments.datasplit + '/' + \
             helper_functions.get_subpath_for_datasplit(arguments=arguments, datasplit=arguments.datasplit) + '/' + \
