@@ -3,7 +3,7 @@ import sklearn
 from model import sklearn_model
 
 
-class SupportVectorMachine(sklearn_model.SklearnModel):
+class LinearRegression(sklearn_model.SklearnModel):
     """See BaseModel for more information on the parameters"""
     standard_encoding = '012'
     possible_encodings = ['012', 'raw']
@@ -20,8 +20,9 @@ class SupportVectorMachine(sklearn_model.SklearnModel):
             l1_ratio = self.suggest_hyperparam_to_optuna('l1_ratio')
         if self.task == 'classification':
             reg_C = self.suggest_hyperparam_to_optuna('C')
-            return sklearn.linear_model.LogisticRegression(penalty=penalty, C=reg_C, l1_ratio=l1_ratio, max_iter=10000,
-                                                           random_state=42)
+            return sklearn.linear_model.LogisticRegression(penalty=penalty, C=reg_C,
+                                                           l1_ratio=l1_ratio if penalty == 'elasticnet' else None,
+                                                           max_iter=10000, random_state=42)
         else:
             alpha = self.suggest_hyperparam_to_optuna('alpha')
             return sklearn.linear_model.ElasticNet(alpha=alpha, l1_ratio=l1_ratio, max_iter=10000, random_state=42)
