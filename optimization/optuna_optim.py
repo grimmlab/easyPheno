@@ -48,6 +48,7 @@ class OptunaOptim:
             '/' + arguments.phenotype_matrix.split('.')[0] + '/' + arguments.phenotype + \
             '/' + current_model_name + '/' + arguments.datasplit + '/' + \
             helper_functions.get_subpath_for_datasplit(arguments=arguments, datasplit=arguments.datasplit) + '/' + \
+            'MAF' + str(self.arguments.maf_percentage) + '/' + \
             datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + '/'
         if not os.path.exists(self.base_path):
             os.makedirs(self.base_path)
