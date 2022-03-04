@@ -2,7 +2,7 @@ import sklearn
 import numpy as np
 
 
-def get_evaluation_report(y_pred: np.array, y_true: np.array, task: str, prefix: str = ''):
+def get_evaluation_report(y_pred: np.array, y_true: np.array, task: str, prefix: str = '') -> dict:
     """
     Get values for common evaluation metrics
     :param y_pred: predicted values

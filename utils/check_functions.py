@@ -20,12 +20,12 @@ def check_and_create_directories(arguments: argparse.Namespace):
                        + helper_functions.get_subpath_for_datasplit(arguments=arguments, datasplit=arguments.datasplit)
 
     # add subfolder for each model in case 'all' models shoudl be optimized
-    if arguments.model == 'all':
-        implemented_models = helper_functions.get_list_of_implemented_models()
-        for model_name in implemented_models:
-            required_subdirs.append(required_subdirs[0] + '/' + model_name + '/' + datasplit_string)
+    if arguments.models == 'all':
+        models = helper_functions.get_list_of_implemented_models()
     else:
-        required_subdirs[0] += '/' + arguments.model + '/' + datasplit_string
+        models = arguments.models
+    for model_name in models:
+        required_subdirs.append(required_subdirs[0] + '/' + model_name + '/' + datasplit_string)
     for subdir in required_subdirs:
         if not os.path.exists(arguments.base_dir + subdir):
             os.makedirs(arguments.base_dir + subdir)
@@ -71,23 +71,25 @@ def check_all_specified_arguments(arguments: argparse.Namespace):
     # Check spelling of datasplit and model
     if arguments.datasplit not in ['nested-cv', 'cv-test', 'train-val-test']:
         raise Exception('Specified datasplit ' + arguments.datasplit + ' is invalid, '
-                                                                       'has to be: nested_cv | cv-test | train-val-test')
-    if (arguments.model != 'all') and (arguments.model not in helper_functions.get_list_of_implemented_models()):
-        raise Exception('Specified model "' + arguments.model + '" not found in implemented models nor "all" specified.'
-                        + ' Check spelling or if implementation exists. Implemented models: '
-                        + ''.join(helper_functions.get_list_of_implemented_models()))
+                        'has to be: nested-cv | cv-test | train-val-test')
+    if (arguments.models != 'all') and \
+            (any(model not in helper_functions.get_list_of_implemented_models() for model in arguments.models)):
+        raise Exception('At least one specified model in "' + str(arguments.models) +
+                        '" not found in implemented models nor "all" specified.' +
+                        ' Check spelling or if implementation exists. Implemented models: ' +
+                        ''.join(helper_functions.get_list_of_implemented_models()))
 
     # Check encoding
     if arguments.encoding is not None:
         if arguments.encoding not in ['raw', '012', 'onehot']:
             raise Exception('Specified encoding ' + arguments.encoding + ' is not valid. See help.')
         else:
-            if arguments.model == 'all':
+            if arguments.models == 'all' or len(arguments.models) > 1:
                 raise Exception('If "all" models are specified, standard encodings are used. Do not specify --encoding')
             else:
                 if arguments.encoding not in \
-                        helper_functions.get_mapping_name_to_class()[arguments.model].possible_encodings:
-                    raise Exception(arguments.encoding + ' is not valid for ' + arguments.model +
+                        helper_functions.get_mapping_name_to_class()[arguments.models[0]].possible_encodings:
+                    raise Exception(arguments.encoding + ' is not valid for ' + arguments.models[0] +
                                     '. Check possible_encodings in model file.')
 
     # Only relevant for neural networks

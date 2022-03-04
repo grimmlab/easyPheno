@@ -68,7 +68,7 @@ class OptunaOptim:
                      '-SPLIT' + self.arguments.datasplit + \
                      helper_functions.get_subpath_for_datasplit(arguments=self.arguments,
                                                                 datasplit=self.arguments.datasplit) + \
-                     '-MODEL' + self.arguments.model + '-TRIALS' + str(self.arguments.n_trials)
+                     '-MODEL' + self.current_model_name + '-TRIALS' + str(self.arguments.n_trials)
         storage = optuna.storages.RDBStorage(
             "sqlite:////" + self.save_path + 'Optuna_DB-' + study_name + ".db", heartbeat_interval=60, grace_period=120,
             failed_trial_callback=optuna.storages.RetryFailedTrialCallback(max_retry=3)
@@ -180,13 +180,14 @@ class OptunaOptim:
 
         return current_val_result
 
-    def run_optuna_optimization(self):
+    def run_optuna_optimization(self) -> dict:
         """
         Function to run whole optuna optimization for one model, dataset and datasplit
         """
 
         # Iterate over outerfolds
         # (according to structure described in base_dataset.Dataset, only for nested-cv multiple outerfolds exist)
+        overall_results = {}
         for outerfold_name, outerfold_info in self.dataset.datasplit_indices.items():
             if self.dataset.datasplit == 'nested-cv':
                 # Only print outerfold info for nested-cv as it does not apply for the other splits
@@ -239,6 +240,7 @@ class OptunaOptim:
             # Evaluate and save results
             eval_scores = \
                 eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test, task=self.task, prefix='test_')
+            overall_results[outerfold_name] = {'best_params': self.study.best_trial.params, 'eval_metrics': eval_scores}
             print('## Results on test set ##')
             print(eval_scores)
             final_results = pd.DataFrame(index=range(0, self.dataset.y_full.shape[0]))
@@ -255,3 +257,5 @@ class OptunaOptim:
             if self.arguments.save_final_model:
                 final_model.save_model(path=self.save_path,
                                        filename='final_retrained_model')
+
+        return overall_results
