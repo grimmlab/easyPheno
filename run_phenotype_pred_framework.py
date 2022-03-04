@@ -85,7 +85,8 @@ if __name__ == '__main__':
 
     # set save directory
     args.save_dir = args.base_dir if args.save_dir is None else args.save_dir
-
+    if args.models[0] == 'all':
+        args.models = 'all'
     ### Checks and Raw Data Input Preparation ###
     # Check all arguments
     check_functions.check_all_specified_arguments(arguments=args)
