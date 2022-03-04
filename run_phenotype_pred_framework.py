@@ -113,8 +113,6 @@ if __name__ == '__main__':
         overall_results = optuna_run.run_optuna_optimization()
         print('### Finished Optuna Optimization for ' + current_model_name + ' ###')
         model_overview[current_model_name] = overall_results
-    if len(models_to_optimize) > 1:
-        print('# Optimization runs done for models ' + str(models_to_optimize))
-        print('Results overview on the test set(s)')
-        pprint.PrettyPrinter(depth=4).pprint(model_overview)
-
+    print('# Optimization runs done for models ' + str(models_to_optimize))
+    print('Results overview on the test set(s)')
+    pprint.PrettyPrinter(depth=4).pprint(model_overview)
