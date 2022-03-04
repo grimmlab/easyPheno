@@ -68,7 +68,7 @@ class OptunaOptim:
                      '-SPLIT' + self.arguments.datasplit + \
                      helper_functions.get_subpath_for_datasplit(arguments=self.arguments,
                                                                 datasplit=self.arguments.datasplit) + \
-                     '-MODEL' + self.arguments.model + '-TRIALS' + str(self.arguments.n_trials)
+                     '-MODEL' + self.current_model_name + '-TRIALS' + str(self.arguments.n_trials)
         storage = optuna.storages.RDBStorage(
             "sqlite:////" + self.save_path + 'Optuna_DB-' + study_name + ".db", heartbeat_interval=60, grace_period=120,
             failed_trial_callback=optuna.storages.RetryFailedTrialCallback(max_retry=3)

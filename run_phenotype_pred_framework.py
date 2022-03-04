@@ -62,9 +62,11 @@ if __name__ == '__main__':
                              "Standard is 5, only relevant 'nested_cv' and 'cv-test'")
 
     # Model and Optimization Params #
-    parser.add_argument("-model", "--model", type=str, default='mlp',
-                        help="specify the model(s) to optimize: 'all' or naming according to source file name "
-                             "(without suffix .py) in subfolder model of this repo")
+    parser.add_argument("-models", "--models", nargs='+', type=str, default=['xgboost'],
+                        help="specify the models to optimize: all or naming according to source file name. "
+                             "Multiple models can be selected by just naming multiple model names, "
+                             "e.g. --models mlp xgboost. "
+                             "The following are available: " + str(helper_functions.get_list_of_implemented_models()))
     parser.add_argument("-trials", "--n_trials", type=int, default=10,
                         help="number of trials for optuna")
     parser.add_argument("-save_final_model", "--save_final_model", type=bool, default=False,
@@ -96,7 +98,7 @@ if __name__ == '__main__':
 
     ### Optimization Pipeline ###
     helper_functions.set_all_seeds()
-    models_to_optimize = helper_functions.get_list_of_implemented_models() if args.model == 'all' else [args.model]
+    models_to_optimize = helper_functions.get_list_of_implemented_models() if args.models == 'all' else args.models
     for current_model_name in models_to_optimize:
         encoding = args.encoding if args.encoding is not None \
             else helper_functions.get_mapping_name_to_class()[current_model_name].standard_encoding

@@ -16,7 +16,7 @@ def get_list_of_implemented_models():
         model_src_files = os.listdir('../model')
     except:
         model_src_files = os.listdir('model')
-    model_src_files.remove('__init__.py')
+    model_src_files = [file for file in model_src_files if '__' not in file]
     model_src_files.remove('base_model.py')
     model_src_files.remove('sklearn_model.py')
     model_src_files.remove('torch_model.py')
