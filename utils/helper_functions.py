@@ -71,20 +71,29 @@ def set_all_seeds(seed: int = 42):
     torch.backends.cudnn.benchmark = False
 
 
-def get_subpath_for_datasplit(arguments: argparse, datasplit: str) -> str:
+def get_subpath_for_datasplit(arguments: argparse, datasplit: str, additional_param=None) -> str:
     """
     Method to construct the subpath according to the datasplit
     :param arguments: arguments specified by the user
     :param datasplit: datasplit to retrieve
+    :param additional_param: parameters to use if they differ from input arguments
     :return: string with the subpath
     """
     # construct subpath due to the specified datasplit
-    if datasplit == 'train-val-test':
-        datasplit_string = f'({100 - arguments.test_set_size_percentage}-{arguments.validation_set_size_percentage})-' \
-                           f'{arguments.test_set_size_percentage}'
-    elif datasplit == 'cv-test':
-        datasplit_string = f'{arguments.n_innerfolds}-{arguments.test_set_size_percentage}'
-    elif datasplit == 'nested-cv':
-        datasplit_string = f'{arguments.n_outerfolds}-{arguments.n_innerfolds}'
-
+    if additional_param is None:
+        if datasplit == 'train-val-test':
+            datasplit_string = f'({100 - arguments.validation_set_size_percentage}-' \
+                               f'{arguments.validation_set_size_percentage})-{arguments.test_set_size_percentage}'
+        elif datasplit == 'cv-test':
+            datasplit_string = f'{arguments.n_innerfolds}-{arguments.test_set_size_percentage}'
+        elif datasplit == 'nested-cv':
+            datasplit_string = f'{arguments.n_outerfolds}-{arguments.n_innerfolds}'
+    else:
+        if datasplit == 'train-val-test':
+            datasplit_string = f'({100 - additional_param[0]}-{additional_param[0]})-' \
+                           f'{additional_param[1]}'
+        elif datasplit == 'cv-test':
+            datasplit_string = f'{additional_param[0]}-{additional_param[1]}'
+        elif datasplit == 'nested-cv':
+            datasplit_string = f'{additional_param[0]}-{additional_param[1]}'
     return datasplit_string
