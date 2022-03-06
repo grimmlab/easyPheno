@@ -258,7 +258,7 @@ def check_and_load_phenotype_matrix(arguments: argparse.Namespace):
         raise Exception('Only accept .csv, .pheno, .txt phenotype files. See documentation for help')
     y = y.sort_values(y.columns[0]).groupby(y.columns[0]).mean()
     if arguments.phenotype not in y.columns:
-        raise Exception('Phenotype ' + arguments.phenotype + ' is not in phenotype file '+ arguments.phenotype_matrix +
+        raise Exception('Phenotype ' + arguments.phenotype + ' is not in phenotype file ' + arguments.phenotype_matrix +
                         ' See documentation for help')
     else:
         y = y[[arguments.phenotype]].dropna()
@@ -378,8 +378,8 @@ def check_create_index_file(arguments: argparse.Namespace, X: np.array, y: np.ar
 
 def append_index_file(arguments: argparse.Namespace):
     """
-    Function to check index file and append datasets if necessary.
-    :param arguments:
+    Function to check index file, described in check_create_index_file(), and append datasets if necessary.
+    :param arguments: all arguments specified by the user
     :return:
     """
     matched_datasets = ['y', 'matched_sample_ids', 'X_index', 'y_index', 'ma_frequency']
@@ -445,9 +445,9 @@ def append_index_file(arguments: argparse.Namespace):
                      f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}' not in
                      f['datasplits/cv-test']):
                 tvt = f.create_group(f'datasplits/train-val-test/'
-                        f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}')
+                                     f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}')
                 train, val, test = check_train_test_splits(f['matched_data/y'], 'train-val-test',
-                                    [arguments.validation_set_size_percentage, arguments.test_set_size_percentage])
+                                        [arguments.validation_set_size_percentage, arguments.test_set_size_percentage])
                 o = tvt.create_group('outerfold_0')
                 o.create_dataset('test', data=test, chunks=True, compression="gzip")
                 i = o.create_group('innerfold_0')
@@ -496,7 +496,8 @@ def create_index_file(arguments: argparse.Namespace, X: np.array, y: np.array,  
         dsplit = f.create_group('datasplits')
         nest = dsplit.create_group('nested-cv')
         for elem in param_nested:
-            n = nest.create_group(helper_functions.get_subpath_for_datasplit(arguments, 'nested-cv', additional_param=elem))
+            n = nest.create_group(helper_functions.get_subpath_for_datasplit(arguments, 'nested-cv',
+                                                                             additional_param=elem))
             for outer in range(elem[0]):
                 index_dict = check_train_test_splits(y, 'nested-cv', elem)
                 o = n.create_group(f'outerfold_{outer}')
@@ -520,7 +521,8 @@ def create_index_file(arguments: argparse.Namespace, X: np.array, y: np.array,  
         tvt = dsplit.create_group('train-val-test')
         for elem in param_tvt:
             train, val, test = check_train_test_splits(y, 'train-val-test', elem)
-            n = tvt.create_group(helper_functions.get_subpath_for_datasplit(arguments, 'train-val-test', additional_param=elem))
+            n = tvt.create_group(helper_functions.get_subpath_for_datasplit(arguments, 'train-val-test',
+                                                                            additional_param=elem))
             o = n.create_group('outerfold_0')
             o.create_dataset('test', data=test, chunks=True, compression="gzip")
             i = o.create_group('innerfold_0')
@@ -568,7 +570,7 @@ def check_datasplit_user_input(arguments: argparse.Namespace, split: str, param:
         param.append(user_input)
     return param
 
-# TODO sanity checks: number of samples in index sets
+
 def check_train_test_splits(y: np.array, split: str, param: list):
     """
     Function to create stratified train-test splits. Continuous values will be grouped into bins and stratified

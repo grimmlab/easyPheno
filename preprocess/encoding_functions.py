@@ -2,6 +2,7 @@ import argparse
 import numpy as np
 import torch
 from torch.nn.functional import one_hot
+from utils import helper_functions
 
 
 def get_encoding(arguments:  argparse.Namespace):
@@ -10,10 +11,17 @@ def get_encoding(arguments:  argparse.Namespace):
     :param arguments:
     :return: list of encodings
     """
-    if arguments.model == 'all':
-        return get_list_of_encodings()
+    if arguments.models == 'all':
+        list_of_encodings = get_list_of_encodings()
     else:
-        return [arguments.encoding]
+        if arguments.encoding is not None:
+            list_of_encodings =  [arguments.encoding]
+        else:
+            list_of_encodings = []
+            for model in arguments.models:
+                if helper_functions.get_mapping_name_to_class()[model].standard_encoding not in list_of_encodings:
+                    list_of_encodings.append(helper_functions.get_mapping_name_to_class()[model].standard_encoding)
+    return list_of_encodings
 
 
 def get_list_of_encodings():

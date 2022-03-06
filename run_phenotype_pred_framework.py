@@ -3,6 +3,7 @@ import argparse
 import optimization.optuna_optim
 import preprocess.base_dataset
 from utils import check_functions, print_functions, helper_functions
+from preprocess import encoding_functions
 import pprint
 from preprocess import raw_data_functions
 from model import *
@@ -39,7 +40,7 @@ if __name__ == '__main__':
                         help="specify the name of the phenotype to be predicted")
     parser.add_argument("-enc", "--encoding", type=str, default=None,
                         help="specify the encoding to use. Caution: has to be a possible encoding for the model to use."
-                             "Valid arguments are: 'raw', '012', 'onehot'")
+                             "Valid arguments are: " + str(encoding_functions.get_list_of_encodings()))
 
     # Preprocess Params #
     parser.add_argument("-maf", "--maf_percentage", type=int, default=1,
