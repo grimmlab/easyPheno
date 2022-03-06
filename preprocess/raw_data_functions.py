@@ -607,7 +607,7 @@ def make_bins(y: np.array, split: str, param: list):
     :return: binned array
     """
     if helper_functions.test_likely_categorical(y):
-        return y
+        return y.astype(int)
     else:
         if split == 'nested-cv':
             tmp = len(y)/(param[0] + param[1])
