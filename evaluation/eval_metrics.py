@@ -2,7 +2,7 @@ import sklearn
 import numpy as np
 
 
-def get_evaluation_report(y_pred: np.array, y_true: np.array, task: str, prefix: str = ''):
+def get_evaluation_report(y_pred: np.array, y_true: np.array, task: str, prefix: str = '') -> dict:
     """
     Get values for common evaluation metrics
     :param y_pred: predicted values
@@ -14,10 +14,12 @@ def get_evaluation_report(y_pred: np.array, y_true: np.array, task: str, prefix:
     if task == 'classification':
         eval_report_dict = {
             prefix + 'accuracy': sklearn.metrics.accuracy_score(y_true=y_true, y_pred=y_pred),
-            prefix + 'f1_score': sklearn.metrics.f1_score(y_true=y_true, y_pred=y_pred),
-            prefix + 'precision': sklearn.metrics.precision_score(y_true=y_true, y_pred=y_pred),
-            prefix + 'recall': sklearn.metrics.recall_score(y_true=y_true, y_pred=y_pred),
-            prefix + 'roc_auc': sklearn.metrics.roc_auc_score(y_true=y_true, y_pred=y_pred)
+            prefix + 'f1_score': sklearn.metrics.f1_score(y_true=y_true, y_pred=y_pred, average='micro'),
+            prefix + 'precision': sklearn.metrics.precision_score(y_true=y_true, y_pred=y_pred,
+                                                                  zero_division=0, average='micro'),
+            prefix + 'recall': sklearn.metrics.recall_score(y_true=y_true, y_pred=y_pred,
+                                                            zero_division=0, average='micro'),
+            prefix + 'mcc': sklearn.metrics.matthews_corrcoef(y_true=y_true, y_pred=y_pred)
         }
     else:
         eval_report_dict = {

@@ -39,7 +39,7 @@ class BaseModel(abc.ABC):
         raise NotImplementedError
 
     ### Constructor super class ###
-    def __init__(self, task: str, optuna_trial: optuna.trial.Trial, encoding: str = None):
+    def __init__(self, task: str, optuna_trial: optuna.trial.Trial, encoding: str = None, n_outputs: int = 1):
         """
         Constructor of the base model class
         # Please add super().__init__(PARAMS) to the constructor in case you override it in a child class #
@@ -50,7 +50,12 @@ class BaseModel(abc.ABC):
         self.task = task
         self.encoding = self.standard_encoding if encoding is None else encoding
         self.optuna_trial = optuna_trial
-        self.all_hyperparams = self.define_hyperparams_to_tune()
+        self.n_outputs = n_outputs if task == 'classification' else 1
+        if not hasattr(self, 'all_hyperparams'):
+            self.all_hyperparams = self.define_hyperparams_to_tune()
+        else:
+            # update in case common hyperparams are already defined
+            self.all_hyperparams.update(self.define_hyperparams_to_tune())
         self.model = self.define_model()
 
     ### Methods required by each child class ###
@@ -104,11 +109,11 @@ class BaseModel(abc.ABC):
         """
 
     @abc.abstractmethod
-    def train(self, X_train: np.array, y_train: np.array):
+    def retrain(self, X_retrain: np.array, y_retrain: np.array):
         """
-        Method that runs one train iteration of the model
-        :param X_train: feature matrix for the training
-        :param y_train: target vector
+        Method that runs the retraining of the model
+        :param X_retrain: feature matrix for retraining
+        :param y_retrain: target vector for retraining
         """
 
     @abc.abstractmethod
@@ -117,6 +122,17 @@ class BaseModel(abc.ABC):
         Method that predicts target values based on the input X_in
         :param X_in: feature matrix as input
         :return: numpy array with the predicted values
+        """
+
+    @abc.abstractmethod
+    def train_val_loop(self, X_train: np.array, y_train: np.array, X_val: np.array, y_val: np.array) -> np.array:
+        """
+
+        :param X_train: feature matrix for the training
+        :param y_train: target vector for training
+        :param X_val: feature matrix for validation
+        :param y_val: target vector for validation
+        :return: predictions on validation set
         """
 
     ### General methods ###
@@ -198,4 +214,29 @@ class BaseModel(abc.ABC):
         :param path: path where the model will be saved
         :param filename: filename of the model
         """
-        joblib.dump(self, path + filename)
+        joblib.dump(self, path + filename, compress=3)
+
+
+def load_retrain_model(path: str, filename: str, X_retrain: np.array, y_retrain: np.array) -> BaseModel:
+    """
+    Method to load and retrain persisted model
+    :param path: path where the model is saved
+    :param filename: filename of the model
+    :param X_retrain: feature matrix for retraining
+    :param y_retrain: target vector for retraining
+    :return: model instance
+    """
+    model = load_model(path=path, filename=filename)
+    model.retrain(X_retrain=X_retrain, y_retrain=y_retrain)
+    return model
+
+
+def load_model(path: str, filename: str) -> BaseModel:
+    """
+    Method to load persisted model
+    :param path: path where the model is saved
+    :param filename: filename of the model
+    :return: model instance
+    """
+    return joblib.load(path + filename)
+

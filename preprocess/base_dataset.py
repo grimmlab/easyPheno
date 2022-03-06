@@ -1,9 +1,11 @@
 import argparse
 import h5py
 import numpy as np
+import sklearn.preprocessing
+
 from utils import helper_functions
 from preprocess import raw_data_functions as raw
-from preprocess import encoding_functions as enc
+from preprocess.encoding_functions import encode_raw_genotype
 
 
 class Dataset:
@@ -22,20 +24,28 @@ class Dataset:
         :param arguments: all arguments provided by the user
         """
         with h5py.File(arguments.base_dir + '/data/' + arguments.genotype_matrix.split('.')[0] + '.h5', "r") as f:
-            if f'X_{self.encoding}' in f:
-                X = f[f'X_{self.encoding}'][:]
-            elif f'X_{enc.get_base_encoding(self.encoding)}' in f:
-                X_base = f[f'X_{enc.get_base_encoding(self.encoding)}'][:]
-                X = enc.encode_genotype(X_base, self.encoding, enc.get_base_encoding(self.encoding))
-            else:
-                raise Exception('Genotype in ' + self.encoding + ' encoding missing. Can not create required encoding. '
-                                                                 'See documentation for help')
+            if 'X_raw' in f:
+                if self.encoding == 'raw':
+                    X = f['X_raw'][:]
+                else:
+                    X_raw = f['X_raw'][:]
+                    X = encode_raw_genotype(X_raw, self.encoding)
+            elif 'X_012' in f:
+                if self.encoding in ('raw', 'onehot'):
+                    raise Exception('Genotype in required encoding not in genotype file. Can not create required'
+                                    'encoding. See documentation for help.')
+                else:
+                    X = f['X_012'][:]  # TODO adapt when we have additional encodings
 
         with h5py.File(arguments.base_dir + '/data/' + self.get_index_file_name(arguments), "r") as f:
             X = raw.get_matched_data(X, f['matched_data/X_index'][:])
-            y = f['matched_data/y'][:]
+            y = f['matched_data/y'][:]  # TODO change if multiple phenotypes
+            if helper_functions.test_likely_categorical(y):
+                if y.dtype.type is np.float64:
+                    y = y.astype(int)
+                y = sklearn.preprocessing.LabelEncoder().fit_transform(y)
             sample_ids = f['matched_data/matched_sample_ids'][:]
-        return X, y, sample_ids
+        return X, np.reshape(y, (-1, 1)), np.reshape(sample_ids, (-1, 1))
 
     def maf_filter_raw_data(self, arguments: argparse.Namespace):
         """

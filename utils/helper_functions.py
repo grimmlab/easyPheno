@@ -16,7 +16,7 @@ def get_list_of_implemented_models():
         model_src_files = os.listdir('../model')
     except:
         model_src_files = os.listdir('model')
-    model_src_files.remove('__init__.py')
+    model_src_files = [file for file in model_src_files if '__' not in file]
     model_src_files.remove('base_model.py')
     model_src_files.remove('sklearn_model.py')
     model_src_files.remove('torch_model.py')
@@ -31,7 +31,7 @@ def test_likely_categorical(vector_to_test: list, threshold: float = 0.1):
     :param threshold: threshold of unique values' ratio to declare vector categorical
     :return: True if the vector is most likely categorical, False otherwise
     """
-    return len(set(vector_to_test)) / len(vector_to_test) <= threshold
+    return np.unique(vector_to_test).shape[0] / vector_to_test.shape[0] <= threshold
 
 
 def get_mapping_name_to_class():

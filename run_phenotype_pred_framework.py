@@ -1,10 +1,10 @@
 import argparse
 
-import model.xgboost
 import optimization.optuna_optim
 import preprocess.base_dataset
 from utils import check_functions, print_functions, helper_functions
-from preprocess import raw_data_functions, encoding_functions
+import pprint
+from preprocess import raw_data_functions
 from model import *
 
 if __name__ == '__main__':
@@ -35,9 +35,9 @@ if __name__ == '__main__':
                         help="specify the name (including data type suffix) of the phenotype matrix to be used. "
                              "Needs to be located in the subfolder data/ of the specified base directory" +
                              "For more info regarding the required format see our documentation at GitHub")
-    parser.add_argument("-phenotype", "--phenotype", type=str, default='FT10',
+    parser.add_argument("-phenotype", "--phenotype", type=str, default='Fake',
                         help="specify the name of the phenotype to be predicted")
-    parser.add_argument("-enc", "--encoding", type=str, default='raw',
+    parser.add_argument("-enc", "--encoding", type=str, default=None,
                         help="specify the encoding to use. Caution: has to be a possible encoding for the model to use."
                              "Valid arguments are: 'raw', '012', 'onehot'")
 
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     parser.add_argument("-maf", "--maf_percentage", type=int, default=1,
                         help="specify the minor allele frequency (as percentage value). "
                              "specify 0 if you do not want a maf filter.")
-    parser.add_argument("-datasplit", "--datasplit", type=str, default='nested-cv',
+    parser.add_argument("-datasplit", "--datasplit", type=str, default='cv-test',
                         help="specify the data slit to use: 'nested-cv' | 'cv-test' | 'train-val-test'"
                              "Default values are 5 folds, train-test-split to 80/20 and train-val-test to 60/20/20")
     parser.add_argument("-testperc", "--test_set_size_percentage", type=int, default=20,
@@ -62,16 +62,31 @@ if __name__ == '__main__':
                              "Standard is 5, only relevant 'nested_cv' and 'cv-test'")
 
     # Model and Optimization Params #
-    parser.add_argument("-model", "--model", type=str, default='xgboost',
-                        help="specify the model(s) to optimize: 'all' or naming according to source file name "
-                             "(without suffix .py) in subfolder model of this repo")
+    parser.add_argument("-models", "--models", nargs='+', type=str, default=['xgboost'],
+                        help="specify the models to optimize: all or naming according to source file name. "
+                             "Multiple models can be selected by just naming multiple model names, "
+                             "e.g. --models mlp xgboost. "
+                             "The following are available: " + str(helper_functions.get_list_of_implemented_models()))
     parser.add_argument("-trials", "--n_trials", type=int, default=10,
                         help="number of trials for optuna")
+    parser.add_argument("-save_final_model", "--save_final_model", type=bool, default=False,
+                        help="save the final model to hard drive "
+                             "(caution: some models may use a lot of disk space, "
+                             "unfitted models that can be retrained are already saved by default)")
+
+    # Only relevant for Neural Networks #
+    parser.add_argument("-batch_size", "--batch_size", type=int, default=None,
+                        help="Only relevant for neural networks: define the batch size. If nothing is specified,"
+                             "it will be considered as a hyperparameter for optimization")
+    parser.add_argument("-n_epochs", "--n_epochs", type=int, default=None,
+                        help="Only relevant for neural networks: define the number of epochs. If nothing is specified,"
+                             "it will be considered as a hyperparameter for optimization")
     args = parser.parse_args()
 
     # set save directory
     args.save_dir = args.base_dir if args.save_dir is None else args.save_dir
-
+    if args.models[0] == 'all':
+        args.models = 'all'
     ### Checks and Raw Data Input Preparation ###
     # Check all arguments
     check_functions.check_all_specified_arguments(arguments=args)
@@ -84,7 +99,8 @@ if __name__ == '__main__':
 
     ### Optimization Pipeline ###
     helper_functions.set_all_seeds()
-    models_to_optimize = helper_functions.get_list_of_implemented_models() if args.model == 'all' else [args.model]
+    models_to_optimize = helper_functions.get_list_of_implemented_models() if args.models == 'all' else args.models
+    model_overview = {}
     for current_model_name in models_to_optimize:
         encoding = args.encoding if args.encoding is not None \
             else helper_functions.get_mapping_name_to_class()[current_model_name].standard_encoding
@@ -93,6 +109,10 @@ if __name__ == '__main__':
         # maybe print function would make sense here as dataset is already loaded
         optuna_run = optimization.optuna_optim.OptunaOptim(arguments=args, task=task,
                                                            current_model_name=current_model_name, dataset=dataset)
-        print('### Starting Optuna Optimization ###')
-        optuna_run.run_optuna_optimization()
+        print('### Starting Optuna Optimization for ' + current_model_name + ' ###')
+        overall_results = optuna_run.run_optuna_optimization()
         print('### Finished Optuna Optimization for ' + current_model_name + ' ###')
+        model_overview[current_model_name] = overall_results
+    print('# Optimization runs done for models ' + str(models_to_optimize))
+    print('Results overview on the test set(s)')
+    pprint.PrettyPrinter(depth=4).pprint(model_overview)
