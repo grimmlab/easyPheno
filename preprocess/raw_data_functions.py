@@ -6,7 +6,7 @@ import os
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
 from pandas_plink import read_plink1_bin
-from utils.helper_functions import test_likely_categorical
+from utils import helper_functions
 from preprocess import encoding_functions as enc
 
 
@@ -101,7 +101,7 @@ def check_genotype_h5_file(arguments: argparse.Namespace, encodings: list):
             # check if genotype contains constant SNPs
             m = X_012.shape[1]
             X_012, X_raw, snp_ids = filter_non_informative_snps(X_012, X_raw, snp_ids)
-            if X_012.shape[1] != m:
+            if X_012.shape[1] != m or arguments.genotype_matrix.split("-")[0] != 'unified':
                 return sample_ids, snp_ids, X_012, X_raw
             else:
                 return sample_ids, None, X_012, None
@@ -227,14 +227,18 @@ def create_genotype_h5_file(arguments: argparse.Namespace, sample_ids: np.array,
     :param X_012: matrix containing genotype in additive encoding
     :param X_raw: matrix containing genotype in raw encoding
     """
-    with h5py.File(arguments.base_dir + '/data/' + arguments.genotype_matrix.split(".")[0] + '.h5', 'w') as f:
+    if arguments.genotype_matrix.split("-")[0] == 'unified':
+        x_file = arguments.base_dir + '/data/' + arguments.genotype_matrix.split(".")[0] + '.h5'
+    else:
+        x_file = arguments.base_dir + '/data/unified-' + arguments.genotype_matrix.split(".")[0] + '.h5'
+        arguments.genotype_matrix = 'unified-' + arguments.genotype_matrix
+    with h5py.File(x_file, 'w') as f:
         f.create_dataset('sample_ids', data=sample_ids, chunks=True, compression="gzip")
         f.create_dataset('snp_ids', data=snp_ids, chunks=True, compression="gzip")
         if X_raw is not None:
             f.create_dataset('X_raw', data=X_raw, chunks=True, compression="gzip", compression_opts=7)
         else:
             f.create_dataset('X_012', data=X_012, chunks=True, compression="gzip", compression_opts=7)
-    # TODO change name --> even if geno matrix is .h5 file, might need to save new file with filtered snps
 
 
 def check_and_load_phenotype_matrix(arguments: argparse.Namespace):
@@ -245,16 +249,19 @@ def check_and_load_phenotype_matrix(arguments: argparse.Namespace):
     :param arguments: all arguments specified by the user
     :return: DataFrame with sample_ids as index and phenotype values as single column without NAN values
     """
-    if arguments.phenotype_matrix.split('.')[-1] in ("csv", "pheno", "txt"):
+    suffix = arguments.phenotype_matrix.split('.')[-1]
+    if suffix == "csv":
         y = pd.read_csv(arguments.base_dir + '/data/' + arguments.phenotype_matrix)
-        y = y.sort_values(y.columns[0]).groupby(y.columns[0]).mean()
-        if arguments.phenotype not in y.columns:
-            raise Exception('Phenotype ' + arguments.phenotype + ' is not in phenotype file '
-                            + arguments.phenotype_matrix + ' See documentation for help')
-        else:
-            y = y[[arguments.phenotype]].dropna()
+    elif suffix in ("pheno", "txt"):
+        y = pd.read_csv(arguments.base_dir + '/data/' + arguments.phenotype_matrix, sep=" ")
     else:
         raise Exception('Only accept .csv, .pheno, .txt phenotype files. See documentation for help')
+    y = y.sort_values(y.columns[0]).groupby(y.columns[0]).mean()
+    if arguments.phenotype not in y.columns:
+        raise Exception('Phenotype ' + arguments.phenotype + ' is not in phenotype file '+ arguments.phenotype_matrix +
+                        ' See documentation for help')
+    else:
+        y = y[[arguments.phenotype]].dropna()
     return y
 
 
@@ -398,11 +405,13 @@ def append_index_file(arguments: argparse.Namespace):
         # check if group datasplit and all user inputs concerning datasplits are available, if not: create all
         if arguments.datasplit == 'nested-cv':
             if 'datasplits' not in f or ('datasplits' in f and 'nested-cv' not in f['datasplits']) or \
-                    ('datasplits' in f and 'nested-cv' in f['datasplits'] and f'{arguments.n_outerfolds}-'
-                        f'{arguments.n_innerfolds}' not in f['datasplits/nested-cv']):
-                nest = f.create_group(f'datasplits/nested-cv/{arguments.n_outerfolds}-{arguments.n_innerfolds}')
+                    ('datasplits' in f and 'nested-cv' in f['datasplits'] and
+                     f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}' not in
+                     f['datasplits/nested-cv']):
+                nest = f.create_group(f'datasplits/nested-cv/'
+                                      f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}')
                 for outer in range(arguments.n_outerfolds):
-                    index_dict = check_train_test_splits('nested-cv', f['matched_data/y'],
+                    index_dict = check_train_test_splits(f['matched_data/y'], 'nested-cv',
                                                          [arguments.n_outerfolds, arguments.n_innerfolds])
                     o = nest.create_group(f'outerfold_{outer}')
                     o.create_dataset('test', data=index_dict[f'outerfold_{outer}_test'], chunks=True,
@@ -417,10 +426,12 @@ def append_index_file(arguments: argparse.Namespace):
                                          compression="gzip")
         elif arguments.datasplit == 'cv-test':
             if 'datasplits' not in f or ('datasplits' in f and 'cv-test' not in f['datasplits']) or \
-                    ('datasplits' in f and 'cv-test' in f['datasplits'] and f'{arguments.n_innerfolds}-'
-                        f'{arguments.test_set_size_percentage}' not in f['datasplits/cv-test']):
-                cv = f.create_group(f'datasplits/cv-test/{arguments.n_innerfolds}-{arguments.test_set_size_percentage}')
-                index_dict, test = check_train_test_splits('cv-test', f['matched_data/y'],
+                    ('datasplits' in f and 'cv-test' in f['datasplits'] and
+                     f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}' not in
+                     f['datasplits/cv-test']):
+                cv = f.create_group(f'datasplits/cv-test/'
+                                    f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}')
+                index_dict, test = check_train_test_splits(f['matched_data/y'], 'cv-test',
                                                            [arguments.n_innerfolds, arguments.test_set_size_percentage])
                 o = cv.create_group('outerfold_0')
                 o.create_dataset('test', data=test, chunks=True, compression="gzip")
@@ -431,13 +442,11 @@ def append_index_file(arguments: argparse.Namespace):
         elif arguments.datasplit == 'train-val-test':
             if 'datasplits' not in f or ('datasplits' in f and 'train-val-test' not in f['datasplits']) or \
                     ('datasplits' in f and 'train-val-test' in f['datasplits'] and
-                     f'{100 - arguments.validation_set_size_percentage - arguments.test_set_size_percentage}-'
-                     f'{arguments.validation_set_size_percentage}-{arguments.test_set_size_percentage}' not in
+                     f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}' not in
                      f['datasplits/cv-test']):
                 tvt = f.create_group(f'datasplits/train-val-test/'
-                        f'{100 - arguments.validation_set_size_percentage - arguments.test_set_size_percentage}-'
-                            f'{arguments.validation_set_size_percentage}-{arguments.test_set_size_percentage}')
-                train, val, test = check_train_test_splits('train-val-test', f['matched_data/y'],
+                        f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}')
+                train, val, test = check_train_test_splits(f['matched_data/y'], 'train-val-test',
                                     [arguments.validation_set_size_percentage, arguments.test_set_size_percentage])
                 o = tvt.create_group('outerfold_0')
                 o.create_dataset('test', data=test, chunks=True, compression="gzip")
@@ -487,9 +496,9 @@ def create_index_file(arguments: argparse.Namespace, X: np.array, y: np.array,  
         dsplit = f.create_group('datasplits')
         nest = dsplit.create_group('nested-cv')
         for elem in param_nested:
-            n = nest.create_group(f'{elem[0]}-{elem[1]}')
+            n = nest.create_group(helper_functions.get_subpath_for_datasplit(arguments, 'nested-cv', additional_param=elem))
             for outer in range(elem[0]):
-                index_dict = check_train_test_splits('nested-cv', y, elem)
+                index_dict = check_train_test_splits(y, 'nested-cv', elem)
                 o = n.create_group(f'outerfold_{outer}')
                 o.create_dataset('test', data=index_dict[f'outerfold_{outer}_test'], chunks=True, compression="gzip")
                 for inner in range(elem[1]):
@@ -500,8 +509,8 @@ def create_index_file(arguments: argparse.Namespace, X: np.array, y: np.array,  
                                      compression="gzip")
         cv = dsplit.create_group('cv-test')
         for elem in param_cv:
-            index_dict, test = check_train_test_splits('cv-test', y, elem)
-            n = cv.create_group(f'{elem[0]}-{elem[1]}')
+            index_dict, test = check_train_test_splits(y, 'cv-test', elem)
+            n = cv.create_group(helper_functions.get_subpath_for_datasplit(arguments, 'cv-test', additional_param=elem))
             o = n.create_group('outerfold_0')
             o.create_dataset('test', data=test, chunks=True, compression="gzip")
             for fold in range(elem[0]):
@@ -510,8 +519,8 @@ def create_index_file(arguments: argparse.Namespace, X: np.array, y: np.array,  
                 i.create_dataset('val', data=index_dict[f'fold_{fold}_test'], chunks=True, compression="gzip")
         tvt = dsplit.create_group('train-val-test')
         for elem in param_tvt:
-            train, val, test = check_train_test_splits('train-val-test', y, elem)
-            n = tvt.create_group(f'{100 - elem[0] - elem[1]}-{elem[0]}-{elem[1]}')
+            train, val, test = check_train_test_splits(y, 'train-val-test', elem)
+            n = tvt.create_group(helper_functions.get_subpath_for_datasplit(arguments, 'train-val-test', additional_param=elem))
             o = n.create_group('outerfold_0')
             o.create_dataset('test', data=test, chunks=True, compression="gzip")
             i = o.create_group('innerfold_0')
@@ -557,19 +566,22 @@ def check_datasplit_user_input(arguments: argparse.Namespace, split: str, param:
         raise Exception('Only accept nested-cv, cv-test or train-val-test as data splits.')
     if arguments.datasplit == split and user_input not in param:
         param.append(user_input)
-        return param
+    return param
 
 # TODO sanity checks: number of samples in index sets
-def check_train_test_splits(split: str, y: np.array, param: list):
+def check_train_test_splits(y: np.array, split: str, param: list):
     """
     Function to create stratified train-test splits. Continuous values will be grouped into bins and stratified
     according to those.
     :param split: type of data split ('nested-cv', 'cv-test', 'train-val-test')
     :param y: array with phenotypic values for stratification
-    :param param: parameters to use for split
+    :param param: parameters to use for split:
+    [n_outerfolds, n_innerfolds] for nested-cv
+    [n_innerfolds, test_set_size_percentage] for cv-test
+    [validation_set_size_percentage, test_set_size_percentage] for train-val-test
     :return: index arrays for splits
     """
-    y_binned = make_bins(y)
+    y_binned = make_bins(y, split, param)
     if split == 'nested-cv':
         return make_nested_cv(y=y_binned, outerfolds=param[0], innerfolds=param[1])
     elif split == 'cv-test':
@@ -582,19 +594,29 @@ def check_train_test_splits(split: str, y: np.array, param: list):
         raise Exception('Only accept nested-cv, cv-test or train-val-test as data splits.')
 
 
-def make_bins(y: np.array):
+def make_bins(y: np.array, split: str, param: list):
     """
     Function to create bins of continuous values for stratification.
     :param y: array containing phenotypic values
+    :param split: train test split to use
+    :param param: list of parameters to use:
+    [n_outerfolds, n_innerfolds] for nested-cv
+    [n_innerfolds, test_set_size_percentage] for cv-test
     :return: binned array
     """
-    if test_likely_categorical(y):
+    if helper_functions.test_likely_categorical(y):
         return y
     else:
-        # TODO check for number of samples in bins --> join bins if not enough
-        _, edges = np.histogram(y)
-        edges = edges[:-1]
-        y_binned = np.digitize(y, edges)
+        if split == 'nested-cv':
+            tmp = len(y)/(param[0] + param[1])
+        elif split == 'cv-test':
+            tmp = len(y)*(1-param[1]/100)/param[0]
+        else:
+            tmp = len(y)/10 + 1
+
+        number_of_bins = min(int(tmp) - 1, 10)
+        edges = np.percentile(y, np.linspace(0, 100, number_of_bins)[1:])
+        y_binned = np.digitize(y, edges, right=True)
         return y_binned
 
 
@@ -655,6 +677,7 @@ def make_stratified_cv(x: np.array, y: np.array, split_number: int):
         np.random.shuffle(test_index)
         index_dict[f'fold_{fold}_train'] = train_index
         index_dict[f'fold_{fold}_test'] = test_index
+        fold += 1
     return index_dict
 
 

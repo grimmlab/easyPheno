@@ -4,7 +4,7 @@ import model.xgboost
 import optimization.optuna_optim
 import preprocess.base_dataset
 from utils import check_functions, print_functions, helper_functions
-from preprocess import raw_data_functions
+from preprocess import raw_data_functions, encoding_functions
 from model import *
 
 if __name__ == '__main__':
@@ -37,7 +37,7 @@ if __name__ == '__main__':
                              "For more info regarding the required format see our documentation at GitHub")
     parser.add_argument("-phenotype", "--phenotype", type=str, default='FT10',
                         help="specify the name of the phenotype to be predicted")
-    parser.add_argument("-enc", "--encoding", type=str, default=None,
+    parser.add_argument("-enc", "--encoding", type=str, default='raw',
                         help="specify the encoding to use. Caution: has to be a possible encoding for the model to use."
                              "Valid arguments are: 'raw', '012', 'onehot'")
 
