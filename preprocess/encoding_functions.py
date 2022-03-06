@@ -15,7 +15,7 @@ def get_encoding(arguments:  argparse.Namespace):
         list_of_encodings = get_list_of_encodings()
     else:
         if arguments.encoding is not None:
-            list_of_encodings =  [arguments.encoding]
+            list_of_encodings = [arguments.encoding]
         else:
             list_of_encodings = []
             for model in arguments.models:
