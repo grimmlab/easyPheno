@@ -5,7 +5,7 @@ from model import torch_model
 
 class Mlp(torch_model.TorchModel):
     standard_encoding = '012'
-    possible_encodings = ['012', 'raw', 'onehot']
+    possible_encodings = ['012', 'raw']
 
     def define_model(self) -> torch.nn.Sequential:
         """See BaseModel for more information"""
@@ -19,9 +19,9 @@ class Mlp(torch_model.TorchModel):
             model.append(torch.nn.BatchNorm1d(num_features=out_features))
             model.append(act_function)
             p = self.suggest_hyperparam_to_optuna('dropout')
-            model.append(torch.nn.Dropout(p))
+            model.append(torch.nn.Dropout(p=p))
             in_features = out_features
-        model.append(torch.nn.Linear(in_features, self.n_outputs))
+        model.append(torch.nn.Linear(in_features=in_features, out_features=self.n_outputs))
         return torch.nn.Sequential(*model)
 
     def define_hyperparams_to_tune(self) -> dict:
