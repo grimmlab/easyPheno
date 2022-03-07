@@ -12,7 +12,7 @@ import utils
 from preprocess import base_dataset
 from utils import helper_functions
 from evaluation import eval_metrics
-from model import torch_model, base_model
+from model import torch_model, base_model, cnn
 
 
 class OptunaOptim:
@@ -100,6 +100,7 @@ class OptunaOptim:
             additional_attributes_dict['n_features'] = self.dataset.X_full.shape[1]
             additional_attributes_dict['batch_size'] = self.arguments.batch_size
             additional_attributes_dict['n_epochs'] = self.arguments.n_epochs
+            additional_attributes_dict['width_onehot'] = self.dataset.X_full.shape[-1]
         model: base_model.BaseModel = utils.helper_functions.get_mapping_name_to_class()[self.current_model_name](
             task=self.task, optuna_trial=trial,
             n_outputs=len(np.unique(self.dataset.y_full)) if self.task == 'classification' else 1,

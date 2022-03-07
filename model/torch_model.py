@@ -15,9 +15,10 @@ class TorchModel(base_model.BaseModel, abc.ABC):
     """
 
     def __init__(self, task: str, optuna_trial: optuna.trial.Trial, encoding: str = None, n_outputs: int = 1,
-                 n_features: int = None, batch_size: int = None, n_epochs: int = None):
+                 n_features: int = None, batch_size: int = None, n_epochs: int = None, width_onehot: int = None):
         self.all_hyperparams = self.common_hyperparams()  # add hyperparameters commonly optimized for all torch models
         self.n_features = n_features
+        self.width_onehot = width_onehot
         super().__init__(task=task, optuna_trial=optuna_trial, encoding=encoding, n_outputs=n_outputs)
         self.loss_fn = torch.nn.CrossEntropyLoss() if task == 'classification' else torch.nn.MSELoss()
         self.batch_size = \
@@ -136,6 +137,8 @@ class TorchModel(base_model.BaseModel, abc.ABC):
         :return: Pytorch DataLoader
         """
         X_tensor = torch.from_numpy(X).float()
+        if self.encoding == 'onehot':
+            X_tensor = torch.swapaxes(X_tensor, 1, 2)
         y_tensor = torch.reshape(torch.from_numpy(y).float(), (-1, 1)) if y is not None else None
         y_tensor = y_tensor.flatten() if (self.task == 'classification' and y_tensor is not None) else y_tensor
         dataset = torch.utils.data.TensorDataset(X_tensor, y_tensor) if y_tensor is not None \
@@ -153,7 +156,7 @@ class TorchModel(base_model.BaseModel, abc.ABC):
             'dropout': {
                 'datatype': 'float',
                 'lower_bound': 0,
-                'upper_bound': 1,
+                'upper_bound': 0.99,
                 'step': 0.05
             },
             'act_function': {

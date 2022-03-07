@@ -122,5 +122,5 @@ def get_onehot_encoding(X: np.array):
     """
     unique, inverse = np.unique(X, return_inverse=True)
     inverse = inverse.reshape(X.shape)
-    X_onehot = one_hot(torch.from_numpy(inverse))
+    X_onehot = one_hot(torch.from_numpy(inverse)).numpy()
     return X_onehot
