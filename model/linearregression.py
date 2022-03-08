@@ -1,9 +1,9 @@
 import sklearn
 
-from model import sklearn_model
+from model import _sklearn_model
 
 
-class LinearRegression(sklearn_model.SklearnModel):
+class LinearRegression(_sklearn_model.SklearnModel):
     """See BaseModel for more information on the parameters"""
     standard_encoding = '012'
     possible_encodings = ['012', 'raw']

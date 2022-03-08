@@ -215,28 +215,3 @@ class BaseModel(abc.ABC):
         :param filename: filename of the model
         """
         joblib.dump(self, path + filename, compress=3)
-
-
-def load_retrain_model(path: str, filename: str, X_retrain: np.array, y_retrain: np.array) -> BaseModel:
-    """
-    Method to load and retrain persisted model
-    :param path: path where the model is saved
-    :param filename: filename of the model
-    :param X_retrain: feature matrix for retraining
-    :param y_retrain: target vector for retraining
-    :return: model instance
-    """
-    model = load_model(path=path, filename=filename)
-    model.retrain(X_retrain=X_retrain, y_retrain=y_retrain)
-    return model
-
-
-def load_model(path: str, filename: str) -> BaseModel:
-    """
-    Method to load persisted model
-    :param path: path where the model is saved
-    :param filename: filename of the model
-    :return: model instance
-    """
-    return joblib.load(path + filename)
-

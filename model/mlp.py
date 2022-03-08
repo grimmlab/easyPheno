@@ -1,9 +1,9 @@
 import torch
 
-from model import torch_model
+from model import _torch_model
 
 
-class Mlp(torch_model.TorchModel):
+class Mlp(_torch_model.TorchModel):
     standard_encoding = '012'
     possible_encodings = ['012', 'raw']
 
@@ -16,8 +16,8 @@ class Mlp(torch_model.TorchModel):
         for layer in range(n_layers):
             out_features = 2 ** self.suggest_hyperparam_to_optuna('n_units_per_layer_exp')
             model.append(torch.nn.Linear(in_features=in_features, out_features=out_features))
-            model.append(torch.nn.BatchNorm1d(num_features=out_features))
             model.append(act_function)
+            model.append(torch.nn.BatchNorm1d(num_features=out_features))
             p = self.suggest_hyperparam_to_optuna('dropout')
             model.append(torch.nn.Dropout(p=p))
             in_features = out_features
@@ -26,7 +26,7 @@ class Mlp(torch_model.TorchModel):
 
     def define_hyperparams_to_tune(self) -> dict:
         """See BaseModel for more information on the format"""
-        return {
+        return {  # TODO: ranges anpassen for start der Experimente
             'n_layers': {
                 'datatype': 'int',
                 'lower_bound': 1,

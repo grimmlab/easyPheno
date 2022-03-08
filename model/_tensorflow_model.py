@@ -1,16 +1,16 @@
 import abc
 import numpy as np
 import optuna
-import torch.nn
-import torch.utils.data
+import tensorflow as tf
 import copy
+import joblib
 
-from model import base_model
+from model import _base_model
 
 
-class TorchModel(base_model.BaseModel, abc.ABC):
+class TensorflowModel(_base_model.BaseModel, abc.ABC):
     """
-    Parent class based on BaseModel for all PyTorch models to share functionalities
+    Parent class based on BaseModel for all TensorFlow models to share functionalities
     See BaseModel for more information
     """
 
@@ -20,26 +20,33 @@ class TorchModel(base_model.BaseModel, abc.ABC):
         self.n_features = n_features
         self.width_onehot = width_onehot
         super().__init__(task=task, optuna_trial=optuna_trial, encoding=encoding, n_outputs=n_outputs)
-        self.loss_fn = torch.nn.CrossEntropyLoss() if task == 'classification' else torch.nn.MSELoss()
+        self.loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True) if task == 'classification' \
+            else tf.keras.losses.MeanSquaredError()
         self.batch_size = \
             batch_size if batch_size is not None else 2**self.suggest_hyperparam_to_optuna('batch_size_exp')
         self.n_epochs = n_epochs if n_epochs is not None else self.suggest_hyperparam_to_optuna('n_epochs')
         # optimizer to use may be included as hyperparam
-        self.optimizer = torch.optim.Adam(params=self.model.parameters(),
-                                          lr=self.suggest_hyperparam_to_optuna('learning_rate'))
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.suggest_hyperparam_to_optuna('learning_rate'))
         # early stopping if there is no improvement on validation loss for a certain number of epochs
         self.early_stopping_patience = self.suggest_hyperparam_to_optuna('early_stopping_patience')
         self.early_stopping_point = None
-        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        self.early_stopping_callback = tf.keras.callbacks.EarlyStopping(
+            monitor='val_loss', patience=self.early_stopping_patience, mode='min', restore_best_weights=True
+        )
+        self.model.compile(self.optimizer, loss=self.loss_fn)
 
     def train_val_loop(self, X_train: np.array, y_train: np.array, X_val: np.array, y_val: np.array) -> np.array:
         """
-        Implementation of a train and validation loop for  PyTorch models.
+        Implementation of a train and validation loop for  TensorFlow models.
         See BaseModel for more information
+        """
+        history = self.model.fit(x=X_train, y=y_train, batch_size=self.batch_size, epochs=self.n_epochs,
+                                 validation_data=(X_val, y_val), validation_freq=1, verbose=2,
+                                 callbacks=[self.early_stopping_callback])
+        self.early_stopping_point = len(history.history['loss']) - self.early_stopping_patience
         """
         train_loader = self.get_dataloader(X=X_train, y=y_train)
         val_loader = self.get_dataloader(X=X_val, y=y_val)
-        self.model.to(device=self.device)
         best_loss = None
         epochs_wo_improvement = 0
         for epoch in range(self.n_epochs):
@@ -58,36 +65,32 @@ class TorchModel(base_model.BaseModel, abc.ABC):
                 self.early_stopping_point = epoch - self.early_stopping_patience
                 self.model = best_model
                 return self.predict(X_in=X_val)
+        """
         return self.predict(X_in=X_val)
 
-    def train_one_epoch(self, train_loader: torch.utils.data.DataLoader):
+    def train_one_epoch(self, train_loader: tf.data.Dataset):
         """
         Train one epoch
         :param train_loader: DataLoader with training data
         """
-        self.model.train()
         for inputs, targets in train_loader:
-            inputs, targets = inputs.to(device=self.device), targets.to(device=self.device)
-            self.optimizer.zero_grad()
-            outputs = self.model(inputs)
-            loss = self.get_loss(outputs=outputs, targets=targets)
-            loss.backward()
-            self.optimizer.step()
+            with tf.GradientTape() as tape:
+                outputs = self.model(inputs, training=True)
+                loss = self.get_loss(outputs=outputs, targets=targets)
+            grads = tape.gradient(target=loss, sources=self.model.trainable_weights)
+            self.optimizer.apply_gradients(zip(grads, self.model.trainable_weights))
 
-    def validate_one_epoch(self, val_loader: torch.utils.data.DataLoader) -> float:
+    def validate_one_epoch(self, val_loader: tf.data.Dataset) -> float:
         """
         Validate one epoch
         :param val_loader: DataLoader with validation data
         :return: loss based on loss-criterion
         """
-        self.model.eval()
         total_loss = 0
-        with torch.no_grad():
-            for inputs, targets in val_loader:
-                inputs, targets = inputs.to(device=self.device), targets.to(device=self.device)
-                outputs = self.model(inputs)
-                total_loss += self.get_loss(outputs=outputs, targets=targets).item()
-        return total_loss / len(val_loader.dataset)
+        for inputs, targets in val_loader:
+            outputs = self.model(inputs, training=False)
+            total_loss += self.get_loss(outputs=outputs, targets=targets).numpy()
+        return total_loss / len(val_loader)
 
     def retrain(self, X_retrain: np.array, y_retrain: np.array):
         """
@@ -96,7 +99,6 @@ class TorchModel(base_model.BaseModel, abc.ABC):
         """
         retrain_loader = self.get_dataloader(X=X_retrain, y=y_retrain)
         n_epochs_to_retrain = self.n_epochs if self.early_stopping_point is None else self.early_stopping_point
-        self.model.to(device=self.device)
         for epoch in range(n_epochs_to_retrain):
             self.train_one_epoch(retrain_loader)
 
@@ -106,29 +108,25 @@ class TorchModel(base_model.BaseModel, abc.ABC):
         See BaseModel for more information
         """
         dataloader = self.get_dataloader(X=X_in, shuffle=False)
-        self.model.eval()
         predictions = None
-        with torch.no_grad():
-            for inputs in dataloader:
-                inputs = inputs.to(device=self.device)
-                outputs = self.model(inputs)
-                predictions = torch.clone(outputs) if predictions is None else torch.cat((predictions, outputs))
+        for inputs in dataloader:
+            outputs = self.model(inputs, training=False)
+            # concat
+            predictions = outputs.numpy() if predictions is None else np.vstack((predictions, outputs.numpy()))
         if self.task == 'classification':
-            _, predictions = torch.max(predictions, 1)
-        return predictions.cpu().detach().numpy()
+            predictions = predictions.argmax(axis=1)
+        return predictions
 
-    def get_loss(self, outputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+    def get_loss(self, outputs: tf.Tensor, targets: tf.Tensor) -> tf.Tensor:
         """
         Calculate the loss based on the outputs and targets
         :param outputs: outputs of the model
         :param targets: targets of the dataset
         :return: loss
         """
-        if type(self.loss_fn) in [torch.nn.CrossEntropyLoss, torch.nn.NLLLoss]:
-            targets = targets.long()
-        return self.loss_fn(outputs, targets)
+        return self.loss_fn(y_pred=outputs, y_true=targets)
 
-    def get_dataloader(self, X: np.array, y: np.array = None, shuffle: bool = True) -> torch.utils.data.DataLoader:
+    def get_dataloader(self, X: np.array, y: np.array = None, shuffle: bool = True) -> tf.data.Dataset:
         """
         Get a Pytorch DataLoader using the specified data and batch size
         :param X: feature matrix to use
@@ -136,14 +134,11 @@ class TorchModel(base_model.BaseModel, abc.ABC):
         :param shuffle: shuffle parameter for DataLoader
         :return: Pytorch DataLoader
         """
-        X_tensor = torch.from_numpy(X).float()
-        if self.encoding == 'onehot':
-            X_tensor = torch.swapaxes(X_tensor, 1, 2)
-        y_tensor = torch.reshape(torch.from_numpy(y).float(), (-1, 1)) if y is not None else None
-        y_tensor = y_tensor.flatten() if (self.task == 'classification' and y_tensor is not None) else y_tensor
-        dataset = torch.utils.data.TensorDataset(X_tensor, y_tensor) if y_tensor is not None \
-            else X_tensor
-        return torch.utils.data.DataLoader(dataset=dataset, batch_size=self.batch_size, shuffle=shuffle)
+        dataset = tf.data.Dataset.from_tensor_slices((X, y)) if y is not None \
+            else tf.data.Dataset.from_tensor_slices(X)
+        if shuffle:
+            dataset = dataset.shuffle(buffer_size=len(dataset))
+        return dataset.batch(batch_size=self.batch_size)
 
     @staticmethod
     def common_hyperparams():
@@ -152,11 +147,11 @@ class TorchModel(base_model.BaseModel, abc.ABC):
         Do not need to be included in optimization for every child model.
         Also see BaseModel for more information
         """
-        return {
+        return {  # TODO: ranges anpassen for start der Experimente
             'dropout': {
                 'datatype': 'float',
                 'lower_bound': 0,
-                'upper_bound': 0.99,
+                'upper_bound': 0.95,
                 'step': 0.05
             },
             'act_function': {
@@ -184,11 +179,13 @@ class TorchModel(base_model.BaseModel, abc.ABC):
             }
         }
 
-    @staticmethod
-    def get_torch_object_for_string(string_to_get: str):
-        string_to_object_dict = {
-            'relu': torch.nn.ReLU(),
-            'tanh': torch.nn.Tanh()
-        }
-        return string_to_object_dict[string_to_get]
-
+    def save_model(self, path: str, filename: str):
+        """
+        Method to persist the whole model object on a hard drive (can be loaded with joblib.load(filepath))
+        :param path: path where the model will be saved
+        :param filename: filename of the model
+        """
+        optimizer = self.optimizer
+        self.optimizer = tf.keras.optimizers.serialize(self.optimizer)
+        joblib.dump(self, path + filename, compress=3)
+        self.optimizer = optimizer

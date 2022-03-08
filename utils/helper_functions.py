@@ -5,6 +5,7 @@ import importlib
 import torch
 import random
 import numpy as np
+import tensorflow as tf
 
 
 def get_list_of_implemented_models():
@@ -16,10 +17,7 @@ def get_list_of_implemented_models():
         model_src_files = os.listdir('../model')
     except:
         model_src_files = os.listdir('model')
-    model_src_files = [file for file in model_src_files if '__' not in file]
-    model_src_files.remove('base_model.py')
-    model_src_files.remove('sklearn_model.py')
-    model_src_files.remove('torch_model.py')
+    model_src_files = [file for file in model_src_files if file[0] != '_']
     return [model[:-3] for model in model_src_files]
 
 
@@ -69,6 +67,7 @@ def set_all_seeds(seed: int = 42):
     np.random.seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+    tf.random.set_seed(seed)
 
 
 def get_subpath_for_datasplit(arguments: argparse, datasplit: str, additional_param=None) -> str:
