@@ -12,7 +12,7 @@ import utils
 from preprocess import base_dataset
 from utils import helper_functions
 from evaluation import eval_metrics
-from model import torch_model, base_model, cnn
+from model import _torch_model, _base_model, _tensorflow_model, _model_functions
 
 
 class OptunaOptim:
@@ -95,13 +95,15 @@ class OptunaOptim:
         # (name of the attribute and key in the dictionary have to match)
         additional_attributes_dict = {}
         if issubclass(utils.helper_functions.get_mapping_name_to_class()[self.current_model_name],
-                      torch_model.TorchModel):
+                      _torch_model.TorchModel) or \
+                issubclass(utils.helper_functions.get_mapping_name_to_class()[self.current_model_name],
+                           _tensorflow_model.TensorflowModel):
             # all torch models have the number of input features as attribute
             additional_attributes_dict['n_features'] = self.dataset.X_full.shape[1]
             additional_attributes_dict['batch_size'] = self.arguments.batch_size
             additional_attributes_dict['n_epochs'] = self.arguments.n_epochs
             additional_attributes_dict['width_onehot'] = self.dataset.X_full.shape[-1]
-        model: base_model.BaseModel = utils.helper_functions.get_mapping_name_to_class()[self.current_model_name](
+        model: _base_model.BaseModel = utils.helper_functions.get_mapping_name_to_class()[self.current_model_name](
             task=self.task, optuna_trial=trial,
             n_outputs=len(np.unique(self.dataset.y_full)) if self.task == 'classification' else 1,
             **additional_attributes_dict
@@ -124,8 +126,8 @@ class OptunaOptim:
             else:
                 innerfold_name = 'train-val'
             # load the unfitted model to prevent information leak between folds
-            model = base_model.load_model(path=self.save_path + 'temp/',
-                                          filename='unfitted_model_trial' + str(trial.number))
+            model = _model_functions.load_model(path=self.save_path + 'temp/',
+                                                filename='unfitted_model_trial' + str(trial.number))
             X_train, y_train, sample_ids_train, X_val, y_val, sample_ids_val = \
                 self.dataset.X_full[innerfold_info['train']], \
                 self.dataset.y_full[innerfold_info['train']], \
@@ -152,7 +154,8 @@ class OptunaOptim:
                 validation_results.at[0:len(y_train) - 1, innerfold_name + '_train_true'] = y_train.flatten()
                 validation_results.at[0:len(y_train) - 1, innerfold_name + '_train_pred'] = \
                     model.predict(X_in=X_train).flatten()
-                validation_results.at[0:len(sample_ids_val)-1, innerfold_name + '_val_sampleids'] = sample_ids_val.flatten()
+                validation_results.at[0:len(sample_ids_val)-1, innerfold_name + '_val_sampleids'] = \
+                    sample_ids_val.flatten()
                 validation_results.at[0:len(y_val)-1, innerfold_name + '_val_true'] = y_val.flatten()
                 validation_results.at[0:len(y_pred)-1, innerfold_name + '_val_pred'] = y_pred.flatten()
                 for metric, value in eval_metrics.get_evaluation_report(y_pred=y_pred, y_true=y_val, task=self.task,
@@ -233,7 +236,7 @@ class OptunaOptim:
                 self.dataset.y_full[~np.isin(np.arange(len(self.dataset.y_full)), outerfold_info['test'])], \
                 self.dataset.sample_ids_full[~np.isin(np.arange(len(self.dataset.sample_ids_full)),
                                                       outerfold_info['test'])],
-            final_model = base_model.load_retrain_model(
+            final_model = _model_functions.load_retrain_model(
                 path=self.save_path, filename='unfitted_model_trial' + str(self.study.best_trial.number),
                 X_retrain=X_retrain, y_retrain=y_retrain)
             y_pred_retrain = final_model.predict(X_in=X_retrain)

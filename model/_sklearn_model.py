@@ -1,9 +1,9 @@
-from model import base_model
+from model import _base_model
 import abc
 import numpy as np
 
 
-class SklearnModel(base_model.BaseModel, abc.ABC):
+class SklearnModel(_base_model.BaseModel, abc.ABC):
     """
     Parent class based on BaseModel for all models with a sklearn-like API to share functionalities
     See BaseModel for more information
