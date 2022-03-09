@@ -103,11 +103,17 @@ class OptunaOptim:
             additional_attributes_dict['batch_size'] = self.arguments.batch_size
             additional_attributes_dict['n_epochs'] = self.arguments.n_epochs
             additional_attributes_dict['width_onehot'] = self.dataset.X_full.shape[-1]
-        model: _base_model.BaseModel = utils.helper_functions.get_mapping_name_to_class()[self.current_model_name](
-            task=self.task, optuna_trial=trial,
-            n_outputs=len(np.unique(self.dataset.y_full)) if self.task == 'classification' else 1,
-            **additional_attributes_dict
-        )
+        try:
+            model: _base_model.BaseModel = utils.helper_functions.get_mapping_name_to_class()[self.current_model_name](
+                task=self.task, optuna_trial=trial,
+                n_outputs=len(np.unique(self.dataset.y_full)) if self.task == 'classification' else 1,
+                **additional_attributes_dict
+            )
+        except Exception as exc:
+            print('Trial failed. Error in model creation.')
+            print(exc)
+            return np.nan
+
         # save the unfitted model
         os.makedirs(self.save_path + 'temp/', exist_ok=True)
         model.save_model(path=self.save_path + 'temp/',
@@ -164,7 +170,7 @@ class OptunaOptim:
                 # model.save_model(path=self.save_path + 'temp/',
                 #                 filename=innerfold_name + '-validation_model_trial' + str(trial.number))
             except Exception as exc:
-                print('Trial failed')
+                print('Trial failed. Error in optim loop.')
                 print(exc)
                 break
         current_val_result = np.mean(objective_values)
