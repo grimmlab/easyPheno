@@ -90,7 +90,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
         for inputs, targets in val_loader:
             outputs = self.model(inputs, training=False)
             total_loss += self.get_loss(outputs=outputs, targets=targets).numpy()
-        return total_loss / len(val_loader)
+        return total_loss / len(val_loader._input_dataset)
 
     def retrain(self, X_retrain: np.array, y_retrain: np.array):
         """
