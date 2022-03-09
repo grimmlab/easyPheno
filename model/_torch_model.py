@@ -87,7 +87,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
                 inputs, targets = inputs.to(device=self.device), targets.to(device=self.device)
                 outputs = self.model(inputs)
                 total_loss += self.get_loss(outputs=outputs, targets=targets).item()
-        return total_loss / len(val_loader._input_dataset)
+        return total_loss / len(val_loader.dataset)
 
     def retrain(self, X_retrain: np.array, y_retrain: np.array):
         """
