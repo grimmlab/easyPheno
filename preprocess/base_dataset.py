@@ -15,6 +15,7 @@ class Dataset:
         self.encoding = encoding
         self.X_full, self.y_full, self.sample_ids_full = self.load_match_raw_data(arguments=arguments)
         self.maf_filter_raw_data(arguments=arguments)
+        self.filter_duplicate_snps()
         self.datasplit = arguments.datasplit
         self.datasplit_indices = self.load_datasplit_indices(arguments=arguments)
 
@@ -53,6 +54,15 @@ class Dataset:
             if f'maf_filter/maf_{arguments.maf_percentage}' in f:
                 filter_indices = f[f'maf_filter/maf_{arguments.maf_percentage}'][:]
         self.X_full = np.delete(self.X_full, filter_indices, axis=1)
+
+    def filter_duplicate_snps(self):
+        """
+        Function to remove duplicate SNPs
+        :param X: genotype matrix in additive or raw encoding
+        :return: filtered matrix
+        """
+        uniques, index = np.unique(self.X_full, return_index=True, axis=1)
+        self.X_full = uniques[:, np.argsort(index)]
 
     def load_datasplit_indices(self, arguments: argparse.Namespace):
         """
