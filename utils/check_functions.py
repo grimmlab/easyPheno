@@ -11,17 +11,17 @@ def check_all_specified_arguments(arguments: argparse.Namespace):
     :param arguments: all arguments provided by the user
     """
     # Check existence of genotype and phenotype file
-    if not os.path.isfile(arguments.base_dir + '/data/' + arguments.genotype_matrix):
+    if not os.path.isfile(arguments.data_dir + '/' + arguments.genotype_matrix):
         raise Exception('Specified genotype file ' + arguments.genotype_matrix + ' does not exist in '
-                        + arguments.base_dir + 'data/. Please check spelling.')
-    if not os.path.isfile(arguments.base_dir + '/data/' + arguments.phenotype_matrix):
+                        + arguments.data_dir + '/. Please check spelling.')
+    if not os.path.isfile(arguments.data_dir + '/' + arguments.phenotype_matrix):
         raise Exception('Specified phenotype file ' + arguments.phenotype_matrix + ' does not exist in '
-                        + arguments.base_dir + 'data/. Please check spelling.')
+                        + arguments.data_dir + '/. Please check spelling.')
     # Check existence of specified phenotype in phenotype file
-    phenotype_file = pd.read_csv(arguments.base_dir + '/data/' + arguments.phenotype_matrix)
+    phenotype_file = pd.read_csv(arguments.data_dir + '/' + arguments.phenotype_matrix)
     if arguments.phenotype not in phenotype_file.columns:
         raise Exception('Specified phenotype ' + arguments.phenotype + ' does not exist in phenotype file '
-                        + arguments.base_dir + 'data/' + arguments.phenotype_matrix + '. Check spelling.')
+                        + arguments.data_dir + '/' + arguments.phenotype_matrix + '. Check spelling.')
 
     # Check meaningfulness of specified values
     if not (0 <= arguments.maf_percentage <= 20):

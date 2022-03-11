@@ -24,7 +24,7 @@ class Dataset:
         Load the full genotype and phenotype matrices specified and match them
         :param arguments: all arguments provided by the user
         """
-        with h5py.File(arguments.base_dir + '/data/' + arguments.genotype_matrix.split('.')[0] + '.h5', "r") as f:
+        with h5py.File(arguments.data_dir + '/' + arguments.genotype_matrix.split('.')[0] + '.h5', "r") as f:
             if f'X_{self.encoding}' in f:
                 X = f[f'X_{self.encoding}'][:]
             elif f'X_{encoding_functions.get_base_encoding(self.encoding)}' in f:
@@ -35,7 +35,7 @@ class Dataset:
                 raise Exception('Genotype in ' + self.encoding + ' encoding missing. Can not create required encoding. '
                                                                  'See documentation for help')
 
-        with h5py.File(arguments.base_dir + '/data/' + self.get_index_file_name(arguments), "r") as f:
+        with h5py.File(arguments.data_dir + '/' + self.get_index_file_name(arguments), "r") as f:
             X = raw_data_functions.get_matched_data(X, f['matched_data/X_index'][:])
             y = f['matched_data/y'][:]  # TODO change if multiple phenotypes
             if helper_functions.test_likely_categorical(y):
@@ -50,7 +50,7 @@ class Dataset:
         Apply maf filter to full raw data
         :param arguments: all arguments provided by the user
         """
-        with h5py.File(arguments.base_dir + '/data/' + self.get_index_file_name(arguments), "r") as f:
+        with h5py.File(arguments.data_dir + '/' + self.get_index_file_name(arguments), "r") as f:
             if f'maf_filter/maf_{arguments.maf_percentage}' in f:
                 filter_indices = f[f'maf_filter/maf_{arguments.maf_percentage}'][:]
         self.X_full = np.delete(self.X_full, filter_indices, axis=1)
@@ -104,7 +104,7 @@ class Dataset:
                                                                         datasplit=arguments.datasplit)
 
         datasplit_indices = {}
-        with h5py.File(arguments.base_dir + '/data/' + self.get_index_file_name(arguments), "r") as f:
+        with h5py.File(arguments.data_dir + '/' + self.get_index_file_name(arguments), "r") as f:
             for m in range(n_outerfolds):
                 outerfold_path = \
                     f'datasplits/{self.datasplit}/{split_param_string}/outerfold_{m}/'
