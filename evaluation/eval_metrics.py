@@ -11,6 +11,9 @@ def get_evaluation_report(y_pred: np.array, y_true: np.array, task: str, prefix:
     :param prefix: prefix to be added to the key if multiple eval metrics are collected
     :return: dictionary with common metrics
     """
+    if len(y_pred) == (len(y_true)-1):
+        print('y_pred has one element less than y_true (e.g. due to batch size config) -> dropped last element')
+        y_true = y_true[:-1]
     if task == 'classification':
         eval_report_dict = {
             prefix + 'accuracy': sklearn.metrics.accuracy_score(y_true=y_true, y_pred=y_pred),

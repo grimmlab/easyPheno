@@ -43,64 +43,20 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
         history = self.model.fit(x=X_train, y=y_train, batch_size=self.batch_size, epochs=self.n_epochs,
                                  validation_data=(X_val, y_val), validation_freq=1, verbose=2,
                                  callbacks=[self.early_stopping_callback])
-        self.early_stopping_point = len(history.history['loss']) - self.early_stopping_patience
-        """
-        train_loader = self.get_dataloader(X=X_train, y=y_train)
-        val_loader = self.get_dataloader(X=X_val, y=y_val)
-        best_loss = None
-        epochs_wo_improvement = 0
-        for epoch in range(self.n_epochs):
-            self.train_one_epoch(train_loader=train_loader)
-            val_loss = self.validate_one_epoch(val_loader=val_loader)
-            if best_loss is None or val_loss < best_loss:
-                best_loss = val_loss
-                epochs_wo_improvement = 0
-                best_model = copy.deepcopy(self.model)
-            else:
-                epochs_wo_improvement += 1
-            print('Epoch ' + str(epoch + 1) + ' of ' + str(self.n_epochs))
-            print('Current val_loss=' + str(val_loss) + ', best val_loss=' + str(best_loss))
-            if epochs_wo_improvement >= self.early_stopping_patience:
-                print("Early Stopping at " + str(epoch + 1) + ' of ' + str(self.n_epochs))
-                self.early_stopping_point = epoch - self.early_stopping_patience
-                self.model = best_model
-                return self.predict(X_in=X_val)
-        """
+        if len(history.history['loss']) != self.n_epochs:
+            self.early_stopping_point = len(history.history['loss']) - self.early_stopping_patience
+            print("Early Stopping at " + str(self.early_stopping_point + self.early_stopping_patience)
+                  + ' of ' + str(self.n_epochs))
+
         return self.predict(X_in=X_val)
-
-    def train_one_epoch(self, train_loader: tf.data.Dataset):
-        """
-        Train one epoch
-        :param train_loader: DataLoader with training data
-        """
-        for inputs, targets in train_loader:
-            with tf.GradientTape() as tape:
-                outputs = self.model(inputs, training=True)
-                loss = self.get_loss(outputs=outputs, targets=targets)
-            grads = tape.gradient(target=loss, sources=self.model.trainable_weights)
-            self.optimizer.apply_gradients(zip(grads, self.model.trainable_weights))
-
-    def validate_one_epoch(self, val_loader: tf.data.Dataset) -> float:
-        """
-        Validate one epoch
-        :param val_loader: DataLoader with validation data
-        :return: loss based on loss-criterion
-        """
-        total_loss = 0
-        for inputs, targets in val_loader:
-            outputs = self.model(inputs, training=False)
-            total_loss += self.get_loss(outputs=outputs, targets=targets).numpy()
-        return total_loss / len(val_loader._input_dataset)
 
     def retrain(self, X_retrain: np.array, y_retrain: np.array):
         """
         Implementation of the retraining for PyTorch models.
         See BaseModel for more information
         """
-        retrain_loader = self.get_dataloader(X=X_retrain, y=y_retrain)
         n_epochs_to_retrain = self.n_epochs if self.early_stopping_point is None else self.early_stopping_point
-        for epoch in range(n_epochs_to_retrain):
-            self.train_one_epoch(retrain_loader)
+        self.model.fit(x=X_retrain, y=y_retrain, batch_size=self.batch_size, epochs=n_epochs_to_retrain, verbose=2)
 
     def predict(self, X_in: np.array) -> np.array:
         """"
@@ -117,15 +73,6 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
             predictions = predictions.argmax(axis=1)
         return predictions
 
-    def get_loss(self, outputs: tf.Tensor, targets: tf.Tensor) -> tf.Tensor:
-        """
-        Calculate the loss based on the outputs and targets
-        :param outputs: outputs of the model
-        :param targets: targets of the dataset
-        :return: loss
-        """
-        return self.loss_fn(y_pred=outputs, y_true=targets)
-
     def get_dataloader(self, X: np.array, y: np.array = None, shuffle: bool = True) -> tf.data.Dataset:
         """
         Get a Pytorch DataLoader using the specified data and batch size
@@ -134,6 +81,9 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
         :param shuffle: shuffle parameter for DataLoader
         :return: Pytorch DataLoader
         """
+        if (len(X) % self.batch_size) == 1:
+            X = X[:-1]
+            y = y[:-1] if y is not None else None
         dataset = tf.data.Dataset.from_tensor_slices((X, y)) if y is not None \
             else tf.data.Dataset.from_tensor_slices(X)
         if shuffle:
@@ -151,7 +101,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
             'dropout': {
                 'datatype': 'float',
                 'lower_bound': 0,
-                'upper_bound': 0.95,
+                'upper_bound': 0.5,
                 'step': 0.05
             },
             'act_function': {
@@ -161,7 +111,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
             'batch_size_exp': {
                 'datatype': 'int',
                 'lower_bound': 3,
-                'upper_bound': 4 #7
+                'upper_bound': 7
             },
             'n_epochs': {
                 'datatype': 'categorical',

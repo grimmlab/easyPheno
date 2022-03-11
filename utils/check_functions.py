@@ -5,50 +5,23 @@ import pandas as pd
 from utils import helper_functions
 
 
-def check_and_create_directories(arguments: argparse.Namespace):
-    """
-    Function to check if required subdirectories exist at base_dir and to create them if not
-    :param arguments: all arguments provided by the user
-    """
-    # add all required directories (directories within will be created automatically)
-    required_subdirs = [
-        'results/' + arguments.genotype_matrix.split('.')[0] + '/' + arguments.phenotype_matrix.split('.')[0] + '/' +
-        arguments.phenotype
-    ]
-
-    datasplit_string = arguments.datasplit + '/' \
-                       + helper_functions.get_subpath_for_datasplit(arguments=arguments, datasplit=arguments.datasplit)
-
-    # add subfolder for each model in case 'all' models shoudl be optimized
-    if arguments.models == 'all':
-        models = helper_functions.get_list_of_implemented_models()
-    else:
-        models = arguments.models
-    for model_name in models:
-        required_subdirs.append(required_subdirs[0] + '/' + model_name + '/' + datasplit_string)
-    for subdir in required_subdirs:
-        if not os.path.exists(arguments.base_dir + subdir):
-            os.makedirs(arguments.base_dir + subdir)
-            print('Created folder ' + arguments.base_dir + subdir)
-
-
 def check_all_specified_arguments(arguments: argparse.Namespace):
     """
     Function to check all specified arguments for plausibility
     :param arguments: all arguments provided by the user
     """
     # Check existence of genotype and phenotype file
-    if not os.path.isfile(arguments.base_dir + '/data/' + arguments.genotype_matrix):
+    if not os.path.isfile(arguments.data_dir + '/' + arguments.genotype_matrix):
         raise Exception('Specified genotype file ' + arguments.genotype_matrix + ' does not exist in '
-                        + arguments.base_dir + 'data/. Please check spelling.')
-    if not os.path.isfile(arguments.base_dir + '/data/' + arguments.phenotype_matrix):
+                        + arguments.data_dir + '/. Please check spelling.')
+    if not os.path.isfile(arguments.data_dir + '/' + arguments.phenotype_matrix):
         raise Exception('Specified phenotype file ' + arguments.phenotype_matrix + ' does not exist in '
-                        + arguments.base_dir + 'data/. Please check spelling.')
+                        + arguments.data_dir + '/. Please check spelling.')
     # Check existence of specified phenotype in phenotype file
-    phenotype_file = pd.read_csv(arguments.base_dir + '/data/' + arguments.phenotype_matrix)
+    phenotype_file = pd.read_csv(arguments.data_dir + '/' + arguments.phenotype_matrix)
     if arguments.phenotype not in phenotype_file.columns:
         raise Exception('Specified phenotype ' + arguments.phenotype + ' does not exist in phenotype file '
-                        + arguments.base_dir + 'data/' + arguments.phenotype_matrix + '. Check spelling.')
+                        + arguments.data_dir + '/' + arguments.phenotype_matrix + '. Check spelling.')
 
     # Check meaningfulness of specified values
     if not (0 <= arguments.maf_percentage <= 20):
@@ -77,7 +50,7 @@ def check_all_specified_arguments(arguments: argparse.Namespace):
         raise Exception('At least one specified model in "' + str(arguments.models) +
                         '" not found in implemented models nor "all" specified.' +
                         ' Check spelling or if implementation exists. Implemented models: ' +
-                        ''.join(helper_functions.get_list_of_implemented_models()))
+                        str(helper_functions.get_list_of_implemented_models()))
 
     # Check encoding
     if arguments.encoding is not None:

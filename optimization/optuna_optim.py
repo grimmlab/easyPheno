@@ -7,6 +7,7 @@ import numpy as np
 import os
 import glob
 import shutil
+import re
 
 import utils
 from preprocess import base_dataset
@@ -31,7 +32,7 @@ class OptunaOptim:
     """
 
     def __init__(self, arguments: argparse.Namespace, task: str, current_model_name: str,
-                 dataset: base_dataset.Dataset):
+                 dataset: base_dataset.Dataset, start_time: str):
         """
         Constructor of OptunaOptim
         :param arguments: all arguments provided by the user
@@ -46,15 +47,13 @@ class OptunaOptim:
         self.base_path = arguments.save_dir + \
             '/results/' + arguments.genotype_matrix.split('.')[0] + \
             '/' + arguments.phenotype_matrix.split('.')[0] + '/' + arguments.phenotype + \
-            '/' + current_model_name + '/' + arguments.datasplit + '/' + \
+            '/' + arguments.datasplit + '/' + \
             helper_functions.get_subpath_for_datasplit(arguments=arguments, datasplit=arguments.datasplit) + '/' + \
-            'MAF' + str(self.arguments.maf_percentage) + '/' + \
-            datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + '/'
-        if not os.path.exists(self.base_path):
-            os.makedirs(self.base_path)
+            'MAF' + str(self.arguments.maf_percentage) + '/' + start_time + '/' + current_model_name + '/'
         self.save_path = self.base_path
         self.study = None
         self.current_best_val_result = None
+        self.early_stopping_point = None
 
     def create_new_study(self) -> optuna.study.Study:
         """
@@ -103,6 +102,7 @@ class OptunaOptim:
             additional_attributes_dict['batch_size'] = self.arguments.batch_size
             additional_attributes_dict['n_epochs'] = self.arguments.n_epochs
             additional_attributes_dict['width_onehot'] = self.dataset.X_full.shape[-1]
+            early_stopping_points = []
         try:
             model: _base_model.BaseModel = utils.helper_functions.get_mapping_name_to_class()[self.current_model_name](
                 task=self.task, optuna_trial=trial,
@@ -144,6 +144,12 @@ class OptunaOptim:
             try:
                 # run train and validation loop for this fold
                 y_pred = model.train_val_loop(X_train=X_train, y_train=y_train, X_val=X_val, y_val=y_val)
+                if hasattr(model, 'early_stopping_point'):
+                    early_stopping_points.append(
+                        model.early_stopping_point if model.early_stopping_point is not None else model.n_epochs)
+                if len(y_pred) == (len(y_val) - 1):
+                    print('y_val has one element less than y_true (e.g. due to batch size config) -> drop last element')
+                    y_val = y_val[:-1]
                 objective_value = \
                     sklearn.metrics.accuracy_score(y_true=y_val, y_pred=y_pred) if self.task == 'classification' \
                     else sklearn.metrics.mean_squared_error(y_true=y_val, y_pred=y_pred)
@@ -171,13 +177,16 @@ class OptunaOptim:
                 #                 filename=innerfold_name + '-validation_model_trial' + str(trial.number))
             except Exception as exc:
                 print('Trial failed. Error in optim loop.')
+                os.remove(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial.number))
                 print(exc)
-                break
+                return np.nan
         current_val_result = np.mean(objective_values)
         if self.current_best_val_result is None or \
                 (self.task == 'classification' and current_val_result > self.current_best_val_result) or \
                 (self.task == 'regression' and current_val_result < self.current_best_val_result):
             self.current_best_val_result = current_val_result
+            if hasattr(model, 'early_stopping_point'):
+                self.early_stopping_point = int(np.mean(early_stopping_points))
             # persist results
             validation_results.to_csv(self.save_path + 'temp/validation_results_trial' + str(trial.number) + '.csv',
                                       sep=',', decimal='.', float_format='%.10f', index=False)
@@ -203,9 +212,10 @@ class OptunaOptim:
             if self.dataset.datasplit == 'nested-cv':
                 # Only print outerfold info for nested-cv as it does not apply for the other splits
                 print("## Starting Optimization for " + outerfold_name + " ##")
-                self.save_path = self.base_path + outerfold_name + '/'
-                if not os.path.exists(self.save_path):
-                    os.makedirs(self.save_path)
+                maf_ind = [m.end(0) for m in re.finditer(pattern='(MAF[0-9]+/)+([0-9]|-|_)+', string=self.base_path)][0]
+                self.save_path = self.base_path[:maf_ind] + '/' + outerfold_name + self.base_path[maf_ind:]
+            if not os.path.exists(self.save_path):
+                os.makedirs(self.save_path)
             # Create a new study for each outerfold
             self.study = self.create_new_study()
             self.current_best_val_result = None
@@ -244,7 +254,7 @@ class OptunaOptim:
                                                       outerfold_info['test'])],
             final_model = _model_functions.load_retrain_model(
                 path=self.save_path, filename='unfitted_model_trial' + str(self.study.best_trial.number),
-                X_retrain=X_retrain, y_retrain=y_retrain)
+                X_retrain=X_retrain, y_retrain=y_retrain, early_stopping_point=self.early_stopping_point)
             y_pred_retrain = final_model.predict(X_in=X_retrain)
             y_pred_test = final_model.predict(X_in=X_test)
 

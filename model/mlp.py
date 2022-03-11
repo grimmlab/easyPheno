@@ -5,7 +5,7 @@ from model import _torch_model
 
 class Mlp(_torch_model.TorchModel):
     standard_encoding = '012'
-    possible_encodings = ['012', 'raw']
+    possible_encodings = ['012']
 
     def define_model(self) -> torch.nn.Sequential:
         """See BaseModel for more information"""
@@ -13,14 +13,15 @@ class Mlp(_torch_model.TorchModel):
         model = []
         act_function = self.get_torch_object_for_string(string_to_get=self.suggest_hyperparam_to_optuna('act_function'))
         in_features = self.n_features
+        out_features = int(in_features * self.suggest_hyperparam_to_optuna('n_initial_units_factor'))
         for layer in range(n_layers):
-            out_features = 2 ** self.suggest_hyperparam_to_optuna('n_units_per_layer_exp')
             model.append(torch.nn.Linear(in_features=in_features, out_features=out_features))
             model.append(act_function)
             model.append(torch.nn.BatchNorm1d(num_features=out_features))
             p = self.suggest_hyperparam_to_optuna('dropout')
             model.append(torch.nn.Dropout(p=p))
             in_features = out_features
+            out_features = int(in_features * (1-self.suggest_hyperparam_to_optuna('perc_decrease_per_layer')))
         model.append(torch.nn.Linear(in_features=in_features, out_features=self.n_outputs))
         return torch.nn.Sequential(*model)
 
@@ -30,11 +31,18 @@ class Mlp(_torch_model.TorchModel):
             'n_layers': {
                 'datatype': 'int',
                 'lower_bound': 1,
-                'upper_bound': 4  # 10
+                'upper_bound': 4
             },
-            'n_units_per_layer_exp': {
-                'datatype': 'int',
-                'lower_bound': 2,
-                'upper_bound': 6  # 10
+            'n_initial_units_factor': {
+                'datatype': 'float',
+                'lower_bound': 0.5,
+                'upper_bound': 1,
+                'step': 0.1
             },
+            'perc_decrease_per_layer': {
+                'datatype': 'float',
+                'lower_bound': 0.1,
+                'upper_bound': 0.5,
+                'step': 0.1
+            }
         }
