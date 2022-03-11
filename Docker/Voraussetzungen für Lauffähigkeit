@@ -1,0 +1,10 @@
+Docker >= 20.10.12 installiert auf dem Rechner (wenn Docker genutzt werden soll) (https://docs.docker.com/engine/install/)
+
+Ohne Docker:
+- Python >= 3.8
+- alle Packages aus dem requirements txt
+- install torch==1.10.2+cu111 -f https://download.pytorch.org/whl/torch_stable.html falls Torch mit CUDA Support
+
+Für GPU support:
+- Cuda >= 11.2
+- nvidia-docker-2 installiert (https://github.com/NVIDIA/nvidia-docker)

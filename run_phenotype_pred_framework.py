@@ -1,4 +1,5 @@
 import argparse
+import datetime
 
 import optimization.optuna_optim
 import preprocess.base_dataset
@@ -6,7 +7,6 @@ from utils import check_functions, print_functions, helper_functions
 from preprocess import encoding_functions
 import pprint
 from preprocess import raw_data_functions
-from model import *
 
 if __name__ == '__main__':
     """
@@ -55,10 +55,10 @@ if __name__ == '__main__':
     parser.add_argument("-valperc", "--validation_set_size_percentage", type=int, default=20,
                         help="specify the size of the validation set in percentage. "
                              "Standard is 20, only relevant 'train-val-test'")
-    parser.add_argument("-outerfolds", "--n_outerfolds", type=int, default=5,
+    parser.add_argument("-outerfolds", "--n_outerfolds", type=int, default=3,
                         help="specify the number of outerfolds to use for 'nested_cv'"
                              "Standard is 20, only relevant 'nested_cv'")
-    parser.add_argument("-folds", "--n_innerfolds", type=int, default=5,
+    parser.add_argument("-folds", "--n_innerfolds", type=int, default=3,
                         help="specify the number of innerfolds/folds to use for 'nested_cv' respectively 'cv-test'"
                              "Standard is 5, only relevant 'nested_cv' and 'cv-test'")
 
@@ -91,24 +91,22 @@ if __name__ == '__main__':
     ### Checks and Raw Data Input Preparation ###
     # Check all arguments
     check_functions.check_all_specified_arguments(arguments=args)
-    # Check and create subdirectories
-    check_functions.check_and_create_directories(arguments=args)
     # prepare all data files
     raw_data_functions.prepare_data_files(arguments=args)
-    # Print info for current config
-    print_functions.print_config_info()
 
     ### Optimization Pipeline ###
     helper_functions.set_all_seeds()
     models_to_optimize = helper_functions.get_list_of_implemented_models() if args.models == 'all' else args.models
     model_overview = {}
-    for current_model_name in models_to_optimize:
+    start_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    for optim_run, current_model_name in enumerate(models_to_optimize):
         encoding = args.encoding if args.encoding is not None \
             else helper_functions.get_mapping_name_to_class()[current_model_name].standard_encoding
         dataset = preprocess.base_dataset.Dataset(arguments=args, encoding=encoding)
         task = 'classification' if helper_functions.test_likely_categorical(dataset.y_full) else 'regression'
-        # maybe print function would make sense here as dataset is already loaded
-        optuna_run = optimization.optuna_optim.OptunaOptim(arguments=args, task=task,
+        if optim_run == 0:
+            print_functions.print_config_info(arguments=args, dataset=dataset, task=task)
+        optuna_run = optimization.optuna_optim.OptunaOptim(arguments=args, task=task, start_time=start_time,
                                                            current_model_name=current_model_name, dataset=dataset)
         print('### Starting Optuna Optimization for ' + current_model_name + ' ###')
         overall_results = optuna_run.run_optuna_optimization()
@@ -117,3 +115,7 @@ if __name__ == '__main__':
     print('# Optimization runs done for models ' + str(models_to_optimize))
     print('Results overview on the test set(s)')
     pprint.PrettyPrinter(depth=4).pprint(model_overview)
+    path_overview_file = \
+        optuna_run.base_path[:[index for index, letter in enumerate(optuna_run.base_path) if letter == '/'][-2]] + \
+        '/Results_overiew_' + '_'.join(args.models) + '.csv'
+    helper_functions.save_model_overview_dict(model_overview=model_overview, save_path=path_overview_file)

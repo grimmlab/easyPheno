@@ -15,27 +15,29 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
         in_channels = self.width_onehot
         width = self.n_features
         model.add(tf.keras.Input(shape=(width, in_channels)))
-        # Add n_layers with: Conv1d + BatchNorm + activation + Dropout
-        for layer in range(n_layers):
-            out_channels = 2 ** self.suggest_hyperparam_to_optuna('out_channels_exp')
-            kernel_size = 2 ** self.suggest_hyperparam_to_optuna('kernel_size_exp')
-            stride = max(1, int(kernel_size * self.suggest_hyperparam_to_optuna('stride_perc_of_kernel_size')))
-            model.add(tf.keras.layers.Conv1D(filters=out_channels, kernel_size=kernel_size,
-                                             strides=stride, activation=None))
-            model.add(tf.keras.layers.BatchNormalization())
-            model.add(act_function)
-            p = self.suggest_hyperparam_to_optuna('dropout')
-            model.add(tf.keras.layers.Dropout(rate=p, seed=42))
-        # Max pooling
-        kernel_size_max_pool = 2 ** self.suggest_hyperparam_to_optuna('kernel_size_exp')
-        model.add(tf.keras.layers.MaxPool1D(pool_size=kernel_size_max_pool))
-        # Flatten and linear layers with dropout
-        model.add(tf.keras.layers.Flatten())
-        out_features = 2 ** self.suggest_hyperparam_to_optuna('n_units_per_layer_exp')
-        model.add(tf.keras.layers.Dense(units=out_features, activation=None))
+        # Add 1 layer with: Locally Connected 1D + BatchNorm + activation + Dropout
+        n_filters = self.suggest_hyperparam_to_optuna('n_filters')
+        kernel_size = 2 ** self.suggest_hyperparam_to_optuna('kernel_size_exp')
+        stride = max(1, int(kernel_size * self.suggest_hyperparam_to_optuna('stride_perc_of_kernel_size')))
+        model.add(tf.keras.layers.LocallyConnected1D(filters=n_filters, kernel_size=kernel_size,
+                                                     strides=stride, activation=None))
+        model.add(tf.keras.layers.BatchNormalization())
         model.add(act_function)
         p = self.suggest_hyperparam_to_optuna('dropout')
-        model.add(tf.keras.layers.Dropout(rate=p))
+        model.add(tf.keras.layers.Dropout(rate=p, seed=42))
+        # Max pooling
+        kernel_size_max_pool = 2 ** self.suggest_hyperparam_to_optuna('maxpool_kernel_size_exp')
+        model.add(tf.keras.layers.MaxPool1D(pool_size=kernel_size_max_pool))
+        # Flatten
+        model.add(tf.keras.layers.Flatten())
+        n_units = int(model.output_shape[1] * self.suggest_hyperparam_to_optuna('n_initial_units_factor'))
+        for layer in range(n_layers):
+            model.add(tf.keras.layers.Dense(units=n_units, activation=None))
+            model.add(act_function)
+            model.add(tf.keras.layers.BatchNormalization())
+            p = self.suggest_hyperparam_to_optuna('dropout')
+            model.add(tf.keras.layers.Dropout(rate=p))
+            n_units = int(n_units * (1-self.suggest_hyperparam_to_optuna('perc_decrease_per_layer')))
         model.add(tf.keras.layers.Dense(units=self.n_outputs))
         return model
 
@@ -44,28 +46,38 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
         return { # TODO: ranges anpassen for start der Experimente
             'n_layers': {
                 'datatype': 'int',
-                'lower_bound': 1,
-                'upper_bound': 4  # 10
+                'lower_bound': 2,
+                'upper_bound': 4
             },
-            'out_channels_exp': {
+            'n_filters': {
                 'datatype': 'int',
                 'lower_bound': 1,
                 'upper_bound': 3
             },
             'kernel_size_exp': {
                 'datatype': 'int',
+                'lower_bound': 3,
+                'upper_bound': 8
+            },
+            'maxpool_kernel_size_exp': {
+                'datatype': 'int',
                 'lower_bound': 2,
-                'upper_bound': 3  # 8
+                'upper_bound': 4
             },
             'stride_perc_of_kernel_size': {
+                'datatype': 'categorical',
+                'list_of_values': [0.5, 1]
+            },
+            'n_initial_units_factor': {
                 'datatype': 'float',
-                'lower_bound': 0,
+                'lower_bound': 0.5,
                 'upper_bound': 1,
                 'step': 0.1
             },
-            'n_units_per_layer_exp': {
-                'datatype': 'int',
-                'lower_bound': 2,
-                'upper_bound': 3  # 10
+            'perc_decrease_per_layer': {
+                'datatype': 'float',
+                'lower_bound': 0.1,
+                'upper_bound': 0.5,
+                'step': 0.1
             }
         }

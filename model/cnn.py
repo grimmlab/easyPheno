@@ -15,29 +15,28 @@ class Cnn(_torch_model.TorchModel):
         model = []
         act_function = self.get_torch_object_for_string(string_to_get=self.suggest_hyperparam_to_optuna('act_function'))
         in_channels = self.width_onehot
-        width = self.n_features
+        kernel_size = 2 ** self.suggest_hyperparam_to_optuna('kernel_size_exp')
+        stride = max(1, int(kernel_size * self.suggest_hyperparam_to_optuna('stride_perc_of_kernel_size')))
+        out_channels = 2 ** self.suggest_hyperparam_to_optuna('initial_out_channels_exp')
+        kernel_size_max_pool = 2 ** self.suggest_hyperparam_to_optuna('maxpool_kernel_size_exp')
+        frequency_out_channels_doubling = self.suggest_hyperparam_to_optuna('frequency_out_channels_doubling')
         # Add n_layers with: Conv1d + BatchNorm + activation + Dropout
         for layer in range(n_layers):
-            out_channels = 2 ** self.suggest_hyperparam_to_optuna('out_channels_exp')
-            kernel_size = 2 ** self.suggest_hyperparam_to_optuna('kernel_size_exp')
-            stride = max(1, int(kernel_size * self.suggest_hyperparam_to_optuna('stride_perc_of_kernel_size')))
             model.append(torch.nn.Conv1d(in_channels=in_channels, out_channels=out_channels,
                                          kernel_size=kernel_size, stride=stride))
             model.append(act_function)
             model.append(torch.nn.BatchNorm1d(num_features=out_channels))
             p = self.suggest_hyperparam_to_optuna('dropout')
             model.append(torch.nn.Dropout(p))
+            model.append(torch.nn.MaxPool1d(kernel_size=kernel_size_max_pool))
             in_channels = out_channels
-            width = int(((width + 2 * padding - dilation * (kernel_size - 1) - 1) / stride) + 1)
-        # Max pooling
-        kernel_size_max_pool = 2 ** self.suggest_hyperparam_to_optuna('kernel_size_exp')
-        model.append(torch.nn.MaxPool1d(kernel_size=kernel_size_max_pool))
-        stride = kernel_size_max_pool
-        n_out_max_pool = int(((width + 2*padding - dilation * (kernel_size_max_pool - 1) - 1) / stride) + 1)
+            if (layer+1) % frequency_out_channels_doubling:
+                out_channels *= 2
         # Flatten and linear layers with dropout
         model.append(torch.nn.Flatten())
-        out_features = 2 ** self.suggest_hyperparam_to_optuna('n_units_per_layer_exp')
-        model.append(torch.nn.Linear(in_features=n_out_max_pool * out_channels, out_features=out_features))
+        in_features = torch.nn.Sequential(*model)(torch.zeros(size=(1, self.width_onehot, self.n_features))).shape[1]
+        out_features = int(in_features * self.suggest_hyperparam_to_optuna('n_units_factor_linear_layer'))
+        model.append(torch.nn.Linear(in_features=in_features, out_features=out_features))
         model.append(act_function)
         model.append(torch.nn.BatchNorm1d(num_features=out_features))
         p = self.suggest_hyperparam_to_optuna('dropout')
@@ -47,21 +46,31 @@ class Cnn(_torch_model.TorchModel):
 
     def define_hyperparams_to_tune(self) -> dict:
         """See BaseModel for more information on the format"""
-        return { # TODO: ranges anpassen for start der Experimente
+        return {
             'n_layers': {
                 'datatype': 'int',
                 'lower_bound': 1,
-                'upper_bound': 4  # 10
+                'upper_bound': 3
             },
-            'out_channels_exp': {
+            'initial_out_channels_exp': {
                 'datatype': 'int',
                 'lower_bound': 1,
-                'upper_bound': 6
+                'upper_bound': 5
+            },
+            'frequency_out_channels_doubling': {
+                'datatype': 'int',
+                'lower_bound': 1,
+                'upper_bound': 2
             },
             'kernel_size_exp': {
                 'datatype': 'int',
                 'lower_bound': 2,
-                'upper_bound': 6  # 8
+                'upper_bound': 6
+            },
+            'maxpool_kernel_size_exp': {
+                'datatype': 'int',
+                'lower_bound': 2,
+                'upper_bound': 4
             },
             'stride_perc_of_kernel_size': {
                 'datatype': 'float',
@@ -69,9 +78,10 @@ class Cnn(_torch_model.TorchModel):
                 'upper_bound': 1,
                 'step': 0.1
             },
-            'n_units_per_layer_exp': {
-                'datatype': 'int',
-                'lower_bound': 2,
-                'upper_bound': 6  # 10
-            }
+            'n_units_factor_linear_layer': {
+                'datatype': 'float',
+                'lower_bound': 0.1,
+                'upper_bound': 1,
+                'step': 0.1
+            },
         }

@@ -98,6 +98,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
         n_epochs_to_retrain = self.n_epochs if self.early_stopping_point is None else self.early_stopping_point
         self.model.to(device=self.device)
         for epoch in range(n_epochs_to_retrain):
+            print('Retrain: Epoch ' + str(epoch + 1) + ' of ' + str(n_epochs_to_retrain))
             self.train_one_epoch(retrain_loader)
 
     def predict(self, X_in: np.array) -> np.array:
@@ -136,6 +137,9 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
         :param shuffle: shuffle parameter for DataLoader
         :return: Pytorch DataLoader
         """
+        if (len(X) % self.batch_size) == 1:
+            X = X[:-1]
+            y = y[:-1] if y is not None else None
         X_tensor = torch.from_numpy(X).float()
         if self.encoding == 'onehot':
             X_tensor = torch.swapaxes(X_tensor, 1, 2)
@@ -156,7 +160,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
             'dropout': {
                 'datatype': 'float',
                 'lower_bound': 0,
-                'upper_bound': 0.95,
+                'upper_bound': 0.5,
                 'step': 0.05
             },
             'act_function': {
@@ -166,7 +170,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
             'batch_size_exp': {
                 'datatype': 'int',
                 'lower_bound': 3,
-                'upper_bound': 4 #7
+                'upper_bound': 7
             },
             'n_epochs': {
                 'datatype': 'categorical',

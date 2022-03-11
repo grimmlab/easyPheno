@@ -6,7 +6,7 @@ from model import _sklearn_model
 class XgBoost(_sklearn_model.SklearnModel):
     """See BaseModel for more information on the parameters"""
     standard_encoding = '012'
-    possible_encodings = ['012', 'raw']
+    possible_encodings = ['012']
 
     def define_model(self) -> xgboost.XGBModel:
         """See BaseModel for more information"""
