@@ -53,7 +53,7 @@ def check_encoding_of_genotype(X: np.array):
     :return: name of encoding
     """
     unique = np.unique(X)
-    if all(z in ['A', 'C', 'G', 'T'] for z in unique):  # TODO heterozygous
+    if all(z in ['A', 'C', 'G', 'T'] for z in unique.astype(str)):  # TODO heterozygous
         return 'raw'
     elif all(z in [0, 1, 2] for z in unique):
         return '012'
