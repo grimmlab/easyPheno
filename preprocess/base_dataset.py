@@ -24,30 +24,33 @@ class Dataset:
         Load the full genotype and phenotype matrices specified and match them
         :param arguments: all arguments provided by the user
         """
-        with h5py.File(arguments.data_dir + '/' + arguments.genotype_matrix.split('.')[0] + '.h5', "r") as f:
-            if f'X_{self.encoding}' in f:
-                X = f[f'X_{self.encoding}'][:]
-            elif f'X_{encoding_functions.get_base_encoding(self.encoding)}' in f:
-                X_base = f[f'X_{encoding_functions.get_base_encoding(self.encoding)}'][:]
-                X = encoding_functions.encode_genotype(X_base, self.encoding,
-                                                       encoding_functions.get_base_encoding(self.encoding))
-            else:
-                raise Exception('Genotype in ' + self.encoding + ' encoding missing. Can not create required encoding. '
-                                                                 'See documentation for help')
-
         with h5py.File(arguments.data_dir + '/' + self.get_index_file_name(arguments), "r") as f:
-            X = raw_data_functions.get_matched_data(X, f['matched_data/X_index'][:])
             y = f['matched_data/y'][:]  # TODO change if multiple phenotypes
             if helper_functions.test_likely_categorical(y):
                 if y.dtype.type is np.float64:
                     y = y.astype(int)
                 y = sklearn.preprocessing.LabelEncoder().fit_transform(y)
             sample_ids = f['matched_data/matched_sample_ids'][:]
+            non_informative_filter = f['matched_data/non_informative_filter'][:]
+            X_index = f['matched_data/X_index'][:]
+
+        with h5py.File(arguments.data_dir + '/' + arguments.genotype_matrix.split('.')[0] + '.h5', "r") as f:
+            if f'X_{self.encoding}' in f:
+                X = f[f'X_{self.encoding}'][:, non_informative_filter]
+            elif f'X_{encoding_functions.get_base_encoding(self.encoding)}' in f:
+                X_base = f[f'X_{encoding_functions.get_base_encoding(self.encoding)}'][:, non_informative_filter]
+                X = encoding_functions.encode_genotype(X_base, self.encoding,
+                                                       encoding_functions.get_base_encoding(self.encoding))
+            else:
+                raise Exception('Genotype in ' + self.encoding + ' encoding missing. Can not create required encoding. '
+                                                                 'See documentation for help')
+        X = raw_data_functions.get_matched_data(X, X_index)
+
         return X, np.reshape(y, (-1, 1)), np.reshape(sample_ids, (-1, 1))
 
     def maf_filter_raw_data(self, arguments: argparse.Namespace):
         """
-        Apply maf filter to full raw data
+        Apply maf filter to full raw data, if maf=0 only non-informative SNPs will be removed
         :param arguments: all arguments provided by the user
         """
         with h5py.File(arguments.data_dir + '/' + self.get_index_file_name(arguments), "r") as f:
