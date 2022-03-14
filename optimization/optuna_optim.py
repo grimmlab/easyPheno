@@ -8,6 +8,9 @@ import os
 import glob
 import shutil
 import re
+import gc
+
+import torch.cuda
 
 import utils
 from preprocess import base_dataset
@@ -175,10 +178,17 @@ class OptunaOptim:
                     validation_results.at[0, metric] = value
                 # model.save_model(path=self.save_path + 'temp/',
                 #                 filename=innerfold_name + '-validation_model_trial' + str(trial.number))
-            except Exception as exc:
-                print('Trial failed. Error in optim loop.')
-                os.remove(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial.number))
+            except RuntimeError as exc:
                 print(exc)
+                if 'out of memory' in str(exc):
+                    # Recover from CUDA out of memory error
+                    print('CUDA OOM at batch_size ' + str(model.batch_size))
+                    del model
+                    gc.collect()
+                    torch.cuda.empty_cache()
+                else:
+                    print('Trial failed. Error in optim loop.')
+                os.remove(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial.number))
                 return np.nan
         current_val_result = np.mean(objective_values)
         if self.current_best_val_result is None or \

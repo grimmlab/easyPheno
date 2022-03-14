@@ -124,3 +124,14 @@ def save_model_overview_dict(model_overview: dict, save_path: str):
             results_overiew.at['mean_over_all_folds', model_name + '___' + 'eval_metrics'] = [result_dicts]
             results_overiew.at['std_over_all_folds', model_name + '___' + 'eval_metrics'] = [result_dicts_std]
     results_overiew.to_csv(save_path)
+
+
+def sort_models_by_encoding(models_list: list) -> list:
+    """
+    Sort models by the encoding that will be used
+    :param models_list: unsorted list of models
+    :return: list of models sorted by encoding
+    """
+    encodings = [get_mapping_name_to_class()[model_name].standard_encoding for model_name in models_list]
+    sorted_models_list = [el[0] for el in sorted(zip(models_list, encodings), key=lambda x: x[1])]
+    return sorted_models_list
