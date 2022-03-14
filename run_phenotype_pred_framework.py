@@ -97,15 +97,22 @@ if __name__ == '__main__':
     ### Optimization Pipeline ###
     helper_functions.set_all_seeds()
     models_to_optimize = helper_functions.get_list_of_implemented_models() if args.models == 'all' else args.models
+    if len(models_to_optimize) > 1:
+        models_to_optimize = helper_functions.sort_models_by_encoding(models_list=models_to_optimize)
     model_overview = {}
     start_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     for optim_run, current_model_name in enumerate(models_to_optimize):
         encoding = args.encoding if args.encoding is not None \
             else helper_functions.get_mapping_name_to_class()[current_model_name].standard_encoding
-        dataset = preprocess.base_dataset.Dataset(arguments=args, encoding=encoding)
-        task = 'classification' if helper_functions.test_likely_categorical(dataset.y_full) else 'regression'
         if optim_run == 0:
+            print('----- Starting dataset preparation -----')
+            dataset = preprocess.base_dataset.Dataset(arguments=args, encoding=encoding)
+            task = 'classification' if helper_functions.test_likely_categorical(dataset.y_full) else 'regression'
             print_functions.print_config_info(arguments=args, dataset=dataset, task=task)
+        else:
+            if dataset.encoding != encoding:
+                print('Load new dataset encoding')
+                dataset = preprocess.base_dataset.Dataset(arguments=args, encoding=encoding)
         optuna_run = optimization.optuna_optim.OptunaOptim(arguments=args, task=task, start_time=start_time,
                                                            current_model_name=current_model_name, dataset=dataset)
         print('### Starting Optuna Optimization for ' + current_model_name + ' ###')
