@@ -12,16 +12,100 @@ from preprocess import encoding_functions as enc
 
 def prepare_data_files(arguments: argparse.Namespace):
     """
+    First check if genotype file is .h5 file
+        NO:     Load genotype and create all required .h5 files
+        YES:    First check if all required datasets are available, raise Exception if not.
+                Then check if index file exists
+                    NO: Load genotype and create all required .h5 files
+                    YES: Append all required data splits and ma-filters to index file
+    :param arguments:
+    :return:
+    """
+    print('Check if all data files have the required format')
+    suffix = arguments.genotype_matrix.split('.')[-1]
+    if suffix in ('h5', 'hdf5', 'h5py'):
+        check_genotype_h5_file(arguments, enc.get_encoding(arguments))
+        print('Genotype file available in required format, check index file now.')
+        if check_index_file(arguments):
+            print('Index file ' + arguments.genotype_matrix.split('.')[0] + '-'\
+                    + arguments.phenotype_matrix.split('.')[0] + '-' + arguments.phenotype + '.h5' + ' already exists.'
+                    ' Will append required filters and data splits now.')
+            append_index_file(arguments)
+            print('Done checking data files. All required datasets are available.')
+        else:
+            print('Index file ' + arguments.genotype_matrix.split('.')[0] + '-'\
+                    + arguments.phenotype_matrix.split('.')[0] + '-' + arguments.phenotype + '.h5' + ' does not fulfill'
+                    ' requirements. Will load genotype and phenotype matrix and create new index file.')
+            save_all_data_files(arguments)
+            print('Done checking data files. All required datasets are available.')
+    else:
+        print('Genotype file not in required format. Will load genotype matrix and save as .h5 file. Will also create '
+              'required index file.')
+        save_all_data_files(arguments)
+        print('Done checking data files. All required datasets are available.')
+
+
+def check_genotype_h5_file(arguments: argparse.Namespace, encodings: list):
+    """
+    Function to check .h5 genotype file. Should contain:
+    sample_ids: vector with sample names of genotype matrix,
+    snp_ids: vector with SNP identifiers of genotype matrix,
+    X_{enc}: (samples x SNPs)-genotype matrix in enc encoding, where enc might refer to:
+            '012': additive (number of minor alleles)
+            'raw': raw (alleles)
+    :param arguments: all arguments specified by the user
+    :param encodings: list of needed encodings
+    :return:
+    """
+    with h5py.File(arguments.data_dir + '/' + arguments.genotype_matrix, "r") as f:
+        keys = list(f.keys())
+        if {'sample_ids', 'snp_ids'}.issubset(keys):
+            # check if required encoding is available or can be created
+            for elem in encodings:  # TODO what if several base encodings are possible?
+                if f'X_{elem}' not in f and f'X_{enc.get_base_encoding(elem)}' not in f:
+                    raise Exception('Genotype in ' + elem + ' encoding missing. Can not create required encoding. '
+                                                            'See documentation for help')
+        else:
+            raise Exception('sample_ids and/or snp_ids are missing in' + arguments.genotype_matrix)
+
+
+def check_index_file(arguments: argparse.Namespace):
+    """
+    Check if index file is available and if the datasets 'y', 'matched_sample_ids', 'X_index', 'y_index' and
+    'ma_frequency' exist.
+    :param arguments:
+    :return:
+    """
+    index_file = arguments.data_dir + '/' + arguments.genotype_matrix.split('.')[0] + '-'\
+                    + arguments.phenotype_matrix.split('.')[0] + '-' + arguments.phenotype + '.h5'
+    if os.path.isfile(index_file):
+        matched_datasets = ['y', 'matched_sample_ids', 'X_index', 'y_index', 'non_informative_filter', 'ma_frequency']
+        with h5py.File(index_file, 'a') as f:
+            if 'matched_data' in f and all(z in f['matched_data'] for z in matched_datasets):
+                return True
+            else:
+                return False
+    else:
+        return False
+
+
+def save_all_data_files(arguments: argparse.Namespace):
+    """
     Function to prepare and save all required data files:
         - genotype matrix in unified format as .h5 file with,
         - phenotype matrix in unified format as .csv file,
         - file containing maf filter and data split indices as .h5.
     :param arguments: all arguments specified by the user
     """
+    print('Load genotype file ' + arguments.data_dir + '/' + arguments.genotype_matrix)
     X, X_ids = check_transform_format_genotype_matrix(arguments=arguments)
+    print('Have genotype matrix. Load phenotype ' + arguments.phenotype + ' from ' + arguments.data_dir + '/' +
+          arguments.phenotype_matrix)
     y = check_and_load_phenotype_matrix(arguments=arguments)
+    print('Have phenotype vector. Start matching genotype and phenotype.')
     X, y, sample_ids, X_index, y_index = genotype_phenotype_matching(X, X_ids, y)
-    check_create_index_file(arguments, X, y, sample_ids, X_index, y_index)
+    print('Done matching genotype and phenotype. Create index file now.')
+    create_index_file(arguments, X, y, sample_ids, X_index, y_index)
 
 
 def check_transform_format_genotype_matrix(arguments: argparse.Namespace):
@@ -44,69 +128,26 @@ def check_transform_format_genotype_matrix(arguments: argparse.Namespace):
     suffix = arguments.genotype_matrix.split('.')[-1]
     encoding = enc.get_encoding(arguments)
     if suffix in ('h5', 'hdf5', 'h5py'):
-        sample_ids, snp_ids, X_012, X_raw = check_genotype_h5_file(arguments, encoding)
+        with h5py.File(arguments.data_dir + '/' + arguments.genotype_matrix, "r") as f:
+            sample_ids = f['sample_ids'][:]
+            if 'X_raw' in f:
+                X = f['X_raw'][:]
+            elif 'X_012' in f:
+                X = f['X_012'][:]
     else:
         if suffix == 'csv':
-            sample_ids, snp_ids, X_012, X_raw = check_genotype_csv_file(arguments, encoding)
+            sample_ids, snp_ids, X = check_genotype_csv_file(arguments, encoding)
 
         elif suffix in ('bed', 'bim', 'fam'):
-            sample_ids, snp_ids, X_012, X_raw = check_genotype_binary_plink_file(arguments)
+            sample_ids, snp_ids, X = check_genotype_binary_plink_file(arguments)
 
         elif suffix in ('map', 'ped'):
-            sample_ids, snp_ids, X_012, X_raw = check_genotype_plink_file(arguments)
+            sample_ids, snp_ids, X = check_genotype_plink_file(arguments)
         else:
             raise Exception('Only accept .h5, .hdf5, .h5py, .csv, binary PLINK and PLINK genotype files. '
                             'See documentation for help.')
-        X_012, X_raw, snp_ids = filter_non_informative_snps(X_012, X_raw, snp_ids)
-    if snp_ids is not None:
-        create_genotype_h5_file(arguments, sample_ids, snp_ids, X_012, X_raw)
-    return X_012, sample_ids
-
-
-def check_genotype_h5_file(arguments: argparse.Namespace, encodings: list):
-    """
-    Function to load and check .h5 genotype file. Should contain:
-    sample_ids: vector with sample names of genotype matrix,
-    snp_ids: vector with SNP identifiers of genotype matrix,
-    X_{enc}: (samples x SNPs)-genotype matrix in enc encoding, where enc might refer to:
-            '012': additive (number of minor alleles)
-            'raw': raw (alleles)
-    In order to work with other encodings X_raw is required.
-    If genotype matrix contains non-informative SNPs (with standard deviation = 0) returns matrix without those SNPs
-    :param arguments: all arguments specified by the user
-    :param encodings: list of needed encodings
-    :return: sample_ids, snp_ids, X_012, X_raw;
-    snp_ids and X_raw might be None if matrix does not contain non-informative SNPs
-    """
-    with h5py.File(arguments.data_dir + '/' + arguments.genotype_matrix, "r") as f:
-        keys = list(f.keys())
-        if {'sample_ids', 'snp_ids'}.issubset(keys):
-            sample_ids = f['sample_ids'][:]
-            snp_ids = f['snp_ids'][:]
-            # check if required encoding is available or can be created
-            for elem in encodings:  # TODO what if several base encodings are possible?
-                if f'X_{elem}' not in f and f'X_{enc.get_base_encoding(elem)}' not in f:
-                    raise Exception('Genotype in ' + elem + ' encoding missing. Can not create required encoding. '
-                                                            'See documentation for help')
-            # load X_012 for further processing
-            if 'X_raw' in f:
-                X_raw = f['X_raw'][:]
-                X_012 = enc.encode_genotype(X_raw, '012', 'raw')
-            elif 'X_012' in f:
-                X_012 = f['X_012'][:]
-                X_raw = None
-            else:
-                raise Exception('No genotype matrix in file ' + arguments.genotype_matrix + '. Need genotype matrix in '
-                                'raw or additive encoding. See documentation for help')
-            # check if genotype contains constant SNPs
-            m = X_012.shape[1]
-            X_012, X_raw, snp_ids = filter_non_informative_snps(X_012, X_raw, snp_ids)
-            if X_012.shape[1] != m or arguments.genotype_matrix.split("-")[0] != 'unified':
-                return sample_ids, snp_ids, X_012, X_raw
-            else:
-                return sample_ids, None, X_012, None
-        else:
-            raise Exception('sample_ids and/or snp_ids are missing in' + arguments.genotype_matrix)
+        create_genotype_h5_file(arguments, sample_ids, snp_ids, X)
+    return X, sample_ids
 
 
 def check_genotype_csv_file(arguments: argparse.Namespace, encodings: list):
@@ -130,16 +171,7 @@ def check_genotype_csv_file(arguments: argparse.Namespace, encodings: list):
         if elem != enc_of_X and enc.get_base_encoding(elem) != enc_of_X:
             raise Exception('Genotype in ' + arguments.genotype_matrix + ' in wrong encoding. Can not create'
                             ' required encoding. See documentation for help.')
-    # create 012 encoding for further processing
-    if enc_of_X == 'raw':
-        X_012 = enc.encode_genotype(X, '012', 'raw')
-        return sample_ids, snp_ids, X_012, X
-    elif enc_of_X == '012':
-        return sample_ids, snp_ids, X, None
-    else:
-        raise Exception('Genotype in ' + arguments.genotype_matrix + ' is neither in additive nor in raw '
-                        'encoding. Currently only accept additive or raw encoding for .csv files. '
-                        'See documentation for help.')
+    return sample_ids, snp_ids, X
 
 
 def check_genotype_binary_plink_file(arguments: argparse.Namespace):
@@ -159,7 +191,7 @@ def check_genotype_binary_plink_file(arguments: argparse.Namespace):
     col = np.arange(len(a[0]))
     X_012 = np.array(gt.values)
     X_raw = a[X_012.astype(int), col]
-    return sample_ids, snp_ids, X_012, X_raw
+    return sample_ids, snp_ids, X_raw
 
 
 def check_genotype_plink_file(arguments: argparse.Namespace):
@@ -193,28 +225,10 @@ def check_genotype_plink_file(arguments: argparse.Namespace):
             X_raw.append(snps)
     sample_ids = np.array(sample_ids)
     X_raw = np.array(X_raw)
-    X_012 = enc.encode_genotype(X_raw, '012', 'raw')
-    return sample_ids, snp_ids, X_012, X_raw
+    return sample_ids, snp_ids, X_raw
 
 
-def filter_non_informative_snps(X_012: np.array, X_raw: np.array, snp_ids: np.array):
-    """
-    Function to remove constant SNPs, i.e. SNPs where all values are equal.
-    :param X_012: genotype matrix in additive encoding
-    :param X_raw: genotype matrix in raw encoding
-    :param snp_ids: array containing the SNP ids
-    :return: filtered genotype matrices and SNP_ids
-    """
-    tmp = np.where(X_012.std(axis=0) == 0)[0]
-    X_012 = np.delete(X_012, tmp, axis=1)
-    snp_ids = np.delete(snp_ids, tmp, axis=0)
-    if X_raw is not None:
-        X_raw = np.delete(X_raw, tmp, axis=1)
-    return X_012, X_raw, snp_ids
-
-
-def create_genotype_h5_file(arguments: argparse.Namespace, sample_ids: np.array, snp_ids: np.array, X_012: np.array,
-                            X_raw: np.array):
+def create_genotype_h5_file(arguments: argparse.Namespace, sample_ids: np.array, snp_ids: np.array, X: np.array):
     """
     Save genotype matrix in unified .h5 file.
     Structure:
@@ -224,21 +238,20 @@ def create_genotype_h5_file(arguments: argparse.Namespace, sample_ids: np.array,
     :param arguments:
     :param sample_ids: array containing sample ids of genotype data
     :param snp_ids: array containing snp ids of genotype data
-    :param X_012: matrix containing genotype in additive encoding
-    :param X_raw: matrix containing genotype in raw encoding
+    :param X: matrix containing genotype either in raw or in additive encoding
     """
-    if arguments.genotype_matrix.split("-")[0] == 'unified':
-        x_file = arguments.data_dir + '/' + arguments.genotype_matrix.split(".")[0] + '.h5'
-    else:
-        x_file = arguments.data_dir + '/unified-' + arguments.genotype_matrix.split(".")[0] + '.h5'
-        arguments.genotype_matrix = 'unified-' + arguments.genotype_matrix
+    x_file = arguments.data_dir + '/' + arguments.genotype_matrix.split(".")[0] + '.h5'
+    print('Save unified genotype file ' + x_file)
     with h5py.File(x_file, 'w') as f:
         f.create_dataset('sample_ids', data=sample_ids, chunks=True, compression="gzip")
         f.create_dataset('snp_ids', data=snp_ids, chunks=True, compression="gzip")
-        if X_raw is not None:
-            f.create_dataset('X_raw', data=X_raw, chunks=True, compression="gzip", compression_opts=7)
+        encoding = enc.check_encoding_of_genotype(X)
+        if encoding == 'raw':
+            f.create_dataset('X_raw', data=X, chunks=True, compression="gzip", compression_opts=7)
+        elif encoding == '012':
+            f.create_dataset('X_012', data=X, chunks=True, compression="gzip", compression_opts=7)
         else:
-            f.create_dataset('X_012', data=X_012, chunks=True, compression="gzip", compression_opts=7)
+            raise Exception('Genotype neither in raw or additive encoding. Cannot save .h5 genotype file.')
 
 
 def check_and_load_phenotype_matrix(arguments: argparse.Namespace):
@@ -296,13 +309,81 @@ def get_matched_data(data: np.array, index: np.array):
         return data[index]
 
 
-def check_create_index_file(arguments: argparse.Namespace, X: np.array, y: np.array, sample_ids: np.array,
-                            X_index: np.array, y_index: np.array):
+def append_index_file(arguments: argparse.Namespace):
     """
-    Function to check the .h5 file containing the maf filters and data splits for the combination of genotype matrix,
+    Function to check index file, described in create_index_file(), and append datasets if necessary.
+    :param arguments: all arguments specified by the user
+    :return:
+    """
+    with h5py.File(arguments.data_dir + '/' + arguments.genotype_matrix.split('.')[0] + '-'
+                   + arguments.phenotype_matrix.split('.')[0] + '-' + arguments.phenotype + '.h5', 'a') as f:
+        # check if group 'maf_filter' is available and if user input maf is available, if not: create group/dataset
+        if 'maf_filter' not in f:
+            maf = f.create_group('maf_filter')
+            tmp = (create_maf_filter(arguments.maf_percentage, f['matched_data/ma_frequency']))
+            maf.create_dataset(f'maf_{arguments.maf_percentage}', data=tmp, chunks=True, compression="gzip")
+        elif f'maf_{arguments.maf_percentage}' not in f['maf_filter']:
+            tmp = (create_maf_filter(arguments.maf_percentage, f['matched_data/ma_frequency']))
+            f.create_dataset(f'maf_filter/maf_{arguments.maf_percentage}', data=tmp, chunks=True, compression="gzip")
+        # check if group datasplit and all user inputs concerning datasplits are available, if not: create all
+        if arguments.datasplit == 'nested-cv':
+            if 'datasplits' not in f or ('datasplits' in f and 'nested-cv' not in f['datasplits']) or \
+                    ('datasplits' in f and 'nested-cv' in f['datasplits'] and
+                     f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}' not in
+                     f['datasplits/nested-cv']):
+                nest = f.create_group(f'datasplits/nested-cv/'
+                                      f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}')
+                for outer in range(arguments.n_outerfolds):
+                    index_dict = check_train_test_splits(f['matched_data/y'], 'nested-cv',
+                                                         [arguments.n_outerfolds, arguments.n_innerfolds])
+                    o = nest.create_group(f'outerfold_{outer}')
+                    o.create_dataset('test', data=index_dict[f'outerfold_{outer}_test'], chunks=True,
+                                     compression="gzip")
+                    for inner in range(arguments.n_innerfolds):
+                        i = o.create_group(f'innerfold_{inner}')
+                        i.create_dataset('train', data=index_dict[f'outerfold_{outer}'][f'fold_{inner}_train'],
+                                         chunks=True,
+                                         compression="gzip")
+                        i.create_dataset('val', data=index_dict[f'outerfold_{outer}'][f'fold_{inner}_test'],
+                                         chunks=True,
+                                         compression="gzip")
+        elif arguments.datasplit == 'cv-test':
+            if 'datasplits' not in f or ('datasplits' in f and 'cv-test' not in f['datasplits']) or \
+                    ('datasplits' in f and 'cv-test' in f['datasplits'] and
+                     f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}' not in
+                     f['datasplits/cv-test']):
+                cv = f.create_group(f'datasplits/cv-test/'
+                                    f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}')
+                index_dict, test = check_train_test_splits(f['matched_data/y'], 'cv-test',
+                                                           [arguments.n_innerfolds, arguments.test_set_size_percentage])
+                o = cv.create_group('outerfold_0')
+                o.create_dataset('test', data=test, chunks=True, compression="gzip")
+                for fold in range(arguments.n_innerfolds):
+                    i = o.create_group(f'innerfold_{fold}')
+                    i.create_dataset('train', data=index_dict[f'fold_{fold}_train'], chunks=True, compression="gzip")
+                    i.create_dataset('val', data=index_dict[f'fold_{fold}_test'], chunks=True, compression="gzip")
+        elif arguments.datasplit == 'train-val-test':
+            if 'datasplits' not in f or ('datasplits' in f and 'train-val-test' not in f['datasplits']) or \
+                    ('datasplits' in f and 'train-val-test' in f['datasplits'] and
+                     f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}' not in
+                     f['datasplits/cv-test']):
+                tvt = f.create_group(f'datasplits/train-val-test/'
+                                     f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}')
+                train, val, test = check_train_test_splits(f['matched_data/y'], 'train-val-test',
+                                        [arguments.validation_set_size_percentage, arguments.test_set_size_percentage])
+                o = tvt.create_group('outerfold_0')
+                o.create_dataset('test', data=test, chunks=True, compression="gzip")
+                i = o.create_group('innerfold_0')
+                i.create_dataset('train', data=train, chunks=True, compression="gzip")
+                i.create_dataset('val', data=val, chunks=True, compression="gzip")
+
+
+def create_index_file(arguments: argparse.Namespace, X: np.array, y: np.array,  sample_ids: np.array, X_index: np.array,
+                      y_index: np.array):
+    """
+    Function to create the .h5 file containing the maf filters and data splits for the combination of genotype matrix,
     phenotype matrix and phenotype.
-    It will be created using standard values for the maf filters and data splits in case it does not exist.
-    Otherwise, the maf filter and data splits specified by the user are checked for existence.
+    It will be created using standard values additionally to user inputs for the maf filters and data splits.
     Unified format of .h5 file containing the maf filters and data splits:
         'matched_data': {
                 'y': matched phenotypic values,
@@ -369,106 +450,9 @@ def check_create_index_file(arguments: argparse.Namespace, X: np.array, y: np.ar
     :param y_index: index file of phenotype to redo matching
     :return:
     """
-    if os.path.isfile(arguments.data_dir + '/' + arguments.genotype_matrix.split('.')[0] + '-'
-                      + arguments.phenotype_matrix.split('.')[0] + '-' + arguments.phenotype + '.h5'):
-        append_index_file(arguments)
-    else:
-        create_index_file(arguments, X, y, sample_ids, X_index, y_index)
-
-
-def append_index_file(arguments: argparse.Namespace):
-    """
-    Function to check index file, described in check_create_index_file(), and append datasets if necessary.
-    :param arguments: all arguments specified by the user
-    :return:
-    """
-    matched_datasets = ['y', 'matched_sample_ids', 'X_index', 'y_index', 'ma_frequency']
-    with h5py.File(arguments.data_dir + '/' + arguments.genotype_matrix.split('.')[0] + '-'
-                   + arguments.phenotype_matrix.split('.')[0] + '-' + arguments.phenotype + '.h5', 'a') as f:
-        # check if group 'matched_data' and all datasets in 'matched_data' are available, if not: raise Exception
-        if 'matched_data' not in f:
-            raise Exception('matched_data not in index file ' + arguments.genotype_matrix.split('.')[0] + '-'
-                            + arguments.phenotype_matrix.split('.')[0] + '-' + arguments.phenotype + '.h5' +
-                            '. See documentation for help.')
-        if not all(z in f['matched_data'] for z in matched_datasets):
-            raise Exception('Crucial datasets missing in matched_data in index file '
-                            + arguments.genotype_matrix.split('.')[0] + '-' + arguments.phenotype_matrix.split('.')[0] +
-                            '-' + arguments.phenotype + '.h5' + '. See documentation for help.')
-        # check if group 'maf_filter' is available and if user input maf is available, if not: create group/dataset
-        if 'maf_filter' not in f:
-            maf = f.create_group('maf_filter')
-            tmp = (create_maf_filter(arguments.maf_percentage, f['matched_data/ma_frequency']))
-            maf.create_dataset(f'maf_{arguments.maf_percentage}', data=tmp, chunks=True, compression="gzip")
-        elif f'maf_{arguments.maf_percentage}' not in f['maf_filter']:
-            tmp = (create_maf_filter(arguments.maf_percentage, f['matched_data/ma_frequency']))
-            f.create_dataset(f'maf_filter/maf_{arguments.maf_percentage}', data=tmp, chunks=True, compression="gzip")
-        # check if group datasplit and all user inputs concerning datasplits are available, if not: create all
-        if arguments.datasplit == 'nested-cv':
-            if 'datasplits' not in f or ('datasplits' in f and 'nested-cv' not in f['datasplits']) or \
-                    ('datasplits' in f and 'nested-cv' in f['datasplits'] and
-                     f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}' not in
-                     f['datasplits/nested-cv']):
-                nest = f.create_group(f'datasplits/nested-cv/'
-                                      f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}')
-                for outer in range(arguments.n_outerfolds):
-                    index_dict = check_train_test_splits(f['matched_data/y'], 'nested-cv',
-                                                         [arguments.n_outerfolds, arguments.n_innerfolds])
-                    o = nest.create_group(f'outerfold_{outer}')
-                    o.create_dataset('test', data=index_dict[f'outerfold_{outer}_test'], chunks=True,
-                                     compression="gzip")
-                    for inner in range(arguments.n_innerfolds):
-                        i = o.create_group(f'innerfold_{inner}')
-                        i.create_dataset('train', data=index_dict[f'outerfold_{outer}'][f'fold_{inner}_train'],
-                                         chunks=True,
-                                         compression="gzip")
-                        i.create_dataset('val', data=index_dict[f'outerfold_{outer}'][f'fold_{inner}_test'],
-                                         chunks=True,
-                                         compression="gzip")
-        elif arguments.datasplit == 'cv-test':
-            if 'datasplits' not in f or ('datasplits' in f and 'cv-test' not in f['datasplits']) or \
-                    ('datasplits' in f and 'cv-test' in f['datasplits'] and
-                     f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}' not in
-                     f['datasplits/cv-test']):
-                cv = f.create_group(f'datasplits/cv-test/'
-                                    f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}')
-                index_dict, test = check_train_test_splits(f['matched_data/y'], 'cv-test',
-                                                           [arguments.n_innerfolds, arguments.test_set_size_percentage])
-                o = cv.create_group('outerfold_0')
-                o.create_dataset('test', data=test, chunks=True, compression="gzip")
-                for fold in range(arguments.n_innerfolds):
-                    i = o.create_group(f'innerfold_{fold}')
-                    i.create_dataset('train', data=index_dict[f'fold_{fold}_train'], chunks=True, compression="gzip")
-                    i.create_dataset('val', data=index_dict[f'fold_{fold}_test'], chunks=True, compression="gzip")
-        elif arguments.datasplit == 'train-val-test':
-            if 'datasplits' not in f or ('datasplits' in f and 'train-val-test' not in f['datasplits']) or \
-                    ('datasplits' in f and 'train-val-test' in f['datasplits'] and
-                     f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}' not in
-                     f['datasplits/cv-test']):
-                tvt = f.create_group(f'datasplits/train-val-test/'
-                                     f'{helper_functions.get_subpath_for_datasplit(arguments, arguments.datasplit)}')
-                train, val, test = check_train_test_splits(f['matched_data/y'], 'train-val-test',
-                                        [arguments.validation_set_size_percentage, arguments.test_set_size_percentage])
-                o = tvt.create_group('outerfold_0')
-                o.create_dataset('test', data=test, chunks=True, compression="gzip")
-                i = o.create_group('innerfold_0')
-                i.create_dataset('train', data=train, chunks=True, compression="gzip")
-                i.create_dataset('val', data=val, chunks=True, compression="gzip")
-
-
-def create_index_file(arguments: argparse.Namespace, X: np.array, y: np.array,  sample_ids: np.array, X_index: np.array,
-                      y_index: np.array):
-    """
-    Function to create .h5 index file described in check_create_index_file().
-    :param arguments: all arguments specified by the user
-    :param X: genotype in additive encoding to create ma-frequencies
-    :param y: matched phenotype values
-    :param sample_ids: matched sample ids of genotype/phenotype
-    :param X_index: index file of genotype to redo matching
-    :param y_index: index file of phenotype to redo matching
-    :return:
-    """
+    X, filter = filter_non_informative_snps(X)
     freq = get_minor_allele_freq(X)
-    maf_threshold = [1, 3, 5]  # standard values for maf threshold
+    maf_threshold = [0, 1, 3, 5]  # standard values for maf threshold
     if arguments.maf_percentage not in maf_threshold:  # add user input if needed
         maf_threshold.append(arguments.maf_percentage)
     param_nested = [[5, 5]]  # standard values for outer and inner folds for nested-cv
@@ -486,6 +470,7 @@ def create_index_file(arguments: argparse.Namespace, X: np.array, y: np.array,  
         data.create_dataset('matched_sample_ids', data=sample_ids, chunks=True, compression="gzip")
         data.create_dataset('X_index', data=X_index, chunks=True, compression="gzip")
         data.create_dataset('y_index', data=y_index, chunks=True, compression="gzip")
+        data.create_dataset('non_informative_filter', data=filter, chunks=True, compression="gzip")
         data.create_dataset('ma_frequency', data=freq, chunks=True, compression="gzip")
         # create and save standard mafs and maf according to user input
         maf = f.create_group('maf_filter')
@@ -530,13 +515,46 @@ def create_index_file(arguments: argparse.Namespace, X: np.array, y: np.array,  
             i.create_dataset('val', data=val, chunks=True, compression="gzip")
 
 
+def filter_non_informative_snps(X: np.array):
+    """
+    Function to remove non-informative SNPs, i.e. SNPs that are constant.
+    :param X: genotype matrix in raw or additive encoding
+    :return: filtered genotype matrix and filter-vector
+    """
+    tmp = X == X[0, :]
+    X_filtered = X[:, ~tmp.all(0)]
+    return X_filtered, (~tmp.all(0)).nonzero()[0]
+
 def get_minor_allele_freq(X: np.array):
     """
     Function to compute minor allele frequencies of genotype matrix
     :param X: genotype matrix in additive encoding
     :return: array with frequencies
     """
-    return (np.sum(X, 0)) / (2 * X.shape[0])
+    encoding = enc.check_encoding_of_genotype(X)
+    if encoding == '012':
+        return (np.sum(X, 0)) / (2 * X.shape[0])
+    else:
+        freq = []
+        for i, col in enumerate(np.transpose(X)):
+            unique, counts = np.unique(col, return_counts=True)
+            if len(unique) > 3:
+                raise Exception('More than two alleles encountered at SNP ', i)
+            elif len(unique) == 3:
+                boolean = (unique.astype(str) == 'A') | (unique.astype(str) == 'T') | (unique.astype(str) == 'C') | (
+                            unique.astype(str) == 'G')
+                homozygous = unique[boolean]
+                hetero = unique[~boolean][0]
+                pairs = [['A', 'C'], ['A', 'G'], ['A', 'T'], ['C', 'G'], ['C', 'T'], ['G', 'T']]
+                heterozygous_nuc = ['M', 'R', 'W', 'S', 'Y', 'K']
+                for j, pair in enumerate(pairs):
+                    if all(h in pair for h in homozygous) and hetero != heterozygous_nuc[j]:
+                        raise Exception('More than two alleles encountered at SNP ', i)
+                freq.append((np.min(counts[boolean]) + 0.5 * counts[~boolean][0]) / len(col))
+            else:
+                freq.append(np.min(counts) / len(col))
+        return np.array(freq)
+
 
 
 def create_maf_filter(maf: int, freq: np.array):

@@ -85,17 +85,17 @@ def get_additive_encoding(X: np.array):
     :return: X_012
     """
     # TODO heterozygous
-    maj_min = []
+    alleles = []
     index_arr = []
     for col in np.transpose(X):
         _, inv, counts = np.unique(col, return_counts=True, return_inverse=True)
         tmp = np.where(counts == np.max(counts), 0., 2.)
-        maj_min.append(tmp)
+        alleles.append(tmp)
         index_arr.append(inv)
-    maj_min = np.transpose(np.array(maj_min))
+    alleles = np.transpose(np.array(alleles))
     ind_arr = np.transpose(np.array(index_arr))
-    cols = np.arange(maj_min.shape[1])
-    return maj_min[ind_arr, cols]
+    cols = np.arange(alleles.shape[1])
+    return alleles[ind_arr, cols]
 
 
 def get_onehot_encoding(X: np.array):
