@@ -556,7 +556,6 @@ def get_minor_allele_freq(X: np.array):
         return np.array(freq)
 
 
-
 def create_maf_filter(maf: int, freq: np.array):
     """
     Function to compute minor allele frequency filter
