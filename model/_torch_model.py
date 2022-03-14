@@ -38,7 +38,9 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
         See BaseModel for more information
         """
         train_loader = self.get_dataloader(X=X_train, y=y_train)
+        # del X_train, y_train
         val_loader = self.get_dataloader(X=X_val, y=y_val)
+        # del y_val
         self.model.to(device=self.device)
         best_loss = None
         epochs_wo_improvement = 0
@@ -95,6 +97,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
         See BaseModel for more information
         """
         retrain_loader = self.get_dataloader(X=X_retrain, y=y_retrain)
+        # del X_retrain, y_retrain
         n_epochs_to_retrain = self.n_epochs if self.early_stopping_point is None else self.early_stopping_point
         self.model.to(device=self.device)
         for epoch in range(n_epochs_to_retrain):
@@ -107,6 +110,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
         See BaseModel for more information
         """
         dataloader = self.get_dataloader(X=X_in, shuffle=False)
+        # del X_in
         self.model.eval()
         predictions = None
         with torch.no_grad():
@@ -140,13 +144,14 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
         if (len(X) % self.batch_size) == 1:
             X = X[:-1]
             y = y[:-1] if y is not None else None
-        X_tensor = torch.from_numpy(X).float()
+        X = torch.from_numpy(X).float()
         if self.encoding == 'onehot':
-            X_tensor = torch.swapaxes(X_tensor, 1, 2)
-        y_tensor = torch.reshape(torch.from_numpy(y).float(), (-1, 1)) if y is not None else None
-        y_tensor = y_tensor.flatten() if (self.task == 'classification' and y_tensor is not None) else y_tensor
-        dataset = torch.utils.data.TensorDataset(X_tensor, y_tensor) if y_tensor is not None \
-            else X_tensor
+            X = torch.swapaxes(X, 1, 2)
+        y = torch.reshape(torch.from_numpy(y).float(), (-1, 1)) if y is not None else None
+        y = y.flatten() if (self.task == 'classification' and y is not None) else y
+        dataset = torch.utils.data.TensorDataset(X, y) if y is not None \
+            else X
+        # del X, y
         return torch.utils.data.DataLoader(dataset=dataset, batch_size=self.batch_size, shuffle=shuffle)
 
     @staticmethod

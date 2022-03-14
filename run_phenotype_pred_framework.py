@@ -1,5 +1,7 @@
 import argparse
 import datetime
+import warnings
+from optuna.exceptions import ExperimentalWarning
 
 import optimization.optuna_optim
 import preprocess.base_dataset
@@ -18,7 +20,8 @@ if __name__ == '__main__':
         5. Bayesian Optimization (Optuna)
         6. Evaluation
     """
-
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+    warnings.simplefilter(action='ignore', category=ExperimentalWarning)
     ### User Input ###
     parser = argparse.ArgumentParser()
     # Input Params #
@@ -111,7 +114,7 @@ if __name__ == '__main__':
             print_functions.print_config_info(arguments=args, dataset=dataset, task=task)
         else:
             if dataset.encoding != encoding:
-                print('Load new dataset encoding')
+                print('----- Load new dataset encoding -----')
                 dataset = preprocess.base_dataset.Dataset(arguments=args, encoding=encoding)
         optuna_run = optimization.optuna_optim.OptunaOptim(arguments=args, task=task, start_time=start_time,
                                                            current_model_name=current_model_name, dataset=dataset)
