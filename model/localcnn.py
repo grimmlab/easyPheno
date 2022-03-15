@@ -9,16 +9,16 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
 
     def define_model(self) -> tf.keras.Sequential:
         """See BaseModel for more information"""
-        n_layers = self.suggest_hyperparam_to_optuna('n_layers')
+        n_layers = 3 #self.suggest_hyperparam_to_optuna('n_layers')
         model = tf.keras.Sequential()
         act_function = tf.keras.layers.Activation(self.suggest_hyperparam_to_optuna('act_function'))
         in_channels = self.width_onehot
         width = self.n_features
         model.add(tf.keras.Input(shape=(width, in_channels)))
         # Add 1 layer with: Locally Connected 1D + BatchNorm + activation + Dropout
-        n_filters = self.suggest_hyperparam_to_optuna('n_filters')
-        kernel_size = 2 ** self.suggest_hyperparam_to_optuna('kernel_size_exp')
-        stride = max(1, int(kernel_size * self.suggest_hyperparam_to_optuna('stride_perc_of_kernel_size')))
+        n_filters = 3 #self.suggest_hyperparam_to_optuna('n_filters')
+        kernel_size = 2 ** 3 #self.suggest_hyperparam_to_optuna('kernel_size_exp')
+        stride = max(1, int(kernel_size * 0.5))#self.suggest_hyperparam_to_optuna('stride_perc_of_kernel_size')))
         model.add(tf.keras.layers.LocallyConnected1D(filters=n_filters, kernel_size=kernel_size,
                                                      strides=stride, activation=None))
         model.add(tf.keras.layers.BatchNormalization())
@@ -26,18 +26,18 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
         p = self.suggest_hyperparam_to_optuna('dropout')
         model.add(tf.keras.layers.Dropout(rate=p, seed=42))
         # Max pooling
-        kernel_size_max_pool = 2 ** self.suggest_hyperparam_to_optuna('maxpool_kernel_size_exp')
+        kernel_size_max_pool = 2 ** 2 #self.suggest_hyperparam_to_optuna('maxpool_kernel_size_exp')
         model.add(tf.keras.layers.MaxPool1D(pool_size=kernel_size_max_pool))
         # Flatten
         model.add(tf.keras.layers.Flatten())
-        n_units = int(model.output_shape[1] * self.suggest_hyperparam_to_optuna('n_initial_units_factor'))
+        n_units = int(model.output_shape[1] * 1) #self.suggest_hyperparam_to_optuna('n_initial_units_factor'))
         for layer in range(n_layers):
             model.add(tf.keras.layers.Dense(units=n_units, activation=None))
             model.add(act_function)
             model.add(tf.keras.layers.BatchNormalization())
             p = self.suggest_hyperparam_to_optuna('dropout')
             model.add(tf.keras.layers.Dropout(rate=p))
-            n_units = int(n_units * (1-self.suggest_hyperparam_to_optuna('perc_decrease_per_layer')))
+            n_units = int(n_units * (1-0.1))#self.suggest_hyperparam_to_optuna('perc_decrease_per_layer')))
         model.add(tf.keras.layers.Dense(units=self.n_outputs))
         return model
 
