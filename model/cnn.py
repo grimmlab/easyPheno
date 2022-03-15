@@ -55,7 +55,7 @@ class Cnn(_torch_model.TorchModel):
             'initial_out_channels_exp': {
                 'datatype': 'int',
                 'lower_bound': 1,
-                'upper_bound': 5
+                'upper_bound': 3
             },
             'frequency_out_channels_doubling': {
                 'datatype': 'int',
@@ -64,7 +64,7 @@ class Cnn(_torch_model.TorchModel):
             },
             'kernel_size_exp': {
                 'datatype': 'int',
-                'lower_bound': 2,
+                'lower_bound': 3,
                 'upper_bound': 6
             },
             'maxpool_kernel_size_exp': {

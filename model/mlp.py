@@ -31,7 +31,7 @@ class Mlp(_torch_model.TorchModel):
             'n_layers': {
                 'datatype': 'int',
                 'lower_bound': 1,
-                'upper_bound': 4
+                'upper_bound': 3
             },
             'n_initial_units_factor': {
                 'datatype': 'float',

@@ -46,8 +46,8 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
         return { # TODO: ranges anpassen for start der Experimente
             'n_layers': {
                 'datatype': 'int',
-                'lower_bound': 2,
-                'upper_bound': 4
+                'lower_bound': 1,
+                'upper_bound': 3
             },
             'n_filters': {
                 'datatype': 'int',
