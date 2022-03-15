@@ -25,10 +25,8 @@ class XgBoost(_sklearn_model.SklearnModel):
         """See BaseModel for more information on the format"""
         return {
             'n_estimators': {
-                'datatype': 'int',
-                'lower_bound': 10,
-                'upper_bound': 1000,
-                'log': True
+                'datatype': 'categorical',
+                'list_of_values': [10, 50, 100, 200, 300, 400, 500, 750, 1000]
             },
             'learning_rate': {
                     'datatype': 'float',
@@ -74,11 +72,13 @@ class XgBoost(_sklearn_model.SklearnModel):
             'reg_lambda': {
                 'datatype': 'float',
                 'lower_bound': 0,
-                'upper_bound': 1000
+                'upper_bound': 1000,
+                'step': 10
             },
             'reg_alpha': {
                 'datatype': 'float',
                 'lower_bound': 0,
-                'upper_bound': 1000
+                'upper_bound': 1000,
+                'step': 10
             }
         }
