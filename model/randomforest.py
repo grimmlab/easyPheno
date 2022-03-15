@@ -32,19 +32,19 @@ class RandomForest(_sklearn_model.SklearnModel):
             },
             'min_samples_split': {
                 'datatype': 'float',
-                'lower_bound': 0.01,
+                'lower_bound': 0.05,
                 'upper_bound': 1,
                 'step': 0.05
             },
             'min_samples_leaf': {
                 'datatype': 'float',
-                'lower_bound': 0.01,
+                'lower_bound': 0.05,
                 'upper_bound': 0.5,
                 'step': 0.05
             },
             'max_leaf_nodes': {
                 'datatype': 'int',
-                'lower_bound': 1,
+                'lower_bound': 5,
                 'upper_bound': 100,
                 'step': 5
             }
