@@ -56,6 +56,7 @@ class BaseModel(abc.ABC):
         else:
             # update in case common hyperparams are already defined
             self.all_hyperparams.update(self.define_hyperparams_to_tune())
+        print('before model define')
         self.model = self.define_model()
 
     ### Methods required by each child class ###
