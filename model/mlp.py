@@ -9,11 +9,11 @@ class Mlp(_torch_model.TorchModel):
 
     def define_model(self) -> torch.nn.Sequential:
         """See BaseModel for more information"""
-        n_layers = self.suggest_hyperparam_to_optuna('n_layers')
+        n_layers = 3#self.suggest_hyperparam_to_optuna('n_layers')
         model = []
         act_function = self.get_torch_object_for_string(string_to_get=self.suggest_hyperparam_to_optuna('act_function'))
         in_features = self.n_features
-        out_features = int(in_features * self.suggest_hyperparam_to_optuna('n_initial_units_factor'))
+        out_features = int(in_features)# * self.suggest_hyperparam_to_optuna('n_initial_units_factor'))
         for layer in range(n_layers):
             model.append(torch.nn.Linear(in_features=in_features, out_features=out_features))
             model.append(act_function)
@@ -21,7 +21,7 @@ class Mlp(_torch_model.TorchModel):
             p = self.suggest_hyperparam_to_optuna('dropout')
             model.append(torch.nn.Dropout(p=p))
             in_features = out_features
-            out_features = int(in_features * (1-self.suggest_hyperparam_to_optuna('perc_decrease_per_layer')))
+            out_features = int(in_features * (1-0.1))#self.suggest_hyperparam_to_optuna('perc_decrease_per_layer')))
         model.append(torch.nn.Linear(in_features=in_features, out_features=self.n_outputs))
         return torch.nn.Sequential(*model)
 

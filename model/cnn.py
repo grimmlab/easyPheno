@@ -11,15 +11,15 @@ class Cnn(_torch_model.TorchModel):
         """See BaseModel for more information"""
         padding = 0
         dilation = 1
-        n_layers = self.suggest_hyperparam_to_optuna('n_layers')
+        n_layers = 3#self.suggest_hyperparam_to_optuna('n_layers')
         model = []
         act_function = self.get_torch_object_for_string(string_to_get=self.suggest_hyperparam_to_optuna('act_function'))
         in_channels = self.width_onehot
-        kernel_size = 2 ** self.suggest_hyperparam_to_optuna('kernel_size_exp')
-        stride = max(1, int(kernel_size * self.suggest_hyperparam_to_optuna('stride_perc_of_kernel_size')))
-        out_channels = 2 ** self.suggest_hyperparam_to_optuna('initial_out_channels_exp')
-        kernel_size_max_pool = 2 ** self.suggest_hyperparam_to_optuna('maxpool_kernel_size_exp')
-        frequency_out_channels_doubling = self.suggest_hyperparam_to_optuna('frequency_out_channels_doubling')
+        kernel_size = 2 ** 3 #self.suggest_hyperparam_to_optuna('kernel_size_exp')
+        stride = 1 #max(1, int(kernel_size * self.suggest_hyperparam_to_optuna('stride_perc_of_kernel_size')))
+        out_channels = 2 **3# self.suggest_hyperparam_to_optuna('initial_out_channels_exp')
+        kernel_size_max_pool = 2 ** 2#self.suggest_hyperparam_to_optuna('maxpool_kernel_size_exp')
+        frequency_out_channels_doubling = 1#self.suggest_hyperparam_to_optuna('frequency_out_channels_doubling')
         # Add n_layers with: Conv1d + BatchNorm + activation + Dropout
         for layer in range(n_layers):
             model.append(torch.nn.Conv1d(in_channels=in_channels, out_channels=out_channels,
@@ -35,7 +35,7 @@ class Cnn(_torch_model.TorchModel):
         # Flatten and linear layers with dropout
         model.append(torch.nn.Flatten())
         in_features = torch.nn.Sequential(*model)(torch.zeros(size=(1, self.width_onehot, self.n_features))).shape[1]
-        out_features = int(in_features * self.suggest_hyperparam_to_optuna('n_units_factor_linear_layer'))
+        out_features = int(in_features) #* self.suggest_hyperparam_to_optuna('n_units_factor_linear_layer'))
         model.append(torch.nn.Linear(in_features=in_features, out_features=out_features))
         model.append(act_function)
         model.append(torch.nn.BatchNorm1d(num_features=out_features))
