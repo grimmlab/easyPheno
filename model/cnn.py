@@ -22,6 +22,7 @@ class Cnn(_torch_model.TorchModel):
         frequency_out_channels_doubling = 1#self.suggest_hyperparam_to_optuna('frequency_out_channels_doubling')
         # Add n_layers with: Conv1d + BatchNorm + activation + Dropout
         for layer in range(n_layers):
+            print('Building layer ' + str(layer))
             model.append(torch.nn.Conv1d(in_channels=in_channels, out_channels=out_channels,
                                          kernel_size=kernel_size, stride=stride))
             model.append(act_function)
@@ -34,11 +35,13 @@ class Cnn(_torch_model.TorchModel):
                 out_channels *= 2
         # Flatten and linear layers with dropout
         model.append(torch.nn.Flatten())
+        print('after flattening')
         in_features = torch.nn.Sequential(*model)(torch.zeros(size=(1, self.width_onehot, self.n_features))).shape[1]
         out_features = int(in_features) #* self.suggest_hyperparam_to_optuna('n_units_factor_linear_layer'))
         model.append(torch.nn.Linear(in_features=in_features, out_features=out_features))
         model.append(act_function)
         model.append(torch.nn.BatchNorm1d(num_features=out_features))
+        print('after first linear layer')
         p = self.suggest_hyperparam_to_optuna('dropout')
         model.append(torch.nn.Dropout(p))
         model.append(torch.nn.Linear(in_features=out_features, out_features=self.n_outputs))
