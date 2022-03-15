@@ -37,7 +37,8 @@ class LinearRegression(_sklearn_model.SklearnModel):
             'l1_ratio': {
                 'datatype': 'float',
                 'lower_bound': 0.01,
-                'upper_bound': 0.99
+                'upper_bound': 0.99,
+                'step': 0.05
             },
             'alpha': {
                 'datatype': 'float',

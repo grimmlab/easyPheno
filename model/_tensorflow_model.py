@@ -106,7 +106,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
             },
             'act_function': {
                 'datatype': 'categorical',
-                'list_of_values': ['relu', 'tanh']
+                'list_of_values': ['relu']  # , 'tanh']
             },
             'batch_size_exp': {
                 'datatype': 'int',
@@ -115,7 +115,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
             },
             'n_epochs': {
                 'datatype': 'categorical',
-                'list_of_values': [50, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000]
+                'list_of_values': [50, 100, 500, 1000, 5000, 10000, 50000, 100000, 500000]
             },
             'learning_rate': {
                 'datatype': 'categorical',
@@ -123,8 +123,8 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
             },
             'early_stopping_patience': {
                 'datatype': 'int',
-                'lower_bound': 5,
-                'upper_bound': 50,
+                'lower_bound': 0,
+                'upper_bound': 20,
                 'step': 5
             }
         }

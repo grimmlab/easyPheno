@@ -109,20 +109,32 @@ def save_model_overview_dict(model_overview: dict, save_path: str):
     for model_name, fold_dicts in model_overview.items():
         result_dicts = {}
         result_dicts_std = {}
+        runtime_dicts = {}
+        runtime_dicts_std = {}
         for fold_name, fold_info in fold_dicts.items():
             for result_name, result_info in fold_info.items():
                 results_overiew.at[fold_name, model_name + '___' + result_name] = [result_info]
-                if 'metric' in result_name:
+                if 'eval_metric' in result_name:
                     for metric_name, metric_result in result_info.items():
                         if metric_name not in result_dicts.keys():
                             result_dicts[metric_name] = []
                         result_dicts[metric_name].append(metric_result)
+                if 'runtime' in result_name:
+                    for metric_name, metric_result in result_info.items():
+                        if metric_name not in runtime_dicts.keys():
+                            runtime_dicts[metric_name] = []
+                        runtime_dicts[metric_name].append(metric_result)
         for metric_name, results in result_dicts.items():
             result_dicts[metric_name] = np.mean(results)
             result_dicts_std[metric_name] = np.std(results)
+        for metric_name, results in runtime_dicts.items():
+            runtime_dicts[metric_name] = np.mean(results)
+            runtime_dicts_std[metric_name] = np.std(results)
         if 'nested' in save_path:
             results_overiew.at['mean_over_all_folds', model_name + '___' + 'eval_metrics'] = [result_dicts]
             results_overiew.at['std_over_all_folds', model_name + '___' + 'eval_metrics'] = [result_dicts_std]
+            results_overiew.at['mean_over_all_folds', model_name + '___' + 'runtime_metrics'] = [runtime_dicts]
+            results_overiew.at['std_over_all_folds', model_name + '___' + 'runtime_metrics'] = [runtime_dicts_std]
     results_overiew.to_csv(save_path)
 
 
