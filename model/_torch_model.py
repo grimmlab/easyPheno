@@ -19,7 +19,6 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
         self.all_hyperparams = self.common_hyperparams()  # add hyperparameters commonly optimized for all torch models
         self.n_features = n_features
         self.width_onehot = width_onehot
-        print('before_super_init')
         super().__init__(task=task, optuna_trial=optuna_trial, encoding=encoding, n_outputs=n_outputs)
         self.loss_fn = torch.nn.CrossEntropyLoss() if task == 'classification' else torch.nn.MSELoss()
         self.batch_size = \
@@ -176,7 +175,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
             'batch_size_exp': {
                 'datatype': 'int',
                 'lower_bound': 3,
-                'upper_bound': 4
+                'upper_bound': 6
             },
             'n_epochs': {
                 'datatype': 'categorical',

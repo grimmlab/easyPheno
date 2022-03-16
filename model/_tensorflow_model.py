@@ -2,7 +2,6 @@ import abc
 import numpy as np
 import optuna
 import tensorflow as tf
-import copy
 import joblib
 
 from model import _base_model
@@ -111,7 +110,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
             'batch_size_exp': {
                 'datatype': 'int',
                 'lower_bound': 3,
-                'upper_bound': 4
+                'upper_bound': 6
             },
             'n_epochs': {
                 'datatype': 'categorical',
