@@ -13,6 +13,7 @@ import time
 import csv
 
 import torch.cuda
+import tensorflow as tf
 
 import utils
 from preprocess import base_dataset
@@ -184,9 +185,9 @@ class OptunaOptim:
                     validation_results.at[0, metric] = value
                 # model.save_model(path=self.save_path + 'temp/',
                 #                 filename=innerfold_name + '-validation_model_trial' + str(trial.number))
-            except (RuntimeError, TypeError) as exc:
+            except (RuntimeError, TypeError, tf.errors.ResourceExhaustedError) as exc:
                 print(exc)
-                if 'out of memory' in str(exc):
+                if 'out of memory' in str(exc) or isinstance(exc, tf.errors.ResourceExhaustedError):
                     # Recover from CUDA out of memory error
                     print('CUDA OOM at batch_size ' + str(model.batch_size))
                     del model

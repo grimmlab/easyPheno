@@ -15,10 +15,13 @@ class SupportVectorMachine(_sklearn_model.SklearnModel):
         reg_C = self.suggest_hyperparam_to_optuna('C')
         if kernel == 'poly':
             degree = self.suggest_hyperparam_to_optuna('degree')
-            gamma = 42  # default
-        elif kernel in ['rbf', 'poly', 'sigmoid']:
+            gamma = self.suggest_hyperparam_to_optuna('gamma')
+        elif kernel in ['rbf', 'sigmoid']:
             degree = 42  # default
             gamma = self.suggest_hyperparam_to_optuna('gamma')
+        elif kernel == 'linear':
+            degree = 42  # default
+            gamma = 42  # default
         if self.task == 'classification':
             return sklearn.svm.SVC(kernel=kernel, C=reg_C, degree=degree, gamma=gamma, random_state=42)
         else:
@@ -29,7 +32,7 @@ class SupportVectorMachine(_sklearn_model.SklearnModel):
         return {
             'kernel': {
                 'datatype': 'categorical',
-                'list_of_values': ['linear', 'poly', 'rbf', 'sigmoid']
+                'list_of_values': ['linear', 'poly', 'rbf'],
             },
             'degree': {
                 'datatype': 'int',
