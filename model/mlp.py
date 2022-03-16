@@ -41,7 +41,7 @@ class Mlp(_torch_model.TorchModel):
             },
             'perc_decrease_per_layer': {
                 'datatype': 'float',
-                'lower_bound': 0.1,
+                'lower_bound': 0.2,
                 'upper_bound': 0.5,
                 'step': 0.1
             }
