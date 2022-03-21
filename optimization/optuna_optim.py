@@ -120,6 +120,7 @@ class OptunaOptim:
         except Exception as exc:
             print('Trial failed. Error in model creation.')
             print(exc)
+            print(trial.params)
             self.clean_up_after_exception(trial_number=trial.number, trial_params=trial.params)
             raise optuna.exceptions.TrialPruned()
 
