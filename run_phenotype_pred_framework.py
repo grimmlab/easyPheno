@@ -46,10 +46,10 @@ if __name__ == '__main__':
                              "Valid arguments are: " + str(encoding_functions.get_list_of_encodings()))
 
     # Preprocess Params #
-    parser.add_argument("-maf", "--maf_percentage", type=int, default=5,
+    parser.add_argument("-maf", "--maf_percentage", type=int, default=10,
                         help="specify the minor allele frequency (as percentage value). "
                              "specify 0 if you do not want a maf filter.")
-    parser.add_argument("-datasplit", "--datasplit", type=str, default='nested-cv',
+    parser.add_argument("-datasplit", "--datasplit", type=str, default='cv-test',
                         help="specify the data slit to use: 'nested-cv' | 'cv-test' | 'train-val-test'"
                              "Default values are 5 folds, train-test-split to 80/20 and train-val-test to 60/20/20")
     parser.add_argument("-testperc", "--test_set_size_percentage", type=int, default=20,
@@ -79,7 +79,7 @@ if __name__ == '__main__':
                              "unfitted models that can be retrained are already saved by default)")
 
     # Only relevant for Neural Networks #
-    parser.add_argument("-batch_size", "--batch_size", type=int, default=None,
+    parser.add_argument("-batch_size", "--batch_size", type=int, default=32,
                         help="Only relevant for neural networks: define the batch size. If nothing is specified,"
                              "it will be considered as a hyperparameter for optimization")
     parser.add_argument("-n_epochs", "--n_epochs", type=int, default=None,
