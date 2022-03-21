@@ -22,15 +22,17 @@ def get_list_of_implemented_models():
     return [model[:-3] for model in model_src_files]
 
 
-def test_likely_categorical(vector_to_test: list, threshold: float = 0.1):
+def test_likely_categorical(vector_to_test: list, abs_unique_threshold: int = 20):
     """
     Test whether a vector is most likely categorical.
-    Simple heuristic: checking if the ratio of unique values in the vector is below a specified threshold
+    Simple heuristics:
+        checking if the number of unique values exceeds a specified threshold
     :param vector_to_test: vector that is tested if it is most likely categorical
-    :param threshold: threshold of unique values' ratio to declare vector categorical
+    :param abs_unique_threshold: threshold of unique values' ratio to declare vector categorical
     :return: True if the vector is most likely categorical, False otherwise
     """
-    return np.unique(vector_to_test).shape[0] / vector_to_test.shape[0] <= threshold
+    number_unique_values = np.unique(vector_to_test).shape[0]
+    return number_unique_values <= abs_unique_threshold
 
 
 def get_mapping_name_to_class():
