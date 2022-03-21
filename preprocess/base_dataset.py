@@ -45,7 +45,6 @@ class Dataset:
                 raise Exception('Genotype in ' + self.encoding + ' encoding missing. Can not create required encoding. '
                                                                  'See documentation for help')
         X = raw_data_functions.get_matched_data(X, X_index)
-
         return X, np.reshape(y, (-1, 1)), np.reshape(sample_ids, (-1, 1))
 
     def maf_filter_raw_data(self, arguments: argparse.Namespace):
