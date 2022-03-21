@@ -18,7 +18,7 @@ class Cnn(_torch_model.TorchModel):
         out_channels = 2 ** self.suggest_hyperparam_to_optuna('initial_out_channels_exp')
         kernel_size_max_pool = 2 ** 4  # self.suggest_hyperparam_to_optuna('maxpool_kernel_size_exp')
         frequency_out_channels_doubling = 2  # self.suggest_hyperparam_to_optuna('frequency_out_channels_doubling')
-        # Add n_layers with: Conv1d + BatchNorm + activation + Dropout
+        # Add n_layers with: Conv1d + BatchNorm + activation + dropout
         for layer in range(n_layers):
             model.append(torch.nn.Conv1d(in_channels=in_channels, out_channels=out_channels,
                                          kernel_size=kernel_size, stride=stride))
