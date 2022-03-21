@@ -24,6 +24,7 @@ class Dataset:
         Load the full genotype and phenotype matrices specified and match them
         :param arguments: all arguments provided by the user
         """
+        print('Load and match raw data')
         with h5py.File(arguments.data_dir + '/' + self.get_index_file_name(arguments), "r") as f:
             y = f['matched_data/y'][:]  # TODO change if multiple phenotypes
             if helper_functions.test_likely_categorical(y):
@@ -52,6 +53,7 @@ class Dataset:
         Apply maf filter to full raw data, if maf=0 only non-informative SNPs will be removed
         :param arguments: all arguments provided by the user
         """
+        print('Apply MAF filter')
         with h5py.File(arguments.data_dir + '/' + self.get_index_file_name(arguments), "r") as f:
             if f'maf_filter/maf_{arguments.maf_percentage}' in f:
                 filter_indices = f[f'maf_filter/maf_{arguments.maf_percentage}'][:]
@@ -63,6 +65,7 @@ class Dataset:
         :param X: genotype matrix in additive or raw encoding
         :return: filtered matrix
         """
+        print('Filter duplicate SNPs')
         uniques, index = np.unique(self.X_full, return_index=True, axis=1)
         self.X_full = uniques[:, np.argsort(index)]
 
@@ -93,6 +96,7 @@ class Dataset:
         :param arguments: all arguments provided by the user
         :return: dictionary with the above-described structure containing all indices for the specified data split
         """
+        print('Load datasplit file')
         if self.datasplit == 'train-val-test':
             n_outerfolds = 1
             n_innerfolds = 1

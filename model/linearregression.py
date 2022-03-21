@@ -11,7 +11,7 @@ class LinearRegression(_sklearn_model.SklearnModel):
     def define_model(self):
         """See BaseModel for more information"""
         # all hyperparameters defined are suggested for optimization
-        penalty = self.suggest_hyperparam_to_optuna('penalty')
+        penalty = 'l1'  # self.suggest_hyperparam_to_optuna('penalty')
         if penalty == 'l1':
             l1_ratio = 1
         elif penalty == 'l2':
@@ -36,8 +36,9 @@ class LinearRegression(_sklearn_model.SklearnModel):
             },
             'l1_ratio': {
                 'datatype': 'float',
-                'lower_bound': 0.01,
-                'upper_bound': 0.99
+                'lower_bound': 0.05,
+                'upper_bound': 0.95,
+                'step': 0.05
             },
             'alpha': {
                 'datatype': 'float',

@@ -9,8 +9,6 @@ class Cnn(_torch_model.TorchModel):
 
     def define_model(self) -> torch.nn.Sequential:
         """See BaseModel for more information"""
-        padding = 0
-        dilation = 1
         n_layers = self.suggest_hyperparam_to_optuna('n_layers')
         model = []
         act_function = self.get_torch_object_for_string(string_to_get=self.suggest_hyperparam_to_optuna('act_function'))
@@ -18,8 +16,8 @@ class Cnn(_torch_model.TorchModel):
         kernel_size = 2 ** self.suggest_hyperparam_to_optuna('kernel_size_exp')
         stride = max(1, int(kernel_size * self.suggest_hyperparam_to_optuna('stride_perc_of_kernel_size')))
         out_channels = 2 ** self.suggest_hyperparam_to_optuna('initial_out_channels_exp')
-        kernel_size_max_pool = 2 ** self.suggest_hyperparam_to_optuna('maxpool_kernel_size_exp')
-        frequency_out_channels_doubling = self.suggest_hyperparam_to_optuna('frequency_out_channels_doubling')
+        kernel_size_max_pool = 2 ** 4  # self.suggest_hyperparam_to_optuna('maxpool_kernel_size_exp')
+        frequency_out_channels_doubling = 2  # self.suggest_hyperparam_to_optuna('frequency_out_channels_doubling')
         # Add n_layers with: Conv1d + BatchNorm + activation + Dropout
         for layer in range(n_layers):
             model.append(torch.nn.Conv1d(in_channels=in_channels, out_channels=out_channels,
@@ -55,7 +53,7 @@ class Cnn(_torch_model.TorchModel):
             'initial_out_channels_exp': {
                 'datatype': 'int',
                 'lower_bound': 1,
-                'upper_bound': 5
+                'upper_bound': 3
             },
             'frequency_out_channels_doubling': {
                 'datatype': 'int',
@@ -64,7 +62,7 @@ class Cnn(_torch_model.TorchModel):
             },
             'kernel_size_exp': {
                 'datatype': 'int',
-                'lower_bound': 2,
+                'lower_bound': 3,
                 'upper_bound': 6
             },
             'maxpool_kernel_size_exp': {
@@ -76,12 +74,12 @@ class Cnn(_torch_model.TorchModel):
                 'datatype': 'float',
                 'lower_bound': 0,
                 'upper_bound': 1,
-                'step': 0.1
+                'step': 0.5
             },
             'n_units_factor_linear_layer': {
                 'datatype': 'float',
-                'lower_bound': 0.1,
-                'upper_bound': 1,
-                'step': 0.1
+                'lower_bound': 0.2,
+                'upper_bound': 0.8,
+                'step': 0.2
             },
         }

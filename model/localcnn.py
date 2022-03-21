@@ -15,8 +15,7 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
         in_channels = self.width_onehot
         width = self.n_features
         model.add(tf.keras.Input(shape=(width, in_channels)))
-        # Add 1 layer with: Locally Connected 1D + BatchNorm + activation + Dropout
-        n_filters = self.suggest_hyperparam_to_optuna('n_filters')
+        n_filters = 1
         kernel_size = 2 ** self.suggest_hyperparam_to_optuna('kernel_size_exp')
         stride = max(1, int(kernel_size * self.suggest_hyperparam_to_optuna('stride_perc_of_kernel_size')))
         model.add(tf.keras.layers.LocallyConnected1D(filters=n_filters, kernel_size=kernel_size,
@@ -26,7 +25,7 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
         p = self.suggest_hyperparam_to_optuna('dropout')
         model.add(tf.keras.layers.Dropout(rate=p, seed=42))
         # Max pooling
-        kernel_size_max_pool = 2 ** self.suggest_hyperparam_to_optuna('maxpool_kernel_size_exp')
+        kernel_size_max_pool = 2 ** 4  # self.suggest_hyperparam_to_optuna('maxpool_kernel_size_exp')
         model.add(tf.keras.layers.MaxPool1D(pool_size=kernel_size_max_pool))
         # Flatten
         model.add(tf.keras.layers.Flatten())
@@ -43,20 +42,15 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
 
     def define_hyperparams_to_tune(self) -> dict:
         """See BaseModel for more information on the format"""
-        return { # TODO: ranges anpassen for start der Experimente
+        return {
             'n_layers': {
-                'datatype': 'int',
-                'lower_bound': 2,
-                'upper_bound': 4
-            },
-            'n_filters': {
                 'datatype': 'int',
                 'lower_bound': 1,
                 'upper_bound': 3
             },
             'kernel_size_exp': {
                 'datatype': 'int',
-                'lower_bound': 3,
+                'lower_bound': 4,
                 'upper_bound': 8
             },
             'maxpool_kernel_size_exp': {
@@ -70,14 +64,14 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
             },
             'n_initial_units_factor': {
                 'datatype': 'float',
-                'lower_bound': 0.5,
+                'lower_bound': 0.4,
                 'upper_bound': 1,
-                'step': 0.1
+                'step': 0.2
             },
             'perc_decrease_per_layer': {
                 'datatype': 'float',
                 'lower_bound': 0.1,
                 'upper_bound': 0.5,
-                'step': 0.1
+                'step': 0.2
             }
         }

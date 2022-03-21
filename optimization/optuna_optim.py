@@ -8,6 +8,12 @@ import os
 import glob
 import shutil
 import re
+import gc
+import time
+import csv
+
+import torch.cuda
+import tensorflow as tf
 
 import utils
 from preprocess import base_dataset
@@ -92,6 +98,8 @@ class OptunaOptim:
         # Create model
         # in case a model has attributes not part of the base class hand them over in a dictionary to keep the same call
         # (name of the attribute and key in the dictionary have to match)
+        start_process_time = time.process_time()
+        start_realclock_time = time.time()
         additional_attributes_dict = {}
         if issubclass(utils.helper_functions.get_mapping_name_to_class()[self.current_model_name],
                       _torch_model.TorchModel) or \
@@ -112,6 +120,7 @@ class OptunaOptim:
         except Exception as exc:
             print('Trial failed. Error in model creation.')
             print(exc)
+            self.clean_up_after_exception(trial_number=trial.number, trial_params=trial.params)
             return np.nan
 
         # save the unfitted model
@@ -158,6 +167,7 @@ class OptunaOptim:
                 trial.report(value=objective_value,
                              step=0 if self.dataset.datasplit == 'train-val-test' else int(innerfold_name[-1]))
                 if trial.should_prune():
+                    self.clean_up_after_exception(trial_number=trial.number, trial_params=trial.params)
                     raise optuna.exceptions.TrialPruned()
                 # store results
                 objective_values.append(objective_value)
@@ -175,10 +185,17 @@ class OptunaOptim:
                     validation_results.at[0, metric] = value
                 # model.save_model(path=self.save_path + 'temp/',
                 #                 filename=innerfold_name + '-validation_model_trial' + str(trial.number))
-            except Exception as exc:
-                print('Trial failed. Error in optim loop.')
-                os.remove(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial.number))
+            except (RuntimeError, TypeError, tf.errors.ResourceExhaustedError) as exc:
                 print(exc)
+                if 'out of memory' in str(exc) or isinstance(exc, tf.errors.ResourceExhaustedError):
+                    # Recover from CUDA out of memory error
+                    print('CUDA OOM at batch_size ' + str(model.batch_size))
+                    del model
+                    gc.collect()
+                    torch.cuda.empty_cache()
+                else:
+                    print('Trial failed. Error in optim loop.')
+                self.clean_up_after_exception(trial_number=trial.number, trial_params=trial.params)
                 return np.nan
         current_val_result = np.mean(objective_values)
         if self.current_best_val_result is None or \
@@ -197,8 +214,55 @@ class OptunaOptim:
         else:
             # delete unfitted model
             os.remove(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial.number))
-
+        self.write_runtime_csv(dict_runtime={'Trial': trial.number,
+                                             'process_time_s': time.process_time() - start_process_time,
+                                             'real_time_s': time.time() - start_realclock_time,
+                                             'params': trial.params})
         return current_val_result
+
+    def clean_up_after_exception(self, trial_number: int, trial_params: dict):
+        """
+        Clean up things after an exception
+        :param trial_number: number of the trial
+        :param trial_params: parameters of the trial
+        """
+        if os.path.exists(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial_number)):
+            os.remove(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial_number))
+        self.write_runtime_csv(dict_runtime={'Trial': trial_number, 'process_time_s': np.nan, 'real_time_s': np.nan,
+                                             'params': trial_params})
+
+    def write_runtime_csv(self, dict_runtime: dict):
+        """
+        Write runtime info to runtime csv file
+        :param dict_runtime: Dictionary with runtime information
+        """
+        with open(self.save_path + self.current_model_name + '_runtime_overview.csv', 'a') as runtime_file:
+            headers = ['Trial', 'process_time_s', 'real_time_s', 'params']
+            writer = csv.DictWriter(f=runtime_file, fieldnames=headers)
+            if runtime_file.tell() == 0:
+                writer.writeheader()
+            writer.writerow(dict_runtime)
+
+    def calc_runtime_stats(self) -> dict:
+        """
+        Calculate runtime stats for saved csv file
+        :return: dict with runtime info
+        """
+        csv_file = pd.read_csv(self.save_path + self.current_model_name + '_runtime_overview.csv')
+        process_times = csv_file['process_time_s']
+        real_times = csv_file['real_time_s']
+        process_time_mean, process_time_std, process_time_max, process_time_min = \
+            process_times.mean(), process_times.std(), process_times.max(), process_times.min()
+        real_time_mean, real_time_std, real_time_max, real_time_min = \
+            real_times.mean(), real_times.std(), real_times.max(), real_times.min()
+        self.write_runtime_csv({'Trial': 'mean', 'process_time_s': process_time_mean, 'real_time_s': real_time_mean})
+        self.write_runtime_csv({'Trial': 'std', 'process_time_s': process_time_std, 'real_time_s': real_time_std})
+        self.write_runtime_csv({'Trial': 'max', 'process_time_s': process_time_max, 'real_time_s': real_time_max})
+        self.write_runtime_csv({'Trial': 'min', 'process_time_s': process_time_min, 'real_time_s': real_time_min})
+        return {'process_time_mean': process_time_mean, 'process_time_std': process_time_std,
+                'process_time_max': process_time_max, 'process_time_min': process_time_min,
+                'real_time_mean': real_time_mean, 'real_time_std': real_time_std,
+                'real_time_max': real_time_max, 'real_time_min': real_time_min}
 
     def run_optuna_optimization(self) -> dict:
         """
@@ -224,6 +288,7 @@ class OptunaOptim:
                 lambda trial: self.objective(trial=trial, train_val_indices=outerfold_info),
                 n_trials=self.arguments.n_trials
             )
+            runtime_metrics = self.calc_runtime_stats()
             # Print statistics after run
             print("## Optuna Study finished ##")
             print("Study statistics: ")
@@ -255,14 +320,20 @@ class OptunaOptim:
             final_model = _model_functions.load_retrain_model(
                 path=self.save_path, filename='unfitted_model_trial' + str(self.study.best_trial.number),
                 X_retrain=X_retrain, y_retrain=y_retrain, early_stopping_point=self.early_stopping_point)
+            start_process_time = time.process_time()
+            start_realclock_time = time.time()
             y_pred_retrain = final_model.predict(X_in=X_retrain)
+            self.write_runtime_csv(dict_runtime={'Trial': 'retraining',
+                                                 'process_time_s': time.process_time() - start_process_time,
+                                                 'real_time_s': time.time() - start_realclock_time})
             y_pred_test = final_model.predict(X_in=X_test)
 
             # Evaluate and save results
             eval_scores = \
                 eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test, task=self.task, prefix='test_')
             key = outerfold_name if self.dataset.datasplit == 'nested-cv' else 'Test'
-            overall_results[key] = {'best_params': self.study.best_trial.params, 'eval_metrics': eval_scores}
+            overall_results[key] = {'best_params': self.study.best_trial.params, 'eval_metrics': eval_scores,
+                                    'runtime_metrics': runtime_metrics}
             print('## Results on test set ##')
             print(eval_scores)
             final_results = pd.DataFrame(index=range(0, self.dataset.y_full.shape[0]))

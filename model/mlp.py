@@ -27,22 +27,22 @@ class Mlp(_torch_model.TorchModel):
 
     def define_hyperparams_to_tune(self) -> dict:
         """See BaseModel for more information on the format"""
-        return {  # TODO: ranges anpassen for start der Experimente
+        return {
             'n_layers': {
                 'datatype': 'int',
                 'lower_bound': 1,
-                'upper_bound': 4
+                'upper_bound': 3
             },
             'n_initial_units_factor': {
                 'datatype': 'float',
-                'lower_bound': 0.5,
-                'upper_bound': 1,
-                'step': 0.1
+                'lower_bound': 0.05,
+                'upper_bound': 0.1,
+                'step': 0.05
             },
             'perc_decrease_per_layer': {
                 'datatype': 'float',
-                'lower_bound': 0.1,
+                'lower_bound': 0.2,
                 'upper_bound': 0.5,
-                'step': 0.1
+                'step': 0.15
             }
         }
