@@ -121,7 +121,7 @@ class OptunaOptim:
             print('Trial failed. Error in model creation.')
             print(exc)
             self.clean_up_after_exception(trial_number=trial.number, trial_params=trial.params)
-            return np.nan
+            raise optuna.exceptions.TrialPruned()
 
         # save the unfitted model
         os.makedirs(self.save_path + 'temp/', exist_ok=True)
@@ -196,7 +196,7 @@ class OptunaOptim:
                 else:
                     print('Trial failed. Error in optim loop.')
                 self.clean_up_after_exception(trial_number=trial.number, trial_params=trial.params)
-                return np.nan
+                raise optuna.exceptions.TrialPruned()
         current_val_result = np.mean(objective_values)
         if self.current_best_val_result is None or \
                 (self.task == 'classification' and current_val_result > self.current_best_val_result) or \
