@@ -320,10 +320,10 @@ def append_index_file(arguments: argparse.Namespace):
         # check if group 'maf_filter' is available and if user input maf is available, if not: create group/dataset
         if 'maf_filter' not in f:
             maf = f.create_group('maf_filter')
-            tmp = (create_maf_filter(arguments.maf_percentage, f['matched_data/ma_frequency']))
+            tmp = (create_maf_filter(arguments.maf_percentage, f['matched_data/ma_frequency'][:]))
             maf.create_dataset(f'maf_{arguments.maf_percentage}', data=tmp, chunks=True, compression="gzip")
         elif f'maf_{arguments.maf_percentage}' not in f['maf_filter']:
-            tmp = (create_maf_filter(arguments.maf_percentage, f['matched_data/ma_frequency']))
+            tmp = (create_maf_filter(arguments.maf_percentage, f['matched_data/ma_frequency'][:]))
             f.create_dataset(f'maf_filter/maf_{arguments.maf_percentage}', data=tmp, chunks=True, compression="gzip")
         # check if group datasplit and all user inputs concerning datasplits are available, if not: create all
         if arguments.datasplit == 'nested-cv':
@@ -525,6 +525,7 @@ def filter_non_informative_snps(X: np.array):
     X_filtered = X[:, ~tmp.all(0)]
     return X_filtered, (~tmp.all(0)).nonzero()[0]
 
+
 def get_minor_allele_freq(X: np.array):
     """
     Function to compute minor allele frequencies of genotype matrix
@@ -560,10 +561,10 @@ def create_maf_filter(maf: int, freq: np.array):
     """
     Function to compute minor allele frequency filter
     :param maf: maf threshold as percentage value
-    :param freq: array containing minor allele frequencies
+    :param freq: array containing minor allele frequencies as decimal value
     :return: array containing indices of SNPs with MAF smaller than specified threshold, i.e. SNPs to delete
     """
-    return np.where(freq <= maf / 100)[0]
+    return np.where(freq <= (maf / 100))[0]
 
 
 def check_datasplit_user_input(arguments: argparse.Namespace, split: str, param: list):
