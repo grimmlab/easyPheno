@@ -550,7 +550,7 @@ def get_minor_allele_freq(X: np.array):
                 heterozygous_nuc = ['M', 'R', 'W', 'S', 'Y', 'K']
                 for j, pair in enumerate(pairs):
                     if all(h in pair for h in homozygous) and hetero != heterozygous_nuc[j]:
-                        raise Exception('More than two alleles encountered at SNP ', i)
+                        raise Exception('More than two alleles encountered at SNP ' + str(i))
                 freq.append((np.min(counts[boolean]) + 0.5 * counts[~boolean][0]) / len(col))
             else:
                 freq.append(np.min(counts) / len(col))

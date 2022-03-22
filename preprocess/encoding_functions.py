@@ -84,12 +84,33 @@ def get_additive_encoding(X: np.array):
     :param X: genotype matrix in raw encoding, i.e. containing the alleles
     :return: X_012
     """
-    # TODO heterozygous
     alleles = []
     index_arr = []
-    for col in np.transpose(X):
-        _, inv, counts = np.unique(col, return_counts=True, return_inverse=True)
-        tmp = np.where(counts == np.max(counts), 0., 2.)
+    pairs = [['A', 'C'], ['A', 'G'], ['A', 'T'], ['C', 'G'], ['C', 'T'], ['G', 'T']]
+    heterozygous_nuc = ['M', 'R', 'W', 'S', 'Y', 'K']
+    for j, col in enumerate(np.transpose(X)):
+        unique, inv, counts = np.unique(col, return_counts=True, return_inverse=True)
+        unique = unique.astype(str)
+        boolean = (unique == 'A') | (unique == 'T') | (unique == 'C') | (unique == 'G')
+        tmp = np.zeros(3)
+        if len(unique) > 3:
+            raise Exception('More than two alleles encountered at snp ' + str(j))
+        elif len(unique) == 3:
+            hetero = unique[~boolean][0]
+            homozygous = unique[boolean]
+            for j, pair in enumerate(pairs):
+                if all(h in pair for h in homozygous) and hetero != heterozygous_nuc[j]:
+                    raise Exception('More than two alleles encountered at snp ' + str(j))
+            tmp[~boolean] = 1.0
+            tmp[np.argmin(counts[boolean])] = 2.0
+        elif len(unique) == 2:
+            if list(unique) in pairs:
+                tmp[np.argmin(counts)] = 2.0
+            else:
+                tmp[(~boolean).nonzero()] = 1.0
+        else:
+            if unique[0] in heterozygous_nuc:
+                tmp[0] = 1.0
         alleles.append(tmp)
         index_arr.append(inv)
     alleles = np.transpose(np.array(alleles))
