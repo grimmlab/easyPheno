@@ -25,7 +25,8 @@ if __name__ == '__main__':
     ### User Input ###
     parser = argparse.ArgumentParser()
     # Input Params #
-    parser.add_argument("-data_dir", "--data_dir", type=str, default='/myhome/data/',
+    parser.add_argument("-data_dir", "--data_dir", type=str,
+                        default='/bit_storage/Workspace/Maura/PhenotypePred/data/ArabidopsisThaliana',
                         help="Provide the full path of your data directory "
                              "(that contains the geno- and phenotype files).")
     parser.add_argument("-save_dir", "--save_dir", type=str, default='/myhome/',
@@ -49,7 +50,7 @@ if __name__ == '__main__':
     parser.add_argument("-maf", "--maf_percentage", type=int, default=10,
                         help="specify the minor allele frequency (as percentage value). "
                              "specify 0 if you do not want a maf filter.")
-    parser.add_argument("-datasplit", "--datasplit", type=str, default='cv-test',
+    parser.add_argument("-datasplit", "--datasplit", type=str, default='nested-cv',
                         help="specify the data slit to use: 'nested-cv' | 'cv-test' | 'train-val-test'"
                              "Default values are 5 folds, train-test-split to 80/20 and train-val-test to 60/20/20")
     parser.add_argument("-testperc", "--test_set_size_percentage", type=int, default=20,
