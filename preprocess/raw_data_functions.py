@@ -252,6 +252,7 @@ def create_genotype_h5_file(arguments: argparse.Namespace, sample_ids: np.array,
             f.create_dataset('X_012', data=X, chunks=True, compression="gzip", compression_opts=7)
         else:
             raise Exception('Genotype neither in raw or additive encoding. Cannot save .h5 genotype file.')
+    arguments.genotype_matrix = arguments.genotype_matrix.split('.')[0] + '.h5'
 
 
 def check_and_load_phenotype_matrix(arguments: argparse.Namespace):
