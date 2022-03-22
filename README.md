@@ -53,7 +53,7 @@ By doing so, the whole optimization pipeline is started for the specified models
 A list of all available models can be found under `--models` using the above described help command. Beyond that, one can specify various further parameters, also run the help command to check.
 
 ## Input data
-The minimal requirement is to provide a genotype and a phenotype file. We provide test data in the folder `data/test`.
+The minimal requirement is to provide a genotype and a phenotype file. We provide test data in the folder `data/test`. The genotype matrix needs to be imputed.
 This Framework is designed to work with several genotype file formats. In a first step the genotype data will be saved 
 in a unified .h5 file which simplifies further processing. One can provide the following file formats:
 
