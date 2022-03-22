@@ -31,8 +31,8 @@ All used Python packages and versions are specified in `Docker/requirements.txt`
     ```bash
     docker run -it -v PATH/TO/REPO/FOLDER:/REPO_DIRECTORY/IN/CONTAINER -v /PATH/TO/DATA/DIRECTORY:/DATA_DIRECTORY/IN/CONTAINER -v /PATH/TO/RESULTS/SAVE/DIRECTORY:/SAVE_DIRECTORY/IN/CONTAINER --cpuset-cpus CPU_INDEX_START-CPU_INDEX_STOP --gpus device=DEVICE_NUMBER --name CONTAINERNAME IMAGENAME
     ```
-    Mount the directory where the repository is placed on your machine, the directory where your phenotype and genotype data is stored and the directroy where you want to save your results in the Docker container using the option `-v`.
-    Restrict the number of cpus using the option `cpuset-cpus CPU_INDEX_START-CPU_INDEX_STOP` and specify a gpus device using `--gpus device=DEVICE_NUMBER`if you want to use GPU support.
+    Mount the directory where the repository is placed on your machine, the directory where your phenotype and genotype data is stored and the directory where you want to save your results using the option `-v`.
+    Restrict the number of cpus using the option `cpuset-cpus CPU_INDEX_START-CPU_INDEX_STOP` and specify a gpu device using `--gpus device=DEVICE_NUMBER`if you want to use GPU support.
 6. In the Docker container, navigate to the to top level of the repository in the mounted directory
    ```bash
     cd /REPO_DIRECTORY/IN/CONTAINER/phenotypeprediction
