@@ -47,7 +47,7 @@ The optimization is started via the command line and one can specify various par
 To run the optimization, one has to specifiy a data directory, a save directory, a genotype and phenotype matrix, a phenotype to be predicted as well as the models that should be optimized (one can specifiy multiple models). 
 For example, if you want to run an optimization using the dummy data we provide, use the following command:
 
-    python3 run_phenotype_pred_framework.py --data_dir /REPO_DIRECTORY/IN/CONTAINER/phenotypeprediction/data/test/ --genotype_matrix x_matrix.h5 --phenotype_matrix y_matrix.csv --phenotype continuous_values --models xgboost randomforest cnn
+    python3 run_phenotype_pred_framework.py --data_dir /REPO_DIRECTORY/IN/CONTAINER/phenotypeprediction/data/test/ --save_dir /SAVE_DIRECTORY/IN/CONTAINER --genotype_matrix x_matrix.h5 --phenotype_matrix y_matrix.csv --phenotype continuous_values --models xgboost randomforest cnn
 
 By doing so, the whole optimization pipeline is started for the specified models. One should see command line outputs for the data prepration, a config overview and then the output of the optimization trials. Finally, in `--save_dir`, there will be a subfolder `results` that contains the optimization results in a structure according to the specified optimization parameters.
 A list of all available models can be found under `--models` using the above described help command. Beyond that, one can specify various further parameters, also run the help command to check.
