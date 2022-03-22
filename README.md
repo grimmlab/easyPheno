@@ -53,7 +53,7 @@ By doing so, the whole optimization pipeline is started for the specified models
 A list of all available models can be found under `--models` using the above described help command. Beyond that, one can specify various further parameters, also run the help command to check.
 
 ## Contributors
-This pipeline is developed and maintened by members of the [Bioinformatics](https://bit.cs.tum.de) lab of [Prof. Dr. Dominik Grimm](https://bit.cs.tum.de/team/dominik-grimm/):
+This pipeline is developed and maintained by members of the [Bioinformatics](https://bit.cs.tum.de) lab of [Prof. Dr. Dominik Grimm](https://bit.cs.tum.de/team/dominik-grimm/):
 - [Florian Haselbeck, M.Sc.](https://bit.cs.tum.de/team/florian-haselbeck/)
 - [Maura John, M.Sc.](https://bit.cs.tum.de/team/maura-john/)
 
