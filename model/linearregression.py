@@ -4,13 +4,17 @@ from model import _sklearn_model
 
 
 class LinearRegression(_sklearn_model.SklearnModel):
-    """See BaseModel for more information on the parameters"""
+    """
+    See BaseModel for more information on the attributes.
+    """
     standard_encoding = '012'
     possible_encodings = ['012']
 
     def define_model(self):
-        """See BaseModel for more information"""
-        # all hyperparameters defined are suggested for optimization
+        """
+        See BaseModel for more information.
+        """
+        # Penalty term is fixed to l1, but might also be optimized
         penalty = 'l1'  # self.suggest_hyperparam_to_optuna('penalty')
         if penalty == 'l1':
             l1_ratio = 1
@@ -28,7 +32,9 @@ class LinearRegression(_sklearn_model.SklearnModel):
             return sklearn.linear_model.ElasticNet(alpha=alpha, l1_ratio=l1_ratio, max_iter=10000, random_state=42)
 
     def define_hyperparams_to_tune(self) -> dict:
-        """See BaseModel for more information on the format"""
+        """
+        See BaseModel for more information on the format.
+        """
         return {
             'penalty': {
                 'datatype': 'categorical',

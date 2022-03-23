@@ -24,10 +24,9 @@ from model import _torch_model, _base_model, _tensorflow_model, _model_functions
 
 class OptunaOptim:
     """
-    Class that contains all info for the whole optimization using optuna for one model and dataset
+    Class that contains all info for the whole optimization using optuna for one model and dataset.
 
     ## Attributes ##
-        # Instance attributes #
         arguments: argparse.Namespace : all arguments provided by the user
         task: str : ML task (regression or classification) depending on target variable
         current_model_name: str : name of the current model according to naming of .py file in package model
@@ -35,27 +34,37 @@ class OptunaOptim:
         base_path : str : base_path for save_path
         save_path: str : path for model and results storing
         study : optuna.study.Study : optuna study for optimization run
+        current_best_val_result: float : the best validation result so far
+        early_stopping_point : int : point at which early stopping occured (relevant for some models)
     """
 
-    def __init__(self, arguments: argparse.Namespace, task: str, current_model_name: str,
+    def __init__(self, arguments: dict, task: str, current_model_name: str,
                  dataset: base_dataset.Dataset, start_time: str):
         """
-        Constructor of OptunaOptim
+        Constructor of OptunaOptim.
         :param arguments: all arguments provided by the user
         :param task: ML task (regression or classification) depending on target variable
         :param current_model_name: name of the current model according to naming of .py file in package model
         :param dataset: dataset to use for optimization run
+        :param start_time: starting time of the optimization run for saving purposes
         """
         self.current_model_name = current_model_name
         self.task = task
         self.arguments = arguments
         self.dataset = dataset
-        self.base_path = arguments.save_dir + \
-            '/results/' + arguments.genotype_matrix.split('.')[0] + \
-            '/' + arguments.phenotype_matrix.split('.')[0] + '/' + arguments.phenotype + \
-            '/' + arguments.datasplit + '/' + \
-            helper_functions.get_subpath_for_datasplit(arguments=arguments, datasplit=arguments.datasplit) + '/' + \
-            'MAF' + str(self.arguments.maf_percentage) + '/' + start_time + '/' + current_model_name + '/'
+        if arguments["datasplit"] == 'train-val-test':
+            datasplit_params = [arguments["val_set_size_percentage"], arguments["test_set_size_percentage"]]
+        elif arguments["datasplit"] == 'cv-test':
+            datasplit_params = [arguments["n_innerfolds"], arguments["test_set_size_percentage"]]
+        elif arguments["datasplit"] == 'nested-cv':
+            datasplit_params = [arguments["n_outerfolds"], arguments["n_innerfolds"]]
+        self.base_path = arguments["save_dir"] + \
+            '/results/' + arguments["genotype_matrix"].split('.')[0] + \
+            '/' + arguments["phenotype_matrix"].split('.')[0] + '/' + arguments.phenotype + \
+            '/' + arguments["datasplit"] + '/' + \
+            helper_functions.get_subpath_for_datasplit(datasplit=arguments["datasplit"],
+                                                       datasplit_params=datasplit_params) + '/' + \
+            'MAF' + str(self.arguments["maf_percentage"]) + '/' + start_time + '/' + current_model_name + '/'
         self.save_path = self.base_path
         self.study = None
         self.current_best_val_result = None
@@ -63,54 +72,56 @@ class OptunaOptim:
 
     def create_new_study(self) -> optuna.study.Study:
         """
-        Method to create a new optuna study
+        Create a new optuna study.
         :return: optuna study
         """
         outerfold_prefix = 'OUTER' + self.save_path[-2] + '-' if 'outerfold' in self.save_path else ''
         study_name = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + '_' + outerfold_prefix + \
-                     self.arguments.genotype_matrix.split('.')[0] + '-' + \
-                     self.arguments.phenotype_matrix.split('.')[0] + '-' + self.arguments.phenotype + '-' + \
-                     'MAF' + str(self.arguments.maf_percentage) + \
-                     '-SPLIT' + self.arguments.datasplit + \
+                     self.arguments["genotype_matrix"].split('.')[0] + '-' + \
+                     self.arguments["phenotype_matrix"].split('.')[0] + '-' + self.arguments["phenotype"] + '-' + \
+                     'MAF' + str(self.arguments["maf_percentage"]) + \
+                     '-SPLIT' + self.arguments["datasplit"] + \
                      helper_functions.get_subpath_for_datasplit(arguments=self.arguments,
                                                                 datasplit=self.arguments.datasplit) + \
-                     '-MODEL' + self.current_model_name + '-TRIALS' + str(self.arguments.n_trials)
+                     '-MODEL' + self.current_model_name + '-TRIALS' + str(self.arguments["n_trials[")
         storage = optuna.storages.RDBStorage(
             "sqlite:////" + self.save_path + 'Optuna_DB-' + study_name + ".db", heartbeat_interval=60, grace_period=120,
             failed_trial_callback=optuna.storages.RetryFailedTrialCallback(max_retry=3)
             )
+        # TPE Sampler with seed for reproducibility
+        # Percentile pruner if minimum 20 trials exist and intermediate result is worse than 80th percentile
         study = optuna.create_study(
             storage=storage, study_name=study_name,
             direction='minimize' if self.task == 'regression' else 'maximize', load_if_exists=True,
             sampler=optuna.samplers.TPESampler(seed=42),
             pruner=optuna.pruners.PercentilePruner(percentile=80, n_min_trials=20)
         )
-
         return study
 
-    def objective(self, trial: optuna.trial.Trial, train_val_indices: dict):
+    def objective(self, trial: optuna.trial.Trial, train_val_indices: dict) -> float:
         """
-        Objective function for optuna optimization that returns a score
+        Objective function for optuna optimization that returns a score.
         :param trial: trial of optuna for optimization
         :param train_val_indices: indices of train and validation sets
         :return: score of the current hyperparameter config
         """
+        # Setup timers for runtime logging
+        start_process_time = time.process_time()
+        start_realclock_time = time.time()
         # Create model
         # in case a model has attributes not part of the base class hand them over in a dictionary to keep the same call
         # (name of the attribute and key in the dictionary have to match)
-        start_process_time = time.process_time()
-        start_realclock_time = time.time()
         additional_attributes_dict = {}
         if issubclass(utils.helper_functions.get_mapping_name_to_class()[self.current_model_name],
                       _torch_model.TorchModel) or \
                 issubclass(utils.helper_functions.get_mapping_name_to_class()[self.current_model_name],
                            _tensorflow_model.TensorflowModel):
-            # all torch models have the number of input features as attribute
+            # additional attributes for torch and tensorflow models
             additional_attributes_dict['n_features'] = self.dataset.X_full.shape[1]
             additional_attributes_dict['batch_size'] = self.arguments.batch_size
             additional_attributes_dict['n_epochs'] = self.arguments.n_epochs
             additional_attributes_dict['width_onehot'] = self.dataset.X_full.shape[-1]
-            early_stopping_points = []
+            early_stopping_points = []  # log early stopping point at each fold for torch and tensorflow models
         try:
             model: _base_model.BaseModel = utils.helper_functions.get_mapping_name_to_class()[self.current_model_name](
                 task=self.task, optuna_trial=trial,
@@ -158,13 +169,13 @@ class OptunaOptim:
                     early_stopping_points.append(
                         model.early_stopping_point if model.early_stopping_point is not None else model.n_epochs)
                 if len(y_pred) == (len(y_val) - 1):
+                    # might happen if batch size leads to a last batch with only one sample which will be dropped then
                     print('y_val has one element less than y_true (e.g. due to batch size config) -> drop last element')
                     y_val = y_val[:-1]
                 objective_value = \
                     sklearn.metrics.accuracy_score(y_true=y_val, y_pred=y_pred) if self.task == 'classification' \
                     else sklearn.metrics.mean_squared_error(y_true=y_val, y_pred=y_pred)
                 # report value for pruning
-                # step has an offset based on outerfold_number as same study is used for all outerfolds
                 trial.report(value=objective_value,
                              step=0 if self.dataset.datasplit == 'train-val-test' else int(innerfold_name[-1]))
                 if trial.should_prune():
@@ -184,8 +195,6 @@ class OptunaOptim:
                 for metric, value in eval_metrics.get_evaluation_report(y_pred=y_pred, y_true=y_val, task=self.task,
                                                                         prefix=innerfold_name + '_').items():
                     validation_results.at[0, metric] = value
-                # model.save_model(path=self.save_path + 'temp/',
-                #                 filename=innerfold_name + '-validation_model_trial' + str(trial.number))
             except (RuntimeError, TypeError, tf.errors.ResourceExhaustedError) as exc:
                 print(exc)
                 if 'out of memory' in str(exc) or isinstance(exc, tf.errors.ResourceExhaustedError):
@@ -204,6 +213,7 @@ class OptunaOptim:
                 (self.task == 'regression' and current_val_result < self.current_best_val_result):
             self.current_best_val_result = current_val_result
             if hasattr(model, 'early_stopping_point'):
+                # take mean of early stopping points of all innerfolds for refitting of final model
                 self.early_stopping_point = int(np.mean(early_stopping_points))
             # persist results
             validation_results.to_csv(self.save_path + 'temp/validation_results_trial' + str(trial.number) + '.csv',
@@ -215,6 +225,7 @@ class OptunaOptim:
         else:
             # delete unfitted model
             os.remove(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial.number))
+        # save runtime information of this trial
         self.write_runtime_csv(dict_runtime={'Trial': trial.number,
                                              'process_time_s': time.process_time() - start_process_time,
                                              'real_time_s': time.time() - start_realclock_time,
@@ -223,7 +234,7 @@ class OptunaOptim:
 
     def clean_up_after_exception(self, trial_number: int, trial_params: dict):
         """
-        Clean up things after an exception
+        Clean up things after an exception: delete unfitted model if it exists and update runtime csv.
         :param trial_number: number of the trial
         :param trial_params: parameters of the trial
         """
@@ -234,7 +245,7 @@ class OptunaOptim:
 
     def write_runtime_csv(self, dict_runtime: dict):
         """
-        Write runtime info to runtime csv file
+        Write runtime info to runtime csv file.
         :param dict_runtime: Dictionary with runtime information
         """
         with open(self.save_path + self.current_model_name + '_runtime_overview.csv', 'a') as runtime_file:
@@ -246,7 +257,7 @@ class OptunaOptim:
 
     def calc_runtime_stats(self) -> dict:
         """
-        Calculate runtime stats for saved csv file
+        Calculate runtime stats for saved csv file.
         :return: dict with runtime info
         """
         csv_file = pd.read_csv(self.save_path + self.current_model_name + '_runtime_overview.csv')
@@ -267,9 +278,8 @@ class OptunaOptim:
 
     def run_optuna_optimization(self) -> dict:
         """
-        Function to run whole optuna optimization for one model, dataset and datasplit
+        Function to run whole optuna optimization for one model, dataset and datasplit.
         """
-
         # Iterate over outerfolds
         # (according to structure described in base_dataset.Dataset, only for nested-cv multiple outerfolds exist)
         overall_results = {}
@@ -289,6 +299,7 @@ class OptunaOptim:
                 lambda trial: self.objective(trial=trial, train_val_indices=outerfold_info),
                 n_trials=self.arguments.n_trials
             )
+            # Calculate runtime metrics after finishing optimization
             runtime_metrics = self.calc_runtime_stats()
             # Print statistics after run
             print("## Optuna Study finished ##")
@@ -308,8 +319,8 @@ class OptunaOptim:
                 shutil.copyfile(file, self.save_path + file.split('/')[-1])
             shutil.rmtree(self.save_path + 'temp/')
 
-            print("## Retrain best model and test ##")
             # Retrain on full train + val data with best hyperparams and apply on test
+            print("## Retrain best model and test ##")
             X_test, y_test, sample_ids_test = \
                 self.dataset.X_full[outerfold_info['test']], self.dataset.y_full[outerfold_info['test']], \
                 self.dataset.sample_ids_full[outerfold_info['test']]
@@ -318,11 +329,11 @@ class OptunaOptim:
                 self.dataset.y_full[~np.isin(np.arange(len(self.dataset.y_full)), outerfold_info['test'])], \
                 self.dataset.sample_ids_full[~np.isin(np.arange(len(self.dataset.sample_ids_full)),
                                                       outerfold_info['test'])],
+            start_process_time = time.process_time()
+            start_realclock_time = time.time()
             final_model = _model_functions.load_retrain_model(
                 path=self.save_path, filename='unfitted_model_trial' + str(self.study.best_trial.number),
                 X_retrain=X_retrain, y_retrain=y_retrain, early_stopping_point=self.early_stopping_point)
-            start_process_time = time.process_time()
-            start_realclock_time = time.time()
             y_pred_retrain = final_model.predict(X_in=X_retrain)
             self.write_runtime_csv(dict_runtime={'Trial': 'retraining',
                                                  'process_time_s': time.process_time() - start_process_time,
@@ -351,5 +362,4 @@ class OptunaOptim:
             if self.arguments.save_final_model:
                 final_model.save_model(path=self.save_path,
                                        filename='final_retrained_model')
-
         return overall_results

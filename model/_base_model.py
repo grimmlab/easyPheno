@@ -7,7 +7,7 @@ import numpy as np
 class BaseModel(abc.ABC):
     """
     BaseModel parent class for all models that can be used within the framework.
-    Every model must be based on BaseModel directly or BaseModel's child classes SklearnModel or TorchModel
+    Every model must be based on BaseModel directly or BaseModel's child classes, e.g. SklearnModel or TorchModel
 
     ## Attributes ##
         # Class attributes #
@@ -84,15 +84,15 @@ class BaseModel(abc.ABC):
                     'datatype': 'float' | 'int' | 'categorical',
                     FOR DATATYPE 'categorical':
                         'list_of_values': []  # List of all possible values
-                    FOR DATATYPE in [float, int]:
+                    FOR DATATYPE in ['float', 'int']:
                         'lower_bound': value_lower_bound,
                         'upper_bound': value_upper_bound,
-                        # OPTIONAL ITEMS (only for [float, int]):
+                        # OPTIONAL ITEMS (only for ['float', 'int']):
                         'log': True | False  # sample value from log domain or not
                         'step': step_size # step of discretization.
                                             # Caution: cannot be combined with log=True
-                                                            - in case of float in general and
-                                                            - for step!=1 in case of int
+                                                            - in case of 'float' in general and
+                                                            - for step!=1 in case of 'int'
                     },
                 'name_hyperparam_2':
                     {
@@ -127,7 +127,7 @@ class BaseModel(abc.ABC):
     @abc.abstractmethod
     def train_val_loop(self, X_train: np.array, y_train: np.array, X_val: np.array, y_val: np.array) -> np.array:
         """
-
+        Method that runs the whole training and validation loop
         :param X_train: feature matrix for the training
         :param y_train: target vector for training
         :param X_val: feature matrix for validation
@@ -138,10 +138,10 @@ class BaseModel(abc.ABC):
     ### General methods ###
     def suggest_hyperparam_to_optuna(self, hyperparam_name: str):
         """
-        Add a hyperparameter of hyperparam_dict to the optuna trial to optimize it.
+        Suggest a hyperparameter of hyperparam_dict to the optuna trial to optimize it.
         If you want to add a parameter to your model / in your pipeline to be optimized, you need to call this method
         :param hyperparam_name: name of the hyperparameter to be tuned (see define_hyperparams_to_tune())
-        :return: suggsted value
+        :return: suggested value
         """
         # Get specification of the hyperparameter
         if hyperparam_name in self.all_hyperparams:
@@ -198,15 +198,13 @@ class BaseModel(abc.ABC):
 
     def suggest_all_hyperparams_to_optuna(self) -> dict:
         """
-        Several libraray models require a dictionary with the model parameters.
+        Some models accept a dictionary with the model parameters.
         This method suggests all hyperparameters in all_hyperparams and gives back a dictionary containing them.
         :return: dictionary with suggested hyperparameters
         """
         for param_name in self.all_hyperparams.keys():
             _ = self.suggest_hyperparam_to_optuna(param_name)
         return self.optuna_trial.params
-
-    # TODO: Funktion schreiben zum reuse von einem PArameter, der schon suggested wurde
 
     def save_model(self, path: str, filename: str):
         """

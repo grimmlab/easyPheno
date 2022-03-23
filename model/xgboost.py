@@ -4,16 +4,22 @@ from model import _sklearn_model
 
 
 class XgBoost(_sklearn_model.SklearnModel):
-    """See BaseModel for more information on the parameters"""
+    """
+    See BaseModel for more information on the attributes.
+    """
     standard_encoding = '012'
     possible_encodings = ['012']
 
     def define_model(self) -> xgboost.XGBModel:
-        """See BaseModel for more information"""
+        """
+        See BaseModel for more information.
+        """
         # all hyperparameters defined for XGBoost are suggested for optimization
         params = self.suggest_all_hyperparams_to_optuna()
+        # add random_state for reproducibility
         params.update({'random_state': 42})
         if self.task == 'classification':
+            # set some parameters to prevent warnings
             params.update({'use_label_encoder': False})
             eval_metric = 'mlogloss' if self.n_outputs > 2 else 'logloss'
             params.update({'eval_metric': eval_metric})
@@ -22,7 +28,9 @@ class XgBoost(_sklearn_model.SklearnModel):
             return xgboost.XGBRegressor(**params)
 
     def define_hyperparams_to_tune(self) -> dict:
-        """See BaseModel for more information on the format"""
+        """
+        See BaseModel for more information on the format.
+        """
         return {
             'n_estimators': {
                 'datatype': 'categorical',

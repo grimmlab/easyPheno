@@ -4,7 +4,7 @@ import numpy as np
 
 def get_evaluation_report(y_pred: np.array, y_true: np.array, task: str, prefix: str = '') -> dict:
     """
-    Get values for common evaluation metrics
+    Get values for common evaluation metrics.
     :param y_pred: predicted values
     :param y_true: true values
     :param task: ML task to solve
@@ -31,5 +31,4 @@ def get_evaluation_report(y_pred: np.array, y_true: np.array, task: str, prefix:
             prefix + 'r2_score': sklearn.metrics.r2_score(y_true=y_true, y_pred=y_pred),
             prefix + 'explained_variance': sklearn.metrics.explained_variance_score(y_true=y_true, y_pred=y_pred)
         }
-
     return eval_report_dict

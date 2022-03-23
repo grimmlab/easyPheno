@@ -10,23 +10,48 @@ from model import _base_model
 
 class TorchModel(_base_model.BaseModel, abc.ABC):
     """
-    Parent class based on BaseModel for all PyTorch models to share functionalities
-    See BaseModel for more information
+    Parent class based on BaseModel for all PyTorch models to share functionalities.
+    See BaseModel for more information.
+
+    ## Attributes ##
+        # Inherited attributes #
+        See BaseModel.
+        # Additional attributes #
+        n_outputs: int : Number of outputs of the model
+        n_features: int : Number of input features to the model
+        width_onehot: int : Number of input channels in case of onehot encoding
+        batch_size: int : Batch size for batch-based training
+        n_epochs: int : Number of epochs for optimization
+        optimizer: torch.optim.optimizer.Optimizer : optimizer for model fitting
+        loss_fn : loss function for model fitting
+        early_stopping_patience: int : epochs without improvement before early stopping
+        early_stopping_point: int : epoch at which early stopping occured
+        device: torch.device : device to use
     """
 
     def __init__(self, task: str, optuna_trial: optuna.trial.Trial, encoding: str = None, n_outputs: int = 1,
-                 n_features: int = None, batch_size: int = None, n_epochs: int = None, width_onehot: int = None):
+                 n_features: int = None, width_onehot: int = None, batch_size: int = None, n_epochs: int = None):
+        """
+        TorchModel specific constructor
+        :param task: ML task (regression or classification) depending on target variable
+        :param optuna_trial: optuna.trial.Trial : trial of optuna for optimization
+        :param encoding: the encoding to use (standard encoding or user-defined)
+        :param n_outputs: Number of outputs of the model
+        :param n_features: Number of input features to the model
+        :param width_onehot: Number of input channels in case of onehot encoding
+        :param batch_size: Batch size for batch-based training
+        :param n_epochs: Number of epochs for optimization
+        """
         self.all_hyperparams = self.common_hyperparams()  # add hyperparameters commonly optimized for all torch models
         self.n_features = n_features
-        self.width_onehot = width_onehot
+        self.width_onehot = width_onehot  # relevant for models using onehot encoding e.g. CNNs
         super().__init__(task=task, optuna_trial=optuna_trial, encoding=encoding, n_outputs=n_outputs)
-        self.loss_fn = torch.nn.CrossEntropyLoss() if task == 'classification' else torch.nn.MSELoss()
         self.batch_size = \
             batch_size if batch_size is not None else 2**self.suggest_hyperparam_to_optuna('batch_size_exp')
         self.n_epochs = n_epochs if n_epochs is not None else self.suggest_hyperparam_to_optuna('n_epochs')
-        # optimizer to use may be included as hyperparam
         self.optimizer = torch.optim.Adam(params=self.model.parameters(),
                                           lr=self.suggest_hyperparam_to_optuna('learning_rate'))
+        self.loss_fn = torch.nn.CrossEntropyLoss() if task == 'classification' else torch.nn.MSELoss()
         # early stopping if there is no improvement on validation loss for a certain number of epochs
         self.early_stopping_patience = self.suggest_hyperparam_to_optuna('early_stopping_patience')
         self.early_stopping_point = None
@@ -38,9 +63,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
         See BaseModel for more information
         """
         train_loader = self.get_dataloader(X=X_train, y=y_train)
-        # del X_train, y_train
         val_loader = self.get_dataloader(X=X_val, y=y_val)
-        # del y_val
         self.model.to(device=self.device)
         best_loss = None
         epochs_wo_improvement = 0
@@ -97,7 +120,6 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
         See BaseModel for more information
         """
         retrain_loader = self.get_dataloader(X=X_retrain, y=y_retrain)
-        # del X_retrain, y_retrain
         n_epochs_to_retrain = self.n_epochs if self.early_stopping_point is None else self.early_stopping_point
         self.model.to(device=self.device)
         for epoch in range(n_epochs_to_retrain):
@@ -110,7 +132,6 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
         See BaseModel for more information
         """
         dataloader = self.get_dataloader(X=X_in, shuffle=False)
-        # del X_in
         self.model.eval()
         predictions = None
         with torch.no_grad():
@@ -141,17 +162,18 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
         :param shuffle: shuffle parameter for DataLoader
         :return: Pytorch DataLoader
         """
+        # drop last sample if last batch would only contain one sample
         if (len(X) % self.batch_size) == 1:
             X = X[:-1]
             y = y[:-1] if y is not None else None
         X = torch.from_numpy(X).float()
         if self.encoding == 'onehot':
+            # Adapt to PyTorch ordering (BATCH_SIZE, CHANNELS, SIGNAL)
             X = torch.swapaxes(X, 1, 2)
         y = torch.reshape(torch.from_numpy(y).float(), (-1, 1)) if y is not None else None
         y = y.flatten() if (self.task == 'classification' and y is not None) else y
         dataset = torch.utils.data.TensorDataset(X, y) if y is not None \
             else X
-        # del X, y
         return torch.utils.data.DataLoader(dataset=dataset, batch_size=self.batch_size, shuffle=shuffle)
 
     @staticmethod
@@ -161,7 +183,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
         Do not need to be included in optimization for every child model.
         Also see BaseModel for more information
         """
-        return {  # TODO: ranges anpassen for start der Experimente
+        return {
             'dropout': {
                 'datatype': 'float',
                 'lower_bound': 0,
@@ -170,7 +192,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
             },
             'act_function': {
                 'datatype': 'categorical',
-                'list_of_values': ['relu']  # , 'tanh']
+                'list_of_values': ['relu']
             },
             'batch_size_exp': {
                 'datatype': 'int',
@@ -179,7 +201,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
             },
             'n_epochs': {
                 'datatype': 'categorical',
-                'list_of_values': [50, 100, 500, 1000, 5000, 10000]  # , 50000, 100000, 500000]
+                'list_of_values': [50, 100, 500, 1000, 5000, 10000]
             },
             'learning_rate': {
                 'datatype': 'categorical',
@@ -200,4 +222,3 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
             'tanh': torch.nn.Tanh()
         }
         return string_to_object_dict[string_to_get]
-

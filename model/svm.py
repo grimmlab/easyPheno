@@ -4,13 +4,16 @@ from model import _sklearn_model
 
 
 class SupportVectorMachine(_sklearn_model.SklearnModel):
-    """See BaseModel for more information on the parameters"""
+    """
+    See BaseModel for more information on the attributes.
+    """
     standard_encoding = '012'
     possible_encodings = ['012']
 
     def define_model(self):
-        """See BaseModel for more information"""
-        # all hyperparameters defined are suggested for optimization
+        """
+        See BaseModel for more information.
+        """
         kernel = self.suggest_hyperparam_to_optuna('kernel')
         reg_C = self.suggest_hyperparam_to_optuna('C')
         if kernel == 'poly':
@@ -28,7 +31,9 @@ class SupportVectorMachine(_sklearn_model.SklearnModel):
             return sklearn.svm.SVR(kernel=kernel, C=reg_C, degree=degree, gamma=gamma)
 
     def define_hyperparams_to_tune(self) -> dict:
-        """See BaseModel for more information on the format"""
+        """
+        See BaseModel for more information on the format.
+        """
         return {
             'kernel': {
                 'datatype': 'categorical',

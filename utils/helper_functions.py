@@ -9,9 +9,9 @@ import pandas as pd
 import tensorflow as tf
 
 
-def get_list_of_implemented_models():
+def get_list_of_implemented_models() -> list:
     """
-    Create a list of all implemented models based on files existing in 'model' subdirectory of the repository
+    Create a list of all implemented models based on files existing in 'model' subdirectory of the repository.
     """
     # Assumption: naming of python source file is the same as the model name specified by the user
     try:
@@ -22,11 +22,11 @@ def get_list_of_implemented_models():
     return [model[:-3] for model in model_src_files]
 
 
-def test_likely_categorical(vector_to_test: list, abs_unique_threshold: int = 20):
+def test_likely_categorical(vector_to_test: list, abs_unique_threshold: int = 20) -> bool:
     """
     Test whether a vector is most likely categorical.
     Simple heuristics:
-        checking if the number of unique values exceeds a specified threshold
+        checking if the number of unique values exceeds a specified threshold.
     :param vector_to_test: vector that is tested if it is most likely categorical
     :param abs_unique_threshold: threshold of unique values' ratio to declare vector categorical
     :return: True if the vector is most likely categorical, False otherwise
@@ -35,9 +35,9 @@ def test_likely_categorical(vector_to_test: list, abs_unique_threshold: int = 20
     return number_unique_values <= abs_unique_threshold
 
 
-def get_mapping_name_to_class():
+def get_mapping_name_to_class() -> dict:
     """
-    Get a mapping from model name (naming in package model without .py) to class name
+    Get a mapping from model name (naming in package model without .py) to class name.
     :return: dictionary with mapping model name to class name
     """
     try:
@@ -60,7 +60,7 @@ def get_mapping_name_to_class():
 
 def set_all_seeds(seed: int = 42):
     """
-    Set all seeds of libs with a specific function for reproducability of results
+    Set all seeds of libs with a specific function for reproducibility of results.
     :param seed: seed to use
     """
     torch.manual_seed(seed)
@@ -73,37 +73,29 @@ def set_all_seeds(seed: int = 42):
     tf.random.set_seed(seed)
 
 
-def get_subpath_for_datasplit(arguments: argparse, datasplit: str, additional_param=None) -> str:
+def get_subpath_for_datasplit(datasplit: str, datasplit_params: list) -> str:
     """
-    Method to construct the subpath according to the datasplit
-    :param arguments: arguments specified by the user
+    Construct the subpath according to the datasplit.
     :param datasplit: datasplit to retrieve
-    :param additional_param: parameters to use if they differ from input arguments
+    :param datasplit_params: parameters to use for the specific datasplit
+        - nested-cv: [n_outerfolds, n_innerfolds]
+        - cv-test: [n_innerfolds, test_set_size_percentage]
+        - train-val-test: [val_set_size_percentage, train_set_size_percentage]
     :return: string with the subpath
     """
     # construct subpath due to the specified datasplit
-    if additional_param is None:
-        if datasplit == 'train-val-test':
-            datasplit_string = f'({100 - arguments.validation_set_size_percentage}-' \
-                               f'{arguments.validation_set_size_percentage})-{arguments.test_set_size_percentage}'
-        elif datasplit == 'cv-test':
-            datasplit_string = f'{arguments.n_innerfolds}-{arguments.test_set_size_percentage}'
-        elif datasplit == 'nested-cv':
-            datasplit_string = f'{arguments.n_outerfolds}-{arguments.n_innerfolds}'
-    else:
-        if datasplit == 'train-val-test':
-            datasplit_string = f'({100 - additional_param[0]}-{additional_param[0]})-' \
-                           f'{additional_param[1]}'
-        elif datasplit == 'cv-test':
-            datasplit_string = f'{additional_param[0]}-{additional_param[1]}'
-        elif datasplit == 'nested-cv':
-            datasplit_string = f'{additional_param[0]}-{additional_param[1]}'
+    if datasplit == 'train-val-test':
+        datasplit_string = f'({100 - datasplit_params[0]}-{datasplit_params[0]})-{datasplit_params[1]}'
+    elif datasplit == 'cv-test':
+        datasplit_string = f'{datasplit_params[0]}-{datasplit_params[1]}'
+    elif datasplit == 'nested-cv':
+        datasplit_string = f'{datasplit_params[0]}-{datasplit_params[1]}'
     return datasplit_string
 
 
 def save_model_overview_dict(model_overview: dict, save_path: str):
     """
-    Structure and save results of a whole optimization run for multiple models in one csv file
+    Structure and save results of a whole optimization run for multiple models in one csv file.
     :param model_overview: dictionary with results overview
     :param save_path: filepath for saving the results overview file
     """
