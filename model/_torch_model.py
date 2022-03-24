@@ -127,7 +127,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
             self.train_one_epoch(retrain_loader)
 
     def predict(self, X_in: np.array) -> np.array:
-        """"
+        """
         Implementation of a prediction based on input features for PyTorch models.
         See BaseModel for more information
         """

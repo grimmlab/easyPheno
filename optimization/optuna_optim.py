@@ -112,7 +112,7 @@ class OptunaOptim:
 
     def objective(self, trial: optuna.trial.Trial, train_val_indices: dict) -> float:
         """
-        Objective function for optuna optimization that returns a score.
+        Objective function for optuna optimization that returns a score
         :param trial: trial of optuna for optimization
         :param train_val_indices: indices of train and validation sets
         :return: score of the current hyperparameter config
@@ -246,7 +246,7 @@ class OptunaOptim:
 
     def clean_up_after_exception(self, trial_number: int, trial_params: dict):
         """
-        Clean up things after an exception: delete unfitted model if it exists and update runtime csv.
+        Clean up things after an exception: delete unfitted model if it exists and update runtime csv
         :param trial_number: number of the trial
         :param trial_params: parameters of the trial
         """
@@ -257,7 +257,7 @@ class OptunaOptim:
 
     def write_runtime_csv(self, dict_runtime: dict):
         """
-        Write runtime info to runtime csv file.
+        Write runtime info to runtime csv file
         :param dict_runtime: Dictionary with runtime information
         """
         with open(self.save_path + self.current_model_name + '_runtime_overview.csv', 'a') as runtime_file:

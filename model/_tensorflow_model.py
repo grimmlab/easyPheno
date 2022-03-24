@@ -82,7 +82,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
         self.model.fit(x=X_retrain, y=y_retrain, batch_size=self.batch_size, epochs=n_epochs_to_retrain, verbose=2)
 
     def predict(self, X_in: np.array) -> np.array:
-        """"
+        """
         Implementation of a prediction based on input features for PyTorch models.
         See BaseModel for more information
         """

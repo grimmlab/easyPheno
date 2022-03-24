@@ -9,7 +9,7 @@ class Mlp(_torch_model.TorchModel):
 
     def define_model(self) -> torch.nn.Sequential:
         """
-        Definition of a MLP network.
+        Definition of an MLP network.
         See BaseModel and TorchModel for more information.
 
         Architecture:

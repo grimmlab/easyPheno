@@ -138,7 +138,7 @@ def save_all_data_files(data_dir: str, genotype_matrix_name: str, phenotype_matr
     Prepare and save all required data files:
         - genotype matrix in unified format as .h5 file with,
         - phenotype matrix in unified format as .csv file,
-        - file containing maf filter and data split indices as .h5.
+        - file containing maf filter and data split indices as .h5
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
     :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
@@ -228,7 +228,7 @@ def check_genotype_csv_file(data_dir: str, genotype_matrix_name: str, encodings:
     First column must contain the sample ids, the column names should be the SNP ids.
     The values should be the genotype matrix either in additive encoding or in raw encoding.
     If the genotype is in raw encoding, additive encoding will be calculated.
-    If genotype is in additive encoding, only this encoding will be returned.
+    If genotype is in additive encoding, only this encoding will be returned
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
     :param encodings: list of needed encodings
@@ -250,7 +250,7 @@ def check_genotype_csv_file(data_dir: str, genotype_matrix_name: str, encodings:
 def check_genotype_binary_plink_file(data_dir: str, genotype_matrix_name: str) -> (np.array, np.array, np.array):
     """
     Load binary PLINK file, .bim, .fam, .bed files with same prefix need to be in same folder.
-    Compute additive and raw encoding of genotype.
+    Compute additive and raw encoding of genotype
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
     :return: sample ids, SNP ids and genotype in raw encoding
@@ -271,7 +271,7 @@ def check_genotype_binary_plink_file(data_dir: str, genotype_matrix_name: str) -
 def check_genotype_plink_file(data_dir: str, genotype_matrix_name: str) -> (np.array, np.array, np.array):
     """
     Load PLINK files, .map and .ped file with same prefix need to be in same folder.
-    Accepts GENOTYPENAME.ped and GENOTYPENAME.map as input.
+    Accepts GENOTYPENAME.ped and GENOTYPENAME.map as input
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
     :return: sample ids, SNP ids and genotype in raw encoding
@@ -334,7 +334,7 @@ def check_and_load_phenotype_matrix(data_dir: str, phenotype_matrix_name: str, p
     """
     Check and load the specified phenotype matrix. Only accept .csv, .pheno, .txt files.
     Sample ids need to be in first column, remaining columns should contain phenotypic values
-    with phenotype name as column name.
+    with phenotype name as column name
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
     :param phenotype: name of the phenotype to predict
@@ -358,7 +358,7 @@ def check_and_load_phenotype_matrix(data_dir: str, phenotype_matrix_name: str, p
 
 def genotype_phenotype_matching(X: np.array, X_ids: np.array, y: pd.DataFrame) -> tuple:
     """
-    Match the handed over genotype and phenotype matrix for the phenotype specified by the user.
+    Match the handed over genotype and phenotype matrix for the phenotype specified by the user
     :param X: genotype matrix in additive encoding
     :param X_ids: sample ids of genotype matrix
     :param y: pd.DataFrame containing sample ids of phenotype as index and phenotype values as single column
@@ -391,7 +391,7 @@ def append_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix
                       datasplit: str, n_outerfolds: int, n_innerfolds: int, test_set_size_percentage: int,
                       val_set_size_percentage: int, maf_percentage: int):
     """
-    Check index file, described in create_index_file(), and append datasets if necessary.
+    Check index file, described in create_index_file(), and append datasets if necessary
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
     :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
@@ -563,17 +563,17 @@ def create_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix
                                               user_n_outerfolds=n_outerfolds, user_n_innerfolds=n_innerfolds,
                                               user_test_set_size_percentage=test_set_size_percentage,
                                               user_val_set_size_percentage=val_set_size_percentage,
-                                              datasplit='nested-cv', param=param_nested)
+                                              datasplit='nested-cv', param_to_check=param_nested)
     param_cv = check_datasplit_user_input(user_datasplit=datasplit,
                                           user_n_outerfolds=n_outerfolds, user_n_innerfolds=n_innerfolds,
                                           user_test_set_size_percentage=test_set_size_percentage,
                                           user_val_set_size_percentage=val_set_size_percentage,
-                                          datasplit='cv-test', param=param_cv)
+                                          datasplit='cv-test', param_to_check=param_cv)
     param_tvt = check_datasplit_user_input(user_datasplit=datasplit,
                                            user_n_outerfolds=n_outerfolds, user_n_innerfolds=n_innerfolds,
                                            user_test_set_size_percentage=test_set_size_percentage,
                                            user_val_set_size_percentage=val_set_size_percentage,
-                                           datasplit='train-val-test', param=param_tvt)
+                                           datasplit='train-val-test', param_to_check=param_tvt)
 
     with h5py.File(data_dir + '/' + genotype_matrix_name.split('.')[0] + '-'
                    + phenotype_matrix_name.split('.')[0] + '-' + phenotype + '.h5', 'w') as f:
@@ -630,7 +630,7 @@ def create_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix
 
 def filter_non_informative_snps(X: np.array) -> (np.array, np.array):
     """
-    Remove non-informative SNPs, i.e. SNPs that are constant.
+    Remove non-informative SNPs, i.e. SNPs that are constant
     :param X: genotype matrix in raw or additive encoding
     :return: filtered genotype matrix and filter-vector
     """
@@ -682,10 +682,10 @@ def create_maf_filter(maf: int, freq: np.array) -> np.array:
 
 def check_datasplit_user_input(user_datasplit: str, user_n_outerfolds: int, user_n_innerfolds: int,
                                user_test_set_size_percentage: int, user_val_set_size_percentage: int,
-                               datasplit: str, param: list) -> list:
+                               datasplit: str, param_to_check: list) -> list:
     """
     Check if user input of data split parameters differs from standard values.
-    If it does, add input to list of parameters.
+    If it does, add input to list of parameters
     :param user_datasplit: datasplit specified by the user
     :param user_n_outerfolds: number of outerfolds relevant for nested-cv specified by the user
     :param user_n_innerfolds: number of folds relevant for nested-cv and cv-test specified by the user
@@ -693,7 +693,7 @@ def check_datasplit_user_input(user_datasplit: str, user_n_outerfolds: int, user
         size of the test set relevant for cv-test and train-val-test specified by the user
     :param user_val_set_size_percentage: size of the validation set relevant for train-val-test specified by the user
     :param datasplit: type of data split
-    :param param: standard parameters to compare to
+    :param param_to_check: standard parameters to compare to
     :return: adapted list of parameters
     """
     if datasplit == 'nested-cv':
@@ -704,14 +704,14 @@ def check_datasplit_user_input(user_datasplit: str, user_n_outerfolds: int, user
         user_input = [user_val_set_size_percentage, user_test_set_size_percentage]
     else:
         raise Exception('Only accept nested-cv, cv-test or train-val-test as data splits.')
-    if user_datasplit == datasplit and user_input not in param:
-        param.append(user_input)
-    return param
+    if user_datasplit == datasplit and user_input not in param_to_check:
+        param_to_check.append(user_input)
+    return param_to_check
 
 
 def check_train_test_splits(y: np.array, datasplit: str, datasplit_params: list):
     """
-    Create stratified train-test splits. Continuous values will be grouped into bins and stratified according to those.
+    Create stratified train-test splits. Continuous values will be grouped into bins and stratified according to those
     :param datasplit: type of datasplit ('nested-cv', 'cv-test', 'train-val-test')
     :param y: array with phenotypic values for stratification
     :param datasplit_params: parameters to use for split:
@@ -720,7 +720,7 @@ def check_train_test_splits(y: np.array, datasplit: str, datasplit_params: list)
         [val_set_size_percentage, test_set_size_percentage] for train-val-test
     :return: dictionary respectively arrays with indices
     """
-    y_binned = make_bins(y, datasplit, datasplit_params)
+    y_binned = make_bins(y=y, datasplit=datasplit, datasplit_params=datasplit_params)
     if datasplit == 'nested-cv':
         return make_nested_cv(y=y_binned, outerfolds=datasplit_params[0], innerfolds=datasplit_params[1])
     elif datasplit == 'cv-test':
@@ -733,12 +733,12 @@ def check_train_test_splits(y: np.array, datasplit: str, datasplit_params: list)
         raise Exception('Only accept nested-cv, cv-test or train-val-test as data splits.')
 
 
-def make_bins(y: np.array, split: str, param: list) -> np.array:
+def make_bins(y: np.array, datasplit: str, datasplit_params: list) -> np.array:
     """
-    Create bins of continuous values for stratification.
+    Create bins of continuous values for stratification
     :param y: array containing phenotypic values
-    :param split: train test split to use
-    :param param: list of parameters to use:
+    :param datasplit: train test split to use
+    :param datasplit_params: list of parameters to use:
         [n_outerfolds, n_innerfolds] for nested-cv
         [n_innerfolds, test_set_size_percentage] for cv-test
         [val_set_size_percentage, test_set_size_percentage] for train-val-test
@@ -747,10 +747,10 @@ def make_bins(y: np.array, split: str, param: list) -> np.array:
     if helper_functions.test_likely_categorical(y):
         return y.astype(int)
     else:
-        if split == 'nested-cv':
-            tmp = len(y)/(param[0] + param[1])
-        elif split == 'cv-test':
-            tmp = len(y)*(1-param[1]/100)/param[0]
+        if datasplit == 'nested-cv':
+            tmp = len(y)/(datasplit_params[0] + datasplit_params[1])
+        elif datasplit == 'cv-test':
+            tmp = len(y)*(1-datasplit_params[1]/100)/datasplit_params[0]
         else:
             tmp = len(y)/10 + 1
 
@@ -829,7 +829,7 @@ def make_train_test_split(y: np.array, test_size: int, val_size=None, val=False,
     :param y: target values grouped in bins for stratification
     :param test_size: size of test set as percentage value
     :param val_size: size of validation set as percentage value
-    :param val: if True, function returns validation set additionally to train and test set.
+    :param val: if True, function returns validation set additionally to train and test set
     :param random: controls shuffling of data
     :return: either train, val and test index arrays or
                 train and test index arrays and corresponding binned target values

@@ -39,7 +39,7 @@ def get_list_of_encodings() -> list:
 def get_base_encoding(encoding: str) -> str:
     """
     Check which base encoding is needed to create required encoding.
-    ! Adapt if new encoding is added !
+    ! Adapt if new encoding is added
     :param encoding: required encoding
     :return: base encoding
     """
@@ -51,8 +51,8 @@ def get_base_encoding(encoding: str) -> str:
 
 def check_encoding_of_genotype(X: np.array) -> str:
     """
-    Check the encoding of the genotype matrix.
-    ! Adapt if new encoding is added !
+    Check the encoding of the genotype matrix
+    ! Adapt if new encoding is added
     :param X: genotype matrix
     :return: encoding of the genotype matrix
     """
@@ -65,8 +65,8 @@ def check_encoding_of_genotype(X: np.array) -> str:
 
 def encode_genotype(X: np.array, required_encoding: str) -> np.array:
     """
-    Compute the required encoding of the genotype matrix.
-    ! Adapt if new encoding is added !
+    Compute the required encoding of the genotype matrix
+    ! Adapt if new encoding is added
     :param X: genotype matrix
     :param required_encoding: encoding of genotype matrix to create
     :return: X in new encoding

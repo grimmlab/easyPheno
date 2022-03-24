@@ -4,7 +4,7 @@ import numpy as np
 
 def get_evaluation_report(y_pred: np.array, y_true: np.array, task: str, prefix: str = '') -> dict:
     """
-    Get values for common evaluation metrics.
+    Get values for common evaluation metrics
     :param y_pred: predicted values
     :param y_true: true values
     :param task: ML task to solve

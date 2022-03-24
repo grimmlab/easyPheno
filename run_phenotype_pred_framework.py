@@ -23,7 +23,7 @@ def run_pipeline(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phe
     :param genotype_matrix: name of the genotype matrix including datatype ending
     :param phenotype_matrix: name of the phenotype matrix including datatype ending
     :param phenotype: name of the phenotype to predict
-    :param encoding: encoding to use. Default is None, so standard encoding of each model will be used.
+    :param encoding: encoding to use. Default is None, so standard encoding of each model will be used
     :param maf_percentage: threshold for MAF filter as percentage value. Default is 0, so no MAF filtering
     :param save_dir: directory for saving the results. Default is None, so same directory as data_dir
     :param datasplit: datasplit to use. Options are: nested-cv, cv-test, train-val-test
