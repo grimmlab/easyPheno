@@ -35,7 +35,12 @@ def prepare_data_files(data_dir: str, genotype_matrix_name: str, phenotype_matri
     :param maf_percentage: threshold for MAF filter as percentage value
     """
     print('Check if all data files have the required format')
-    suffix = genotype_matrix_name.split('.')[-1]  # TODO: check einbauen ob ein .h5 mit gleichem Namen existiert
+    if os.path.isfile(data_dir + '/' + genotype_matrix_name.split('.')[0] + '.h5') and \
+            (genotype_matrix_name.split('.')[-1] != 'h5'):
+        print("Found same file name with ending .h5")
+        print("Assuming that the raw file was already prepared using our pipepline. Will continue with the .h5 file.")
+        genotype_matrix_name = genotype_matrix_name.split('.')[0] + '.h5'
+    suffix = genotype_matrix_name.split('.')[-1]
     if suffix in ('h5', 'hdf5', 'h5py'):
         # Genotype matrix has standard file format -> check information in the file
         check_genotype_h5_file(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,

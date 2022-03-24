@@ -27,22 +27,37 @@ class OptunaOptim:
     Class that contains all info for the whole optimization using optuna for one model and dataset.
 
     ## Attributes ##
-        arguments: argparse.Namespace : all arguments provided by the user
         task: str : ML task (regression or classification) depending on target variable
         current_model_name: str : name of the current model according to naming of .py file in package model
         dataset: base_dataset.Dataset : dataset to use for optimization run
+        datasplit_subpath: str : subpath with datasplit info relevant for saving / naming
         base_path : str : base_path for save_path
         save_path: str : path for model and results storing
         study : optuna.study.Study : optuna study for optimization run
         current_best_val_result: float : the best validation result so far
-        early_stopping_point : int : point at which early stopping occured (relevant for some models)
+        early_stopping_point: int : point at which early stopping occured (relevant for some models)
+        user_input_params: dict : all params handed over to the constructor that are needed in the whole class
     """
 
-    def __init__(self, arguments: dict, task: str, current_model_name: str,
-                 dataset: base_dataset.Dataset, start_time: str):
+    def __init__(self, save_dir: str, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
+                 n_outerfolds: int, n_innerfolds: int, val_set_size_percentage: int, test_set_size_percentage: int,
+                 maf_percentage: int, n_trials: int, save_final_model: bool, batch_size: int, n_epochs: int,
+                 task: str, current_model_name: str, dataset: base_dataset.Dataset, start_time: str):
         """
         Constructor of OptunaOptim.
-        :param arguments: all arguments provided by the user
+        :param save_dir: directory for saving the results.
+        :param genotype_matrix_name: name of the genotype matrix including datatype ending
+        :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
+        :param phenotype: name of the phenotype to predict
+        :param n_outerfolds: number of outerfolds relevant for nested-cv
+        :param n_innerfolds: number of folds relevant for nested-cv and cv-test
+        :param test_set_size_percentage: size of the test set relevant for cv-test and train-val-test
+        :param val_set_size_percentage: size of the validation set relevant for train-val-test
+        :param maf_percentage: threshold for MAF filter as percentage value
+        :param n_trials: number of trials for optuna
+        :param save_final_model: specify if the final model should be saved
+        :param batch_size: batch size for neural network models
+        :param n_epochs: number of epochs for neural network models
         :param task: ML task (regression or classification) depending on target variable
         :param current_model_name: name of the current model according to naming of .py file in package model
         :param dataset: dataset to use for optimization run
@@ -50,25 +65,24 @@ class OptunaOptim:
         """
         self.current_model_name = current_model_name
         self.task = task
-        self.arguments = arguments
         self.dataset = dataset
-        if arguments["datasplit"] == 'train-val-test':
-            datasplit_params = [arguments["val_set_size_percentage"], arguments["test_set_size_percentage"]]
-        elif arguments["datasplit"] == 'cv-test':
-            datasplit_params = [arguments["n_innerfolds"], arguments["test_set_size_percentage"]]
-        elif arguments["datasplit"] == 'nested-cv':
-            datasplit_params = [arguments["n_outerfolds"], arguments["n_innerfolds"]]
-        self.base_path = arguments["save_dir"] + \
-            '/results/' + arguments["genotype_matrix"].split('.')[0] + \
-            '/' + arguments["phenotype_matrix"].split('.')[0] + '/' + arguments.phenotype + \
-            '/' + arguments["datasplit"] + '/' + \
-            helper_functions.get_subpath_for_datasplit(datasplit=arguments["datasplit"],
-                                                       datasplit_params=datasplit_params) + '/' + \
-            'MAF' + str(self.arguments["maf_percentage"]) + '/' + start_time + '/' + current_model_name + '/'
+        if self.dataset.datasplit == 'train-val-test':
+            datasplit_params = [val_set_size_percentage, test_set_size_percentage]
+        elif self.dataset.datasplit == 'cv-test':
+            datasplit_params = [n_innerfolds, test_set_size_percentage]
+        elif self.dataset.datasplit == 'nested-cv':
+            datasplit_params = [n_outerfolds, n_innerfolds]
+        self.datasplit_subpath = helper_functions.get_subpath_for_datasplit(
+            datasplit=self.dataset.datasplit, datasplit_params=datasplit_params
+        )
+        self.base_path = save_dir + '/results/' + genotype_matrix_name.split('.')[0] + '/' + \
+            phenotype_matrix_name.split('.')[0] + '/' + phenotype + '/' + self.dataset.datasplit + '/' + \
+            self.datasplit_subpath + '/MAF' + str(maf_percentage) + '/' + start_time + '/' + current_model_name + '/'
         self.save_path = self.base_path
         self.study = None
         self.current_best_val_result = None
         self.early_stopping_point = None
+        self.user_input_params = locals()  # distribute all handed over params in whole class
 
     def create_new_study(self) -> optuna.study.Study:
         """
@@ -77,13 +91,11 @@ class OptunaOptim:
         """
         outerfold_prefix = 'OUTER' + self.save_path[-2] + '-' if 'outerfold' in self.save_path else ''
         study_name = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + '_' + outerfold_prefix + \
-                     self.arguments["genotype_matrix"].split('.')[0] + '-' + \
-                     self.arguments["phenotype_matrix"].split('.')[0] + '-' + self.arguments["phenotype"] + '-' + \
-                     'MAF' + str(self.arguments["maf_percentage"]) + \
-                     '-SPLIT' + self.arguments["datasplit"] + \
-                     helper_functions.get_subpath_for_datasplit(arguments=self.arguments,
-                                                                datasplit=self.arguments.datasplit) + \
-                     '-MODEL' + self.current_model_name + '-TRIALS' + str(self.arguments["n_trials[")
+                     self.user_input_params["genotype_matrix_name"].split('.')[0] + '-' + \
+                     self.user_input_params["phenotype_matrix_name"].split('.')[0] + '-' + \
+                     self.user_input_params["phenotype"] + '-MAF' + str(self.user_input_params["maf_percentage"]) + \
+                     '-SPLIT' + self.dataset.datasplit + self.datasplit_subpath + \
+                     '-MODEL' + self.current_model_name + '-TRIALS' + str(self.user_input_params["n_trials"])
         storage = optuna.storages.RDBStorage(
             "sqlite:////" + self.save_path + 'Optuna_DB-' + study_name + ".db", heartbeat_interval=60, grace_period=120,
             failed_trial_callback=optuna.storages.RetryFailedTrialCallback(max_retry=3)
@@ -118,8 +130,8 @@ class OptunaOptim:
                            _tensorflow_model.TensorflowModel):
             # additional attributes for torch and tensorflow models
             additional_attributes_dict['n_features'] = self.dataset.X_full.shape[1]
-            additional_attributes_dict['batch_size'] = self.arguments.batch_size
-            additional_attributes_dict['n_epochs'] = self.arguments.n_epochs
+            additional_attributes_dict['batch_size'] = self.user_input_params["batch_size"]
+            additional_attributes_dict['n_epochs'] = self.user_input_params["n_epochs"]
             additional_attributes_dict['width_onehot'] = self.dataset.X_full.shape[-1]
             early_stopping_points = []  # log early stopping point at each fold for torch and tensorflow models
         try:
@@ -297,7 +309,7 @@ class OptunaOptim:
             # Start optimization run
             self.study.optimize(
                 lambda trial: self.objective(trial=trial, train_val_indices=outerfold_info),
-                n_trials=self.arguments.n_trials
+                n_trials=self.user_input_params["n_trials"]
             )
             # Calculate runtime metrics after finishing optimization
             runtime_metrics = self.calc_runtime_stats()
@@ -359,7 +371,7 @@ class OptunaOptim:
                 final_results.at[0, metric] = value
             final_results.to_csv(self.save_path + 'final_model_test_results.csv',
                                  sep=',', decimal='.', float_format='%.10f', index=False)
-            if self.arguments.save_final_model:
+            if self.user_input_params["save_final_model"]:
                 final_model.save_model(path=self.save_path,
                                        filename='final_retrained_model')
         return overall_results

@@ -41,7 +41,7 @@ def run_pipeline(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phe
     save_dir = data_dir if save_dir is None else save_dir
     if type(models) == list and models[0] == 'all':
         models = 'all'
-    if type(models) != list and models !='all':
+    if type(models) != list and models != 'all':
         models = [models]
 
     ### Checks and Raw Data Input Preparation ###
@@ -84,8 +84,12 @@ def run_pipeline(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phe
                     test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage,
                     encoding=encoding, maf_percentage=maf_percentage
                 )
-        optuna_run = optimization.optuna_optim.OptunaOptim(arguments=args, task=task, start_time=start_time,
-                                                           current_model_name=current_model_name, dataset=dataset)
+        optuna_run = optimization.optuna_optim.OptunaOptim(
+            save_dir=save_dir, genotype_matrix_name=genotype_matrix, phenotype_matrix_name=phenotype_matrix,
+            phenotype=phenotype, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
+            val_set_size_percentage=val_set_size_percentage, test_set_size_percentage=test_set_size_percentage,
+            maf_percentage=maf_percentage, n_trials=n_trials, save_final_model=save_final_model, batch_size=batch_size,
+            n_epochs=n_epochs, task=task, start_time=start_time, current_model_name=current_model_name, dataset=dataset)
         print('### Starting Optuna Optimization for ' + current_model_name + ' ###')
         overall_results = optuna_run.run_optuna_optimization()
         print('### Finished Optuna Optimization for ' + current_model_name + ' ###')
@@ -126,8 +130,9 @@ if __name__ == '__main__':
                         help="specify the name (including data type suffix) of the phenotype matrix to be used. "
                              "Needs to be located in the subfolder data/ of the specified base directory" +
                              "For more info regarding the required format see our documentation at GitHub")
-    parser.add_argument("-ph", "--phenotype", type=str, default='continuous_values',
-                        help="specify the name of the phenotype to be predicted")
+    parser.add_argument("-ph", "--phenotype", nargs='+', type=str, default=['continuous_values'],
+                        help="specify the name of the phenotype to be predicted. "
+                             "Multiple phenotypes can also be chosesn if they are in the same phenotype matrix")
     parser.add_argument("-enc", "--encoding", type=str, default=None,
                         help="specify the encoding to use. Caution: has to be a possible encoding for the model to use."
                              "Valid arguments are: " + str(encoding_functions.get_list_of_encodings()))
@@ -173,5 +178,13 @@ if __name__ == '__main__':
                         help="Only relevant for neural networks: define the number of epochs. If nothing is specified,"
                              "it will be considered as a hyperparameter for optimization")
     args = vars(parser.parse_args())
+    phenotypes = args["phenotype"]
 
-    run_pipeline(**args)
+    for phenotype in phenotypes:
+        args["phenotype"] = phenotype
+        try:
+            run_pipeline(**args)
+        except Exception as exc:
+            print("Failure when running pipeline for " + phenotype)
+            print(exc)
+            continue
