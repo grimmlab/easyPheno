@@ -67,7 +67,7 @@ class Dataset:
                 if y.dtype.type is np.float64:
                     y = y.astype(int)
                 y = sklearn.preprocessing.LabelEncoder().fit_transform(y)
-            sample_ids = f['matched_data/matched_sample_ids'][:]
+            sample_ids = f['matched_data/matched_sample_ids'][:].astype(str)
             non_informative_filter = f['matched_data/non_informative_filter'][:]
             X_index = f['matched_data/X_index'][:]
 
