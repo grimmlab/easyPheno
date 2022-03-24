@@ -49,7 +49,7 @@ def prepare_data_files(data_dir: str, genotype_matrix_name: str, phenotype_matri
         # Check / create index files
         if check_index_file(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
                             phenotype_matrix_name=phenotype_matrix_name, phenotype=phenotype):
-            print('Index file ' + genotype_matrix_name.split('.')[0] + '-'\
+            print('Index file ' + genotype_matrix_name.split('.')[0] + '-'
                     + phenotype_matrix_name.split('.')[0] + '-' + phenotype + '.h5' + ' already exists.'
                     ' Will append required filters and data splits now.')
             append_index_file(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
@@ -278,11 +278,11 @@ def check_genotype_plink_file(data_dir: str, genotype_matrix_name: str) -> (np.a
     """
     gt_file = data_dir + '/' + genotype_matrix_name.split(".")[0]
     with open(gt_file + '.map', 'r') as f:
-        SNP_ids = []
+        snp_ids = []
         for line in f:
             tmp = line.strip().split(" ")
-            SNP_ids.append(tmp[1].strip())
-    snp_ids = np.array(SNP_ids)
+            snp_ids.append(tmp[1].strip())
+    snp_ids = np.array(snp_ids)
     iupac_map = {"AA": "A", "GG": "G", "TT": "T", "CC": "C", "AG": "R", "GA": "R", "CT": "Y", "TC": "Y", "GC": "S",
                  "CG": "S", "AT": "W", "TA": "W", "GT": "K", "TG": "K", "AC": "M", "CA": "M"}
     with open(gt_file + '.ped', 'r') as f:
@@ -551,7 +551,7 @@ def create_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix
     :param X_index: index file of genotype to redo matching
     :param y_index: index file of phenotype to redo matching
     """
-    X, filter = filter_non_informative_snps(X=X)
+    X, non_informative_filter = filter_non_informative_snps(X=X)
     freq = get_minor_allele_freq(X=X)
     maf_threshold = [0, 1, 3, 5]  # standard values for maf threshold
     if maf_percentage not in maf_threshold:  # add user input if needed
@@ -583,7 +583,7 @@ def create_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix
         data.create_dataset('matched_sample_ids', data=sample_ids.astype(bytes), chunks=True, compression="gzip")
         data.create_dataset('X_index', data=X_index, chunks=True, compression="gzip")
         data.create_dataset('y_index', data=y_index, chunks=True, compression="gzip")
-        data.create_dataset('non_informative_filter', data=filter, chunks=True, compression="gzip")
+        data.create_dataset('non_informative_filter', data=non_informative_filter, chunks=True, compression="gzip")
         data.create_dataset('ma_frequency', data=freq, chunks=True, compression="gzip")
         # create and save standard mafs and maf according to user input
         maf = f.create_group('maf_filter')

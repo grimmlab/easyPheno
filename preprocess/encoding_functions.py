@@ -1,4 +1,3 @@
-import argparse
 import numpy as np
 import torch
 from torch.nn.functional import one_hot
@@ -102,9 +101,9 @@ def get_additive_encoding(X: np.array) -> np.array:
         elif len(unique) == 3:
             hetero = unique[~boolean][0]
             homozygous = unique[boolean]
-            for j, pair in enumerate(pairs):
-                if all(h in pair for h in homozygous) and hetero != heterozygous_nuc[j]:
-                    raise Exception('More than two alleles encountered at snp ' + str(j))
+            for i, pair in enumerate(pairs):
+                if all(h in pair for h in homozygous) and hetero != heterozygous_nuc[i]:
+                    raise Exception('More than two alleles encountered at snp ' + str(i))
             tmp[~boolean] = 1.0
             tmp[np.argmin(counts[boolean])] = 2.0
         elif len(unique) == 2:

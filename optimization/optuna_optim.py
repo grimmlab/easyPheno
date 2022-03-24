@@ -1,4 +1,3 @@
-import argparse
 import datetime
 import optuna
 import pandas as pd
@@ -76,8 +75,9 @@ class OptunaOptim:
             datasplit=self.dataset.datasplit, datasplit_params=datasplit_params
         )
         self.base_path = save_dir + '/results/' + genotype_matrix_name.split('.')[0] + '/' + \
-            phenotype_matrix_name.split('.')[0] + '/' + phenotype + '/' + self.dataset.datasplit + '/' + \
-            self.datasplit_subpath + '/MAF' + str(maf_percentage) + '/' + start_time + '/' + current_model_name + '/'
+                         phenotype_matrix_name.split('.')[0] + '/' + phenotype + '/' + self.dataset.datasplit + '/' + \
+                         self.datasplit_subpath + '/MAF' + str(
+            maf_percentage) + '/' + start_time + '/' + current_model_name + '/'
         self.save_path = self.base_path
         self.study = None
         self.current_best_val_result = None
@@ -99,7 +99,7 @@ class OptunaOptim:
         storage = optuna.storages.RDBStorage(
             "sqlite:////" + self.save_path + 'Optuna_DB-' + study_name + ".db", heartbeat_interval=60, grace_period=120,
             failed_trial_callback=optuna.storages.RetryFailedTrialCallback(max_retry=3)
-            )
+        )
         # TPE Sampler with seed for reproducibility
         # Percentile pruner if minimum 20 trials exist and intermediate result is worse than 80th percentile
         study = optuna.create_study(
@@ -186,7 +186,7 @@ class OptunaOptim:
                     y_val = y_val[:-1]
                 objective_value = \
                     sklearn.metrics.accuracy_score(y_true=y_val, y_pred=y_pred) if self.task == 'classification' \
-                    else sklearn.metrics.mean_squared_error(y_true=y_val, y_pred=y_pred)
+                        else sklearn.metrics.mean_squared_error(y_true=y_val, y_pred=y_pred)
                 # report value for pruning
                 trial.report(value=objective_value,
                              step=0 if self.dataset.datasplit == 'train-val-test' else int(innerfold_name[-1]))
@@ -195,15 +195,15 @@ class OptunaOptim:
                     raise optuna.exceptions.TrialPruned()
                 # store results
                 objective_values.append(objective_value)
-                validation_results.at[0:len(sample_ids_train)-1, innerfold_name + '_train_sampleids'] = \
+                validation_results.at[0:len(sample_ids_train) - 1, innerfold_name + '_train_sampleids'] = \
                     sample_ids_train.flatten()
                 validation_results.at[0:len(y_train) - 1, innerfold_name + '_train_true'] = y_train.flatten()
                 validation_results.at[0:len(y_train) - 1, innerfold_name + '_train_pred'] = \
                     model.predict(X_in=X_train).flatten()
-                validation_results.at[0:len(sample_ids_val)-1, innerfold_name + '_val_sampleids'] = \
+                validation_results.at[0:len(sample_ids_val) - 1, innerfold_name + '_val_sampleids'] = \
                     sample_ids_val.flatten()
-                validation_results.at[0:len(y_val)-1, innerfold_name + '_val_true'] = y_val.flatten()
-                validation_results.at[0:len(y_pred)-1, innerfold_name + '_val_pred'] = y_pred.flatten()
+                validation_results.at[0:len(y_val) - 1, innerfold_name + '_val_true'] = y_val.flatten()
+                validation_results.at[0:len(y_pred) - 1, innerfold_name + '_val_pred'] = y_pred.flatten()
                 for metric, value in eval_metrics.get_evaluation_report(y_pred=y_pred, y_true=y_val, task=self.task,
                                                                         prefix=innerfold_name + '_').items():
                     validation_results.at[0, metric] = value
@@ -219,7 +219,7 @@ class OptunaOptim:
                     print('Trial failed. Error in optim loop.')
                 self.clean_up_after_exception(trial_number=trial.number, trial_params=trial.params)
                 raise optuna.exceptions.TrialPruned()
-        current_val_result = np.mean(objective_values)
+        current_val_result = float(np.mean(objective_values))
         if self.current_best_val_result is None or \
                 (self.task == 'classification' and current_val_result > self.current_best_val_result) or \
                 (self.task == 'regression' and current_val_result < self.current_best_val_result):
@@ -361,12 +361,12 @@ class OptunaOptim:
             print('## Results on test set ##')
             print(eval_scores)
             final_results = pd.DataFrame(index=range(0, self.dataset.y_full.shape[0]))
-            final_results.at[0:len(sample_ids_retrain)-1, 'sample_ids_retrain'] = sample_ids_retrain.flatten()
-            final_results.at[0:len(y_pred_retrain)-1, 'y_pred_retrain'] = y_pred_retrain.flatten()
-            final_results.at[0:len(y_retrain)-1, 'y_true_retrain'] = y_retrain.flatten()
-            final_results.at[0:len(sample_ids_test)-1, 'sample_ids_test'] = sample_ids_test.flatten()
-            final_results.at[0:len(y_pred_test)-1, 'y_pred_test'] = y_pred_test.flatten()
-            final_results.at[0:len(y_test)-1, 'y_true_test'] = y_test.flatten()
+            final_results.at[0:len(sample_ids_retrain) - 1, 'sample_ids_retrain'] = sample_ids_retrain.flatten()
+            final_results.at[0:len(y_pred_retrain) - 1, 'y_pred_retrain'] = y_pred_retrain.flatten()
+            final_results.at[0:len(y_retrain) - 1, 'y_true_retrain'] = y_retrain.flatten()
+            final_results.at[0:len(sample_ids_test) - 1, 'sample_ids_test'] = sample_ids_test.flatten()
+            final_results.at[0:len(y_pred_test) - 1, 'y_pred_test'] = y_pred_test.flatten()
+            final_results.at[0:len(y_test) - 1, 'y_true_test'] = y_test.flatten()
             for metric, value in eval_scores.items():
                 final_results.at[0, metric] = value
             final_results.to_csv(self.save_path + 'final_model_test_results.csv',

@@ -29,7 +29,7 @@ def print_config_info(arguments: dict, dataset: base_dataset.Dataset, task: str)
     print('Datasplit: ' + arguments["datasplit"] +
           ' (' + helper_functions.get_subpath_for_datasplit(datasplit=arguments["datasplit"],
                                                             datasplit_params=datasplit_params) + ')')
-    print('MAF: '+ str(arguments["maf_percentage"]))
+    print('MAF: ' + str(arguments["maf_percentage"]))
     print('Dataset Infos')
     print('- Task detected: ' + task)
     print('- No. of samples: ' + str(dataset.X_full.shape[0]) + ', No. of features: ' + str(dataset.X_full.shape[1]))
