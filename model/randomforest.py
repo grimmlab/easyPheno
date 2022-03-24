@@ -4,14 +4,19 @@ from model import _sklearn_model
 
 
 class RandomForest(_sklearn_model.SklearnModel):
-    """See BaseModel for more information on the parameters"""
+    """
+    See BaseModel for more information on the attributes.
+    """
     standard_encoding = '012'
     possible_encodings = ['012']
 
     def define_model(self):
-        """See BaseModel for more information"""
+        """
+        See BaseModel for more information.
+        """
         # all hyperparameters defined are suggested for optimization
         params = self.suggest_all_hyperparams_to_optuna()
+        # add random_state for reproducibility and n_jobs for multiprocessing
         params.update({'random_state': 42, 'n_jobs': -1})
         if self.task == 'classification':
             return sklearn.ensemble.RandomForestClassifier(**params)
@@ -19,7 +24,9 @@ class RandomForest(_sklearn_model.SklearnModel):
             return sklearn.ensemble.RandomForestRegressor(**params)
 
     def define_hyperparams_to_tune(self) -> dict:
-        """See BaseModel for more information on the format"""
+        """
+        See BaseModel for more information on the format.
+        """
         return {
             'n_estimators': {
                 'datatype': 'categorical',

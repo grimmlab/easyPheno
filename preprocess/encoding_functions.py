@@ -5,52 +5,56 @@ from torch.nn.functional import one_hot
 from utils import helper_functions
 
 
-def get_encoding(arguments:  argparse.Namespace):
+def get_encoding(models, user_encoding: str) -> list:
     """
-    Get a list of all required encodings
-    :param arguments:
+    Get a list of all required encodings.
+    :param models: models to consider
+    :param user_encoding: encoding specified by the user
     :return: list of encodings
     """
-    if arguments.models == 'all':
+    if models == 'all':
+        # do all encodings if all models are specified
         list_of_encodings = get_list_of_encodings()
     else:
-        if arguments.encoding is not None:
-            list_of_encodings = [arguments.encoding]
+        # use the specified encoding or encodings of specified models
+        if user_encoding is not None:
+            list_of_encodings = [user_encoding]
         else:
             list_of_encodings = []
-            for model in arguments.models:
+            for model in models:
                 if helper_functions.get_mapping_name_to_class()[model].standard_encoding not in list_of_encodings:
                     list_of_encodings.append(helper_functions.get_mapping_name_to_class()[model].standard_encoding)
     return list_of_encodings
 
 
-def get_list_of_encodings():
+def get_list_of_encodings() -> list:
     """
-    Get a list of all implemented encodings
-    adapt if new encoding is added
+    Get a list of all implemented encodings.
+    ! Adapt if new encoding is added !
     :return: List of all possible encodings
     """
     return ['raw', '012', 'onehot']
 
 
-def get_base_encoding(encoding: str):
+def get_base_encoding(encoding: str) -> str:
     """
-    Function that checks which base encoding is needed to create required encoding
-    adapt if new encoding is added
+    Check which base encoding is needed to create required encoding.
+    ! Adapt if new encoding is added !
     :param encoding: required encoding
     :return: base encoding
     """
     if encoding in ('raw', '012', 'onehot'):
         return 'raw'
-    else:  # adapt if new encoding is added
+    else:
         raise Exception('No valid encoding. Can not determine base encoding')
 
 
-def check_encoding_of_genotype(X: np.array):
+def check_encoding_of_genotype(X: np.array) -> str:
     """
-    Function to check the encoding of the genotype matrix
+    Check the encoding of the genotype matrix.
+    ! Adapt if new encoding is added !
     :param X: genotype matrix
-    :return: name of encoding
+    :return: encoding of the genotype matrix
     """
     unique = np.unique(X)
     if all(z in ['A', 'C', 'G', 'T', 'M', 'R', 'W', 'S', 'Y', 'K'] for z in unique.astype(str)):
@@ -59,12 +63,12 @@ def check_encoding_of_genotype(X: np.array):
         return '012'
 
 
-def encode_genotype(X: np.array, required_encoding: str, base_encoding: str):
+def encode_genotype(X: np.array, required_encoding: str) -> np.array:
     """
-    compute required encoding of genotype matrix
+    Compute the required encoding of the genotype matrix.
+    ! Adapt if new encoding is added !
     :param X: genotype matrix
     :param required_encoding: encoding of genotype matrix to create
-    :param base_encoding: current encoding of X, needed if new encoding can be created in several ways
     :return: X in new encoding
     """
     if required_encoding == '012':
@@ -72,17 +76,17 @@ def encode_genotype(X: np.array, required_encoding: str, base_encoding: str):
     elif required_encoding == 'onehot':
         return get_onehot_encoding(X)
     else:
-        raise Exception('Only able to create additive or one-hot encoding.')
+        raise Exception('Only able to create additive or onehot encoding.')
 
 
-def get_additive_encoding(X: np.array):
+def get_additive_encoding(X: np.array) -> np.array:
     """
-    generate genotype matrix in additive encoding:
-    0: homozygous major allele,
-    1: heterozygous
-    2: homozygous minor allele
+    Generate genotype matrix in additive encoding:
+        0: homozygous major allele,
+        1: heterozygous
+        2: homozygous minor allele
     :param X: genotype matrix in raw encoding, i.e. containing the alleles
-    :return: X_012
+    :return: genotype matrix in additive encoding (X_012)
     """
     alleles = []
     index_arr = []
@@ -119,15 +123,15 @@ def get_additive_encoding(X: np.array):
     return alleles[ind_arr, cols]
 
 
-def get_onehot_encoding(X: np.array):
+def get_onehot_encoding(X: np.array) -> np.array:
     """
-    Generate genotype matrix in one-hot encoding. If genotype matrix is homozygous, create 3d torch tensor with
-    (samples, SNPs, 4), with 4 as the one-hot encoding
+    Generate genotype matrix in onehot encoding. If genotype matrix is homozygous, create 3d torch tensor with
+    (samples, SNPs, 4), with 4 as the onehot encoding
     A : [1,0,0,0]
     C : [0,1,0,0]
     G : [0,0,1,0]
     T : [0,0,0,1]
-    If genotype matrix is heterozygous, create 3d torch tensor with (samples, SNPs, 10), with 10 as the one-hot encoding
+    If genotype matrix is heterozygous, create 3d torch tensor with (samples, SNPs, 10), with 10 as the onehot encoding
     A : [1,0,0,0,0,0,0,0,0,0]
     C : [0,1,0,0,0,0,0,0,0,0]
     G : [0,0,1,0,0,0,0,0,0,0]
@@ -139,7 +143,7 @@ def get_onehot_encoding(X: np.array):
     W : [0,0,0,0,0,0,0,0,1,0]
     Y : [0,0,0,0,0,0,0,0,0,1]
     :param X: genotype matrix in raw encoding, i.e. containing the alleles
-    :return: X_onehot
+    :return: genotype matrix in onehot encoding (X_onehot)
     """
     unique, inverse = np.unique(X, return_inverse=True)
     inverse = inverse.reshape(X.shape)

@@ -8,7 +8,15 @@ class Mlp(_torch_model.TorchModel):
     possible_encodings = ['012']
 
     def define_model(self) -> torch.nn.Sequential:
-        """See BaseModel for more information"""
+        """
+        Definition of a MLP network.
+        See BaseModel and TorchModel for more information.
+
+        Architecture:
+            - N_LAYERS of (Linear + BatchNorm + Dropout)
+            - Linear output layer
+            Number of units in the first linear layer and percentage decrease after each may be fixed or optimized.
+        """
         n_layers = self.suggest_hyperparam_to_optuna('n_layers')
         model = []
         act_function = self.get_torch_object_for_string(string_to_get=self.suggest_hyperparam_to_optuna('act_function'))
@@ -26,7 +34,10 @@ class Mlp(_torch_model.TorchModel):
         return torch.nn.Sequential(*model)
 
     def define_hyperparams_to_tune(self) -> dict:
-        """See BaseModel for more information on the format"""
+        """
+        See BaseModel for more information on the format.
+        See TorchModel for more information on hyperparameters common for all torch models.
+        """
         return {
             'n_layers': {
                 'datatype': 'int',
@@ -34,12 +45,14 @@ class Mlp(_torch_model.TorchModel):
                 'upper_bound': 3
             },
             'n_initial_units_factor': {
+                # Number of units in the first linear layer in relation to the number of inputs
                 'datatype': 'float',
                 'lower_bound': 0.05,
                 'upper_bound': 0.1,
                 'step': 0.05
             },
             'perc_decrease_per_layer': {
+                # Percentage decrease of the number of units per layer
                 'datatype': 'float',
                 'lower_bound': 0.2,
                 'upper_bound': 0.5,
