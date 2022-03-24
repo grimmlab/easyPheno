@@ -195,7 +195,7 @@ def check_transform_format_genotype_matrix(data_dir: str, genotype_matrix_name: 
     encoding = enc.get_encoding(models=models, user_encoding=user_encoding)
     if suffix in ('h5', 'hdf5', 'h5py'):
         with h5py.File(data_dir + '/' + genotype_matrix_name, "r") as f:
-            sample_ids = f['sample_ids'][:]
+            sample_ids = f['sample_ids'][:].astype(str)
             if 'X_raw' in f:
                 X = f['X_raw'][:]
             elif 'X_012' in f:
@@ -319,8 +319,8 @@ def create_genotype_h5_file(data_dir: str, genotype_matrix_name: str,
     x_file = data_dir + '/' + genotype_matrix_name.split(".")[0] + '.h5'
     print('Save unified genotype file ' + x_file)
     with h5py.File(x_file, 'w') as f:
-        f.create_dataset('sample_ids', data=sample_ids, chunks=True, compression="gzip")
-        f.create_dataset('snp_ids', data=snp_ids, chunks=True, compression="gzip")
+        f.create_dataset('sample_ids', data=sample_ids.astype(bytes), chunks=True, compression="gzip")
+        f.create_dataset('snp_ids', data=snp_ids.astype(bytes), chunks=True, compression="gzip")
         encoding = enc.check_encoding_of_genotype(X=X)
         if encoding == 'raw':
             f.create_dataset('X_raw', data=X, chunks=True, compression="gzip", compression_opts=7)
@@ -364,7 +364,7 @@ def genotype_phenotype_matching(X: np.array, X_ids: np.array, y: pd.DataFrame) -
     :param y: pd.DataFrame containing sample ids of phenotype as index and phenotype values as single column
     :return: matched genotype matrix, matched sample ids, index arrays for genotype and phenotype to redo matching
     """
-    y_ids = np.asarray(y.index, dtype=np.int).flatten()
+    y_ids = np.asarray(y.index, dtype=X_ids.dtype).flatten()
     (y_index, X_index) = (np.reshape(y_ids, (y_ids.shape[0], 1)) == X_ids).nonzero()
     if len(y_index) == 0:
         raise Exception('Samples of genotype and phenotype do not match.')
@@ -580,7 +580,7 @@ def create_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix
         # all data needed to redo matching of X and y and to create new mafs and new data splits
         data = f.create_group('matched_data')
         data.create_dataset('y', data=y, chunks=True, compression="gzip")
-        data.create_dataset('matched_sample_ids', data=sample_ids, chunks=True, compression="gzip")
+        data.create_dataset('matched_sample_ids', data=sample_ids.astype(bytes), chunks=True, compression="gzip")
         data.create_dataset('X_index', data=X_index, chunks=True, compression="gzip")
         data.create_dataset('y_index', data=y_index, chunks=True, compression="gzip")
         data.create_dataset('non_informative_filter', data=filter, chunks=True, compression="gzip")
