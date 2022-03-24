@@ -1,4 +1,3 @@
-import argparse
 import h5py
 import numpy as np
 import sklearn.preprocessing
@@ -25,7 +24,7 @@ class Dataset:
                  datasplit: str, n_outerfolds: int, n_innerfolds: int, test_set_size_percentage: int,
                  val_set_size_percentage: int, encoding: str, maf_percentage: int):
         """
-        Constructor of Dataset.
+        Constructor of Dataset
         :param data_dir: data directory where the phenotype and genotype matrix are stored
         :param genotype_matrix_name: name of the genotype matrix including datatype ending
         :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
@@ -55,7 +54,7 @@ class Dataset:
 
     def load_match_raw_data(self, data_dir: str, genotype_matrix_name: str) -> (np.ndarray, np.ndarray, np.ndarray):
         """
-        Load the full genotype and phenotype matrices specified and match them.
+        Load the full genotype and phenotype matrices specified and match them
         :param data_dir: data directory where the phenotype and genotype matrix are stored
         :param genotype_matrix_name: name of the genotype matrix including datatype ending
         :return: matched genotype, phenotype and sample ids
@@ -174,7 +173,7 @@ class Dataset:
     @staticmethod
     def get_index_file_name(genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str) -> str:
         """
-        Get the name of the file containing the indices for maf filters and data splits.
+        Get the name of the file containing the indices for maf filters and data splits
         :param genotype_matrix_name: name of the genotype matrix including datatype ending
         :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
         :param phenotype: name of the phenotype to predict
