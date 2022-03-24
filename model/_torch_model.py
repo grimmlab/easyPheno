@@ -64,6 +64,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
         """
         train_loader = self.get_dataloader(X=X_train, y=y_train)
         val_loader = self.get_dataloader(X=X_val, y=y_val)
+        best_model = copy.deepcopy(self.model)
         self.model.to(device=self.device)
         best_loss = None
         epochs_wo_improvement = 0
@@ -171,7 +172,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
             # Adapt to PyTorch ordering (BATCH_SIZE, CHANNELS, SIGNAL)
             X = torch.swapaxes(X, 1, 2)
         y = torch.reshape(torch.from_numpy(y).float(), (-1, 1)) if y is not None else None
-        y = y.flatten() if (self.task == 'classification' and y is not None) else y
+        y = torch.flatten(y) if (self.task == 'classification' and y is not None) else y
         dataset = torch.utils.data.TensorDataset(X, y) if y is not None \
             else X
         return torch.utils.data.DataLoader(dataset=dataset, batch_size=self.batch_size, shuffle=shuffle)

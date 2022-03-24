@@ -23,8 +23,8 @@ class LinearRegression(_sklearn_model.SklearnModel):
         else:
             l1_ratio = self.suggest_hyperparam_to_optuna('l1_ratio')
         if self.task == 'classification':
-            reg_C = self.suggest_hyperparam_to_optuna('C')
-            return sklearn.linear_model.LogisticRegression(penalty=penalty, C=reg_C, solver='saga',
+            reg_c = self.suggest_hyperparam_to_optuna('C')
+            return sklearn.linear_model.LogisticRegression(penalty=penalty, C=reg_c, solver='saga',
                                                            l1_ratio=l1_ratio if penalty == 'elasticnet' else None,
                                                            max_iter=10000, random_state=42)
         else:

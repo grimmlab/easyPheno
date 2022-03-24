@@ -23,7 +23,7 @@ class BaseModel(abc.ABC):
         model: model object
     """
 
-    ### Class attributes ###
+    # Class attributes #
     @property
     @classmethod
     @abc.abstractmethod
@@ -38,7 +38,7 @@ class BaseModel(abc.ABC):
         """possible_encodings: a list of all encodings that are possible according to the model definition"""
         raise NotImplementedError
 
-    ### Constructor super class ###
+    # Constructor super class #
     def __init__(self, task: str, optuna_trial: optuna.trial.Trial, encoding: str = None, n_outputs: int = 1):
         """
         Constructor of the base model class
@@ -58,7 +58,7 @@ class BaseModel(abc.ABC):
             self.all_hyperparams.update(self.define_hyperparams_to_tune())
         self.model = self.define_model()
 
-    ### Methods required by each child class ###
+    # Methods required by each child class #
     @abc.abstractmethod
     def define_model(self):
         """
@@ -135,7 +135,7 @@ class BaseModel(abc.ABC):
         :return: predictions on validation set
         """
 
-    ### General methods ###
+    # General methods #
     def suggest_hyperparam_to_optuna(self, hyperparam_name: str):
         """
         Suggest a hyperparameter of hyperparam_dict to the optuna trial to optimize it.
@@ -167,7 +167,7 @@ class BaseModel(abc.ABC):
             if 'list_of_values' not in spec:
                 raise Exception(
                     '"list of values" for ' + hyperparam_name + ' not in hyperparams_dict. '
-                    'Check define_hyperparams_to_tune() of the model.'
+                                                                'Check define_hyperparams_to_tune() of the model.'
                 )
             suggested_value = \
                 self.optuna_trial.suggest_categorical(name=optuna_param_name, choices=spec['list_of_values'])

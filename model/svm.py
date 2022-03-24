@@ -15,7 +15,7 @@ class SupportVectorMachine(_sklearn_model.SklearnModel):
         See BaseModel for more information.
         """
         kernel = self.suggest_hyperparam_to_optuna('kernel')
-        reg_C = self.suggest_hyperparam_to_optuna('C')
+        reg_c = self.suggest_hyperparam_to_optuna('C')
         if kernel == 'poly':
             degree = self.suggest_hyperparam_to_optuna('degree')
             gamma = self.suggest_hyperparam_to_optuna('gamma')
@@ -26,9 +26,9 @@ class SupportVectorMachine(_sklearn_model.SklearnModel):
             degree = 42  # default
             gamma = 42  # default
         if self.task == 'classification':
-            return sklearn.svm.SVC(kernel=kernel, C=reg_C, degree=degree, gamma=gamma, random_state=42)
+            return sklearn.svm.SVC(kernel=kernel, C=reg_c, degree=degree, gamma=gamma, random_state=42)
         else:
-            return sklearn.svm.SVR(kernel=kernel, C=reg_C, degree=degree, gamma=gamma)
+            return sklearn.svm.SVR(kernel=kernel, C=reg_c, degree=degree, gamma=gamma)
 
     def define_hyperparams_to_tune(self) -> dict:
         """

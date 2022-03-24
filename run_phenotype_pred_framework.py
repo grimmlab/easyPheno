@@ -15,7 +15,7 @@ def run_pipeline(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phe
                  encoding: str = None, maf_percentage: int = 0, save_dir: str = None,
                  datasplit: str = 'nested-cv', n_outerfolds: int = 5, n_innerfolds: int = 5,
                  test_set_size_percentage: int = 20, val_set_size_percentage: int = 20,
-                 models: list = ['xgboost'], n_trials: int = 100, save_final_model: bool = False,
+                 models: list = None, n_trials: int = 100, save_final_model: bool = False,
                  batch_size: int = 32, n_epochs: int = None):
     """
     Run the whole optimization pipeline
@@ -37,6 +37,8 @@ def run_pipeline(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phe
     :param batch_size: batch size for neural network models
     :param n_epochs: number of epochs for neural network models
     """
+    if models is None:
+        models = ['xgboost']
     # set save directory
     save_dir = data_dir if save_dir is None else save_dir
     if type(models) == list and models[0] == 'all':
@@ -44,7 +46,7 @@ def run_pipeline(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phe
     if type(models) != list and models != 'all':
         models = [models]
 
-    ### Checks and Raw Data Input Preparation ###
+    # Checks and Raw Data Input Preparation #
     # Check all arguments
     check_functions.check_all_specified_arguments(arguments=locals())
     # prepare all data files
@@ -55,7 +57,7 @@ def run_pipeline(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phe
         models=models, user_encoding=encoding, maf_percentage=maf_percentage
     )
 
-    ### Optimization Pipeline ###
+    # Optimization Pipeline #
     helper_functions.set_all_seeds()
     models_to_optimize = helper_functions.get_list_of_implemented_models() if models == 'all' else models
     if len(models_to_optimize) > 1:
@@ -112,7 +114,7 @@ if __name__ == '__main__':
     """
     warnings.simplefilter(action='ignore', category=FutureWarning)
     warnings.simplefilter(action='ignore', category=ExperimentalWarning)
-    ### User Input ###
+    # User Input #
     parser = argparse.ArgumentParser()
     # Input Params #
     parser.add_argument("-dd", "--data_dir", type=str,
