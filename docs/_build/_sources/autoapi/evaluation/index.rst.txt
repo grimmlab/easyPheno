@@ -1,0 +1,15 @@
+:py:mod:`evaluation`
+====================
+
+.. py:module:: evaluation
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   eval_metrics/index.rst
+
+

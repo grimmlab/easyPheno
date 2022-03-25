@@ -1,0 +1,39 @@
+:py:mod:`model._model_functions`
+================================
+
+.. py:module:: model._model_functions
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   model._model_functions.load_retrain_model
+   model._model_functions.load_model
+
+
+
+.. py:function:: load_retrain_model(path, filename, X_retrain, y_retrain, early_stopping_point = None)
+
+   Method to load and retrain persisted model
+   :param path: path where the model is saved
+   :param filename: filename of the model
+   :param X_retrain: feature matrix for retraining
+   :param y_retrain: target vector for retraining
+   :param early_stopping_point: optional early stopping point relevant for some models
+   :return: model instance
+
+
+.. py:function:: load_model(path, filename)
+
+   Method to load persisted model
+   :param path: path where the model is saved
+   :param filename: filename of the model
+   :return: model instance
+
+

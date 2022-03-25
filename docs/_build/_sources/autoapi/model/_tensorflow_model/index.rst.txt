@@ -1,0 +1,84 @@
+:py:mod:`model._tensorflow_model`
+=================================
+
+.. py:module:: model._tensorflow_model
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   model._tensorflow_model.TensorflowModel
+
+
+
+
+.. py:class:: TensorflowModel(task, optuna_trial, encoding = None, n_outputs = 1, n_features = None, width_onehot = None, batch_size = None, n_epochs = None)
+
+   Bases: :py:obj:`model._base_model.BaseModel`, :py:obj:`abc.ABC`
+
+   Parent class based on BaseModel for all TensorFlow models to share functionalities.
+   See BaseModel for more information.
+
+   ## Attributes ##
+       # Inherited attributes #
+       See BaseModel.
+       # Additional attributes #
+       n_outputs: int : Number of outputs of the model
+       n_features: int : Number of input features to the model
+       width_onehot: int : Number of input channels in case of onehot encoding
+       batch_size: int : Batch size for batch-based training
+       n_epochs: int : Number of epochs for optimization
+       optimizer: torch.optim.optimizer.Optimizer : optimizer for model fitting
+       loss_fn : loss function for model fitting
+       early_stopping_patience: int : epochs without improvement before early stopping
+       early_stopping_point: int : epoch at which early stopping occured
+       early_stopping_callback: tf.keras.callbacks.EarlyStopping : callback for early stopping
+
+   .. py:method:: train_val_loop(self, X_train, y_train, X_val, y_val)
+
+      Implementation of a train and validation loop for  TensorFlow models.
+      See BaseModel for more information
+
+
+   .. py:method:: retrain(self, X_retrain, y_retrain)
+
+      Implementation of the retraining for PyTorch models.
+      See BaseModel for more information
+
+
+   .. py:method:: predict(self, X_in)
+
+      Implementation of a prediction based on input features for PyTorch models.
+      See BaseModel for more information
+
+
+   .. py:method:: get_dataloader(self, X, y = None, shuffle = True)
+
+      Get a dataloader using the specified data and batch size
+      :param X: feature matrix to use
+      :param y: optional target vector to use
+      :param shuffle: shuffle parameter for DataLoader
+      :return: batched dataset
+
+
+   .. py:method:: common_hyperparams()
+      :staticmethod:
+
+      Add hyperparameters that are common for PyTorch models.
+      Do not need to be included in optimization for every child model.
+      Also see BaseModel for more information
+
+
+   .. py:method:: save_model(self, path, filename)
+
+      Method to persist the whole model object on a hard drive (can be loaded with joblib.load(filepath))
+      :param path: path where the model will be saved
+      :param filename: filename of the model
+
+
+

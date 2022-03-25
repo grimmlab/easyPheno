@@ -1,0 +1,26 @@
+:py:mod:`model`
+===============
+
+.. py:module:: model
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   _base_model/index.rst
+   _model_functions/index.rst
+   _sklearn_model/index.rst
+   _tensorflow_model/index.rst
+   _torch_model/index.rst
+   cnn/index.rst
+   linearregression/index.rst
+   localcnn/index.rst
+   mlp/index.rst
+   randomforest/index.rst
+   svm/index.rst
+   xgboost/index.rst
+
+

@@ -1,0 +1,27 @@
+:py:mod:`utils.print_functions`
+===============================
+
+.. py:module:: utils.print_functions
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   utils.print_functions.print_config_info
+
+
+
+.. py:function:: print_config_info(arguments, dataset, task)
+
+   Print info of current configuration.
+   :param arguments: arguments specified by the user
+   :param dataset: dataset used for optimization
+   :param task: task that was detected
+
+

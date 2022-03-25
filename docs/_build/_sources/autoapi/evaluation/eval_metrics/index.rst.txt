@@ -1,0 +1,29 @@
+:py:mod:`evaluation.eval_metrics`
+=================================
+
+.. py:module:: evaluation.eval_metrics
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   evaluation.eval_metrics.get_evaluation_report
+
+
+
+.. py:function:: get_evaluation_report(y_pred, y_true, task, prefix = '')
+
+   Get values for common evaluation metrics
+   :param y_pred: predicted values
+   :param y_true: true values
+   :param task: ML task to solve
+   :param prefix: prefix to be added to the key if multiple eval metrics are collected
+   :return: dictionary with common metrics
+
+
