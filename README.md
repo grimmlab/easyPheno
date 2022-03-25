@@ -1,4 +1,4 @@
-# phenotype-pred-framework
+# easyPheno
 
 [![Python 3.8](https://img.shields.io/badge/Python-3.8-3776AB)](https://www.python.org/downloads/release/python-388/)
 
