@@ -29,7 +29,8 @@ author = 'Florian Haselbeck, Maura John, Dominik G. Grimm'
 # ones.
 extensions = [
         'autoapi.extension',
-        'sphinx.ext.autodoc'
+        'sphinx.ext.autodoc',
+        'myst_parser'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

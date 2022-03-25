@@ -10,7 +10,7 @@ Welcome to easyPheno's documentation!
    :maxdepth: 2
    :caption: Contents:
    install
-   get started
+   quickstart
    modules
 
 Indices and tables
