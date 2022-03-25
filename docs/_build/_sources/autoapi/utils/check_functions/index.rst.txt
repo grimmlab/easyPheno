@@ -1,0 +1,25 @@
+:py:mod:`utils.check_functions`
+===============================
+
+.. py:module:: utils.check_functions
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   utils.check_functions.check_all_specified_arguments
+
+
+
+.. py:function:: check_all_specified_arguments(arguments)
+
+   Check all specified arguments for plausibility
+   :param arguments: all arguments provided by the user
+
+

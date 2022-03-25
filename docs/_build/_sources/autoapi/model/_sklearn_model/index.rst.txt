@@ -1,0 +1,49 @@
+:py:mod:`model._sklearn_model`
+==============================
+
+.. py:module:: model._sklearn_model
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   model._sklearn_model.SklearnModel
+
+
+
+
+.. py:class:: SklearnModel(task, optuna_trial, encoding = None, n_outputs = 1)
+
+   Bases: :py:obj:`model._base_model.BaseModel`, :py:obj:`abc.ABC`
+
+   Parent class based on BaseModel for all models with a sklearn-like API to share functionalities.
+   See BaseModel for more information.
+
+   ## Attributes ##
+       # Inherited attributes #
+       See BaseModel.
+
+   .. py:method:: retrain(self, X_retrain, y_retrain)
+
+      Implementation of the retraining for models with sklearn-like API.
+      See BaseModel for more information.
+
+
+   .. py:method:: predict(self, X_in)
+
+      Implementation of a prediction based on input features for models with sklearn-like API.
+      See BaseModel for more information.
+
+
+   .. py:method:: train_val_loop(self, X_train, y_train, X_val, y_val)
+
+      Implementation of a train and validation loop for models with sklearn-like API.
+      See BaseModel for more information.
+
+
+

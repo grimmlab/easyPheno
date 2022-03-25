@@ -1,0 +1,189 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>easyPheno &#8212; easyPheno  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/nature.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">easyPheno  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">easyPheno</span></code></a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-easyPheno">
+<span id="easypheno"></span><h1><a class="reference internal" href="#module-easyPheno" title="easyPheno"><code class="xref py py-mod docutils literal notranslate"><span class="pre">easyPheno</span></code></a><a class="headerlink" href="#module-easyPheno" title="Permalink to this headline">¶</a></h1>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#easyPheno.run_pipeline" title="easyPheno.run_pipeline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_pipeline</span></code></a>(data_dir, genotype_matrix, phenotype_matrix, phenotype, encoding = None, maf_percentage = 0, save_dir = None, datasplit = 'nested-cv', n_outerfolds = 5, n_innerfolds = 5, test_set_size_percentage = 20, val_set_size_percentage = 20, models = None, n_trials = 100, save_final_model = False, batch_size = 32, n_epochs = None)</p></td>
+<td><p>Run the whole optimization pipeline</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#easyPheno.parser" title="easyPheno.parser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parser</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="easyPheno.run_pipeline">
+<span class="sig-prename descclassname"><span class="pre">easyPheno.</span></span><span class="sig-name descname"><span class="pre">run_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">genotype_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phenotype_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phenotype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maf_percentage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datasplit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nested-cv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_outerfolds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_innerfolds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_set_size_percentage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_set_size_percentage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">models</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_trials</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_final_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#easyPheno.run_pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the whole optimization pipeline
+:param data_dir: data directory where the phenotype and genotype matrix are stored
+:param genotype_matrix: name of the genotype matrix including datatype ending
+:param phenotype_matrix: name of the phenotype matrix including datatype ending
+:param phenotype: name of the phenotype to predict
+:param encoding: encoding to use. Default is None, so standard encoding of each model will be used
+:param maf_percentage: threshold for MAF filter as percentage value. Default is 0, so no MAF filtering
+:param save_dir: directory for saving the results. Default is None, so same directory as data_dir
+:param datasplit: datasplit to use. Options are: nested-cv, cv-test, train-val-test
+:param n_outerfolds: number of outerfolds relevant for nested-cv
+:param n_innerfolds: number of folds relevant for nested-cv and cv-test
+:param test_set_size_percentage: size of the test set relevant for cv-test and train-val-test
+:param val_set_size_percentage: size of the validation set relevant for train-val-test
+:param models: list of models that should be optimized
+:param n_trials: number of trials for optuna
+:param save_final_model: specify if the final model should be saved
+:param batch_size: batch size for neural network models
+:param n_epochs: number of epochs for neural network models</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_dir</strong> (<em>str</em>) – </p></li>
+<li><p><strong>genotype_matrix</strong> (<em>str</em>) – </p></li>
+<li><p><strong>phenotype_matrix</strong> (<em>str</em>) – </p></li>
+<li><p><strong>phenotype</strong> (<em>str</em>) – </p></li>
+<li><p><strong>encoding</strong> (<em>str</em>) – </p></li>
+<li><p><strong>maf_percentage</strong> (<em>int</em>) – </p></li>
+<li><p><strong>save_dir</strong> (<em>str</em>) – </p></li>
+<li><p><strong>datasplit</strong> (<em>str</em>) – </p></li>
+<li><p><strong>n_outerfolds</strong> (<em>int</em>) – </p></li>
+<li><p><strong>n_innerfolds</strong> (<em>int</em>) – </p></li>
+<li><p><strong>test_set_size_percentage</strong> (<em>int</em>) – </p></li>
+<li><p><strong>val_set_size_percentage</strong> (<em>int</em>) – </p></li>
+<li><p><strong>models</strong> (<em>list</em>) – </p></li>
+<li><p><strong>n_trials</strong> (<em>int</em>) – </p></li>
+<li><p><strong>save_final_model</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>batch_size</strong> (<em>int</em>) – </p></li>
+<li><p><strong>n_epochs</strong> (<em>int</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="easyPheno.parser">
+<span class="sig-prename descclassname"><span class="pre">easyPheno.</span></span><span class="sig-name descname"><span class="pre">parser</span></span><a class="headerlink" href="#easyPheno.parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">easyPheno</span></code></a><ul>
+<li><a class="reference internal" href="#module-contents">Module Contents</a><ul>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#attributes">Attributes</a><ul>
+<li><a class="reference internal" href="#easyPheno.run_pipeline">run_pipeline</a></li>
+<li><a class="reference internal" href="#easyPheno.parser">parser</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/autoapi/easyPheno/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">easyPheno  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">easyPheno</span></code></a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Florian Haselbeck, Maura John, Dominik G. Grimm.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
+    </div>
+  </body>
+</html>

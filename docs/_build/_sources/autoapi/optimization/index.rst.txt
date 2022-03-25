@@ -1,0 +1,15 @@
+:py:mod:`optimization`
+======================
+
+.. py:module:: optimization
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   optuna_optim/index.rst
+
+

@@ -1,0 +1,70 @@
+:py:mod:`model.localcnn`
+========================
+
+.. py:module:: model.localcnn
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   model.localcnn.LocalCnn
+
+
+
+
+.. py:class:: LocalCnn(task, optuna_trial, encoding = None, n_outputs = 1, n_features = None, width_onehot = None, batch_size = None, n_epochs = None)
+
+   Bases: :py:obj:`model._tensorflow_model.TensorflowModel`
+
+   Parent class based on BaseModel for all TensorFlow models to share functionalities.
+   See BaseModel for more information.
+
+   ## Attributes ##
+       # Inherited attributes #
+       See BaseModel.
+       # Additional attributes #
+       n_outputs: int : Number of outputs of the model
+       n_features: int : Number of input features to the model
+       width_onehot: int : Number of input channels in case of onehot encoding
+       batch_size: int : Batch size for batch-based training
+       n_epochs: int : Number of epochs for optimization
+       optimizer: torch.optim.optimizer.Optimizer : optimizer for model fitting
+       loss_fn : loss function for model fitting
+       early_stopping_patience: int : epochs without improvement before early stopping
+       early_stopping_point: int : epoch at which early stopping occured
+       early_stopping_callback: tf.keras.callbacks.EarlyStopping : callback for early stopping
+
+   .. py:attribute:: standard_encoding
+      :annotation: = onehot
+
+      
+
+   .. py:attribute:: possible_encodings
+      :annotation: = ['onehot']
+
+      
+
+   .. py:method:: define_model(self)
+
+      Definition of a LocalCNN network.
+      See BaseModel and TensorflowModel for more information.
+      Architecture:
+          - LocallyConnected1D, BatchNorm, Dropout, MaxPool1D, Flatten
+          - N_LAYERS of (Dense + BatchNorm + Dropout)
+          - Dense output layer
+          Kernel size for LocallyConnectedLayer and max pooling layer may be fixed or optimized.
+          Same applies for stride, number of units in the first dense layer and percentage decrease after each layer.
+
+
+   .. py:method:: define_hyperparams_to_tune(self)
+
+      See BaseModel for more information on the format.
+      See TensorflowModel for more information on hyperparameters common for all tensorflow models.
+
+
+
