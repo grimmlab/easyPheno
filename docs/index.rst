@@ -9,6 +9,8 @@ Welcome to easyPheno's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   install
+   get started
    modules
 
 Indices and tables

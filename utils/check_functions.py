@@ -9,6 +9,9 @@ def check_all_specified_arguments(arguments: dict):
     Check all specified arguments for plausibility
     :param arguments: all arguments provided by the user
     """
+    # Check existence of save_dir
+    if not os.path.exists(arguments["save_dir"]):
+        raise Exception("Specified save_dir " + arguments["save_dir"] + " does not exist. Please double-check.")
     # Check existence of genotype and phenotype file
     if not os.path.isfile(arguments["data_dir"] + '/' + arguments["genotype_matrix"]):
         raise Exception('Specified genotype file ' + arguments["genotype_matrix"] + ' does not exist in '
