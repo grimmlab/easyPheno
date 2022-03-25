@@ -1,1 +1,2 @@
 sphinx-autoapi==1.8.4
+myst-parser==0.17.0
