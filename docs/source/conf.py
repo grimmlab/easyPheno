@@ -23,11 +23,6 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
-    "cliff.sphinxext",
-    "sphinx_copybutton",
-    "sphinx_gallery.gen_gallery",
-    "matplotlib.sphinxext.plot_directive",
-    "sphinx_plotly_directive",
     'myst_parser',
     'autoapi.extension',
 ]
