@@ -2,12 +2,9 @@
 
 # -- Project information
 
-project = 'Lumache'
-copyright = '2021, Graziella'
-author = 'Graziella'
-
-release = '0.1'
-version = '0.1.0'
+project = 'easyPheno'
+copyright = '2022, GrimmLab @ TUM Campus Straubing (https://bit.cs.tum.de/)'
+author = 'Florian Haselbeck, Maura John, Dominik G. Grimm'
 
 # -- General configuration
 
