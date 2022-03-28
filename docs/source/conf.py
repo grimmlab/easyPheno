@@ -37,5 +37,7 @@ html_theme = 'sphinx_rtd_theme'
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
 
+exclude_patterns = ['*/docs*']
+
 autoapi_type = 'python'
 autoapi_dirs = ['../../evaluation', '../../model', '../../optimization', '../../preprocess', '../../utils', '../../']
