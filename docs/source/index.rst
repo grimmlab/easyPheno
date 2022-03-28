@@ -9,6 +9,7 @@ We are doing crazy stuff here!
 
 .. toctree::
    :maxdepth: 3
-      install
-      quickstart
-      modules
+
+   install
+   quickstart
+   modules
