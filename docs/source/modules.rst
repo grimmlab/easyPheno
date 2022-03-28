@@ -1,12 +1,12 @@
-phenotypeprediction
+API Reference
 ===================
 
 .. toctree::
    :maxdepth: 4
 
    easyPheno
-   evaluation
-   model
-   optimization
    preprocess
+   optimization
+   model
+   evaluation
    utils
