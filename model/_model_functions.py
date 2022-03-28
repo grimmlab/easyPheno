@@ -35,3 +35,4 @@ def load_model(path: str, filename: str) -> _base_model.BaseModel:
     if issubclass(type(model), _tensorflow_model.TensorflowModel):
         model.optimizer = tf.keras.optimizers.deserialize(model.optimizer)
     return model
+
