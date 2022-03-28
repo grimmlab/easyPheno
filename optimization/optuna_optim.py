@@ -89,7 +89,9 @@ class OptunaOptim:
         Create a new optuna study.
         :return: optuna study
         """
-        outerfold_prefix = 'OUTER' + self.save_path[-2] + '-' if 'outerfold' in self.save_path else ''
+        outerfold_prefix = \
+            'OUTER' + self.save_path[[m.end(0) for m in re.finditer(pattern='outerfold_', string=self.save_path)][0]] \
+            + '-' if 'outerfold' in self.save_path else ''
         study_name = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + '_' + outerfold_prefix + \
                      self.user_input_params["genotype_matrix_name"].split('.')[0] + '-' + \
                      self.user_input_params["phenotype_matrix_name"].split('.')[0] + '-' + \

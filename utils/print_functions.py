@@ -33,6 +33,7 @@ def print_config_info(arguments: dict, dataset: base_dataset.Dataset, task: str)
     print('Dataset Infos')
     print('- Task detected: ' + task)
     print('- No. of samples: ' + str(dataset.X_full.shape[0]) + ', No. of features: ' + str(dataset.X_full.shape[1]))
+    print('- Encoding: ' + str(dataset.encoding))
     if task == 'classification':
         print('- Samples per class: ' + str(np.unique(dataset.y_full, return_counts=True)[1]))
     else:

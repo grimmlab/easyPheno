@@ -26,7 +26,7 @@ class LinearRegression(_sklearn_model.SklearnModel):
             reg_c = self.suggest_hyperparam_to_optuna('C')
             return sklearn.linear_model.LogisticRegression(penalty=penalty, C=reg_c, solver='saga',
                                                            l1_ratio=l1_ratio if penalty == 'elasticnet' else None,
-                                                           max_iter=10000, random_state=42)
+                                                           max_iter=10000, random_state=42, n_jobs=-1)
         else:
             alpha = self.suggest_hyperparam_to_optuna('alpha')
             return sklearn.linear_model.ElasticNet(alpha=alpha, l1_ratio=l1_ratio, max_iter=10000, random_state=42)
