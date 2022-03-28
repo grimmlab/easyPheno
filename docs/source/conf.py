@@ -1,5 +1,9 @@
 # Configuration file for the Sphinx documentation builder.
 
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../../'))
+
 # -- Project information
 
 project = 'easyPheno'
@@ -15,6 +19,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'myst_parser',
+    'autoapi.extension',
 ]
 
 intersphinx_mapping = {
@@ -31,3 +36,6 @@ html_theme = 'sphinx_rtd_theme'
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
+
+autoapi_type = 'python'
+autoapi_dirs = ['../../evaluation', '../../model', '../../optimization', '../../preprocess', '../../utils', '../../']
