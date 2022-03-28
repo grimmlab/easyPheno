@@ -41,3 +41,6 @@ exclude_patterns = ['*/docs*']
 
 autoapi_type = 'python'
 autoapi_dirs = ['../../evaluation', '../../model', '../../optimization', '../../preprocess', '../../utils', '../../']
+autoapi_template_dir = '_autoapi_templates'
+autodoc_typehints = 'description'
+autoapi_ignore = ['*conf*']
