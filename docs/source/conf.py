@@ -24,7 +24,6 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
     'myst_parser',
-    'autoapi.extension',
 ]
 
 intersphinx_mapping = {
