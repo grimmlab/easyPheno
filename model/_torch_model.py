@@ -33,6 +33,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
                  n_features: int = None, width_onehot: int = None, batch_size: int = None, n_epochs: int = None):
         """
         TorchModel specific constructor
+
         :param task: ML task (regression or classification) depending on target variable
         :param optuna_trial: optuna.trial.Trial : trial of optuna for optimization
         :param encoding: the encoding to use (standard encoding or user-defined)
@@ -89,6 +90,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
     def train_one_epoch(self, train_loader: torch.utils.data.DataLoader):
         """
         Train one epoch
+
         :param train_loader: DataLoader with training data
         """
         self.model.train()
@@ -103,7 +105,9 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
     def validate_one_epoch(self, val_loader: torch.utils.data.DataLoader) -> float:
         """
         Validate one epoch
+
         :param val_loader: DataLoader with validation data
+
         :return: loss based on loss-criterion
         """
         self.model.eval()
@@ -147,8 +151,10 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
     def get_loss(self, outputs: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """
         Calculate the loss based on the outputs and targets
+
         :param outputs: outputs of the model
         :param targets: targets of the dataset
+
         :return: loss
         """
         if type(self.loss_fn) in [torch.nn.CrossEntropyLoss, torch.nn.NLLLoss]:
@@ -158,9 +164,11 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
     def get_dataloader(self, X: np.array, y: np.array = None, shuffle: bool = True) -> torch.utils.data.DataLoader:
         """
         Get a Pytorch DataLoader using the specified data and batch size
+
         :param X: feature matrix to use
         :param y: optional target vector to use
         :param shuffle: shuffle parameter for DataLoader
+
         :return: Pytorch DataLoader
         """
         # drop last sample if last batch would only contain one sample
@@ -218,6 +226,13 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
 
     @staticmethod
     def get_torch_object_for_string(string_to_get: str):
+        """
+        Get the torch object for a specific string, e.g. when suggesting to optuna as hyperparameter
+
+        :param string_to_get: string to retrieve the torch object
+
+        :return: torch object
+        """
         string_to_object_dict = {
             'relu': torch.nn.ReLU(),
             'tanh': torch.nn.Tanh()

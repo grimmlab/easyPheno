@@ -1,10 +1,47 @@
 model package
 =============
 
-Submodules
-----------
+model._base_model
+----------------
 
-model.cnn module
+.. automodule:: model._base_model
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+model._model_functions
+----------------
+
+.. automodule:: model._model_functions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+model._sklearn_model
+----------------
+
+.. automodule:: model._sklearn_model
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+model._tensorflow_model
+----------------
+
+.. automodule:: model._tensorflow_model
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+model._torch_model
+----------------
+
+.. automodule:: model._torch_model
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+model.cnn
 ----------------
 
 .. automodule:: model.cnn
@@ -12,7 +49,7 @@ model.cnn module
    :undoc-members:
    :show-inheritance:
 
-model.linearregression module
+model.linearregression
 -----------------------------
 
 .. automodule:: model.linearregression
@@ -20,7 +57,7 @@ model.linearregression module
    :undoc-members:
    :show-inheritance:
 
-model.localcnn module
+model.localcnn
 ---------------------
 
 .. automodule:: model.localcnn
@@ -28,7 +65,7 @@ model.localcnn module
    :undoc-members:
    :show-inheritance:
 
-model.mlp module
+model.mlp
 ----------------
 
 .. automodule:: model.mlp
@@ -36,7 +73,7 @@ model.mlp module
    :undoc-members:
    :show-inheritance:
 
-model.randomforest module
+model.randomforest
 -------------------------
 
 .. automodule:: model.randomforest
@@ -44,7 +81,7 @@ model.randomforest module
    :undoc-members:
    :show-inheritance:
 
-model.svm module
+model.svm
 ----------------
 
 .. automodule:: model.svm
@@ -52,7 +89,7 @@ model.svm module
    :undoc-members:
    :show-inheritance:
 
-model.xgboost module
+model.xgboost
 --------------------
 
 .. automodule:: model.xgboost

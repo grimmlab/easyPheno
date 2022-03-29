@@ -32,6 +32,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
                  n_features: int = None, width_onehot: int = None, batch_size: int = None, n_epochs: int = None):
         """
         TensorflowModel specific constructor
+
         :param task: ML task (regression or classification) depending on target variable
         :param optuna_trial: optuna.trial.Trial : trial of optuna for optimization
         :param encoding: the encoding to use (standard encoding or user-defined)
@@ -99,9 +100,11 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
     def get_dataloader(self, X: np.array, y: np.array = None, shuffle: bool = True) -> tf.data.Dataset:
         """
         Get a dataloader using the specified data and batch size
+
         :param X: feature matrix to use
         :param y: optional target vector to use
         :param shuffle: shuffle parameter for DataLoader
+
         :return: batched dataset
         """
         # drop last sample if last batch would only contain one sample

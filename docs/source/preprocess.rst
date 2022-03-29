@@ -1,9 +1,6 @@
 preprocess package
 ==================
 
-Submodules
-----------
-
 preprocess.base\_dataset module
 -------------------------------
 
@@ -24,14 +21,6 @@ preprocess.raw\_data\_functions module
 --------------------------------------
 
 .. automodule:: preprocess.raw_data_functions
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: preprocess
    :members:
    :undoc-members:
    :show-inheritance:

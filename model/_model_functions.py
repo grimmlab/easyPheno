@@ -9,11 +9,13 @@ def load_retrain_model(path: str, filename: str, X_retrain: np.array, y_retrain:
                        early_stopping_point: int = None) -> _base_model.BaseModel:
     """
     Method to load and retrain persisted model
+
     :param path: path where the model is saved
     :param filename: filename of the model
     :param X_retrain: feature matrix for retraining
     :param y_retrain: target vector for retraining
     :param early_stopping_point: optional early stopping point relevant for some models
+
     :return: model instance
     """
     model = load_model(path=path, filename=filename)
@@ -26,8 +28,10 @@ def load_retrain_model(path: str, filename: str, X_retrain: np.array, y_retrain:
 def load_model(path: str, filename: str) -> _base_model.BaseModel:
     """
     Method to load persisted model
+
     :param path: path where the model is saved
     :param filename: filename of the model
+
     :return: model instance
     """
     model = joblib.load(path + filename)

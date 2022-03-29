@@ -11,16 +11,18 @@ class BaseModel(abc.ABC):
 
     ## Attributes ##
         # Class attributes #
-        standard_encoding: str : the standard encoding for this model
-        possible_encodings: List<str> : a list of all encodings that are possible according to the model definition
+
+        :standard_encoding (*str*): the standard encoding for this model
+        :possible_encodings (*List<str>*): a list of all encodings that are possible according to the model definition
 
         # Instance attributes #
-        task: str : ML task (regression or classification) depending on target variable
-        optuna_trial: optuna.trial.Trial : trial of optuna for optimization
-        encoding: str : the encoding to use (standard encoding or user-defined)
-        all_hyperparams: dict : dictionary with all hyperparameters with related info that can be tuned
+
+        :task (*str*): ML task ('regression' or 'classification') depending on target variable
+        :optuna_trial (*optuna.trial.Trial*): trial of optuna for optimization
+        :encoding (*str*): the encoding to use (standard encoding or user-defined)
+        :all_hyperparams (*dict*): dictionary with all hyperparameters with related info that can be tuned
                                 (structure see define_hyperparams_to_tune())
-        model: model object
+        :model: model object
     """
 
     # Class attributes #
@@ -43,9 +45,11 @@ class BaseModel(abc.ABC):
         """
         Constructor of the base model class
         # Please add super().__init__(PARAMS) to the constructor in case you override it in a child class #
+
         :param task: ML task (regression or classification) depending on target variable
         :param optuna_trial: Trial of optuna for optimization
         :param encoding: the encoding to use (standard encoding or user-defined)
+
         """
         self.task = task
         self.encoding = self.standard_encoding if encoding is None else encoding
@@ -66,10 +70,14 @@ class BaseModel(abc.ABC):
         Hyperparams to tune have to be specified in all_hyperparams and suggested via suggest_hyperparam_to_optuna().
         The hyperparameters have to be included directly in the model definiton to be optimized.
             e.g. if you want to optimize the number of layers, do something like
+
+            .. code-block:: python
+
                 n_layers = self.suggest_hyperparam_to_optuna('n_layers') # same name in define_hyperparams_to_tune()
                 for layer in n_layers:
                     do something
-            Then the number of layers will be optimized by optuna.
+
+        Then the number of layers will be optimized by optuna.
         """
 
     @abc.abstractmethod
@@ -77,6 +85,9 @@ class BaseModel(abc.ABC):
         """
         Method that defines the hyperparameters that should be tuned during optimization and their ranges.
         Required format is a dictionary with:
+
+        .. code-block:: python
+
             {
                 'name_hyperparam_1':
                     {
@@ -104,6 +115,7 @@ class BaseModel(abc.ABC):
                     ...
                     }
             }
+
         If you want to use a similar hyperparameter multiple times (e.g. Dropout after several layers),
         you only need to specify the hyperparameter once. Individual parameters for every suggestion will be created.
         """
@@ -112,6 +124,7 @@ class BaseModel(abc.ABC):
     def retrain(self, X_retrain: np.array, y_retrain: np.array):
         """
         Method that runs the retraining of the model
+
         :param X_retrain: feature matrix for retraining
         :param y_retrain: target vector for retraining
         """
@@ -120,7 +133,9 @@ class BaseModel(abc.ABC):
     def predict(self, X_in: np.array) -> np.array:
         """
         Method that predicts target values based on the input X_in
+
         :param X_in: feature matrix as input
+
         :return: numpy array with the predicted values
         """
 
@@ -128,10 +143,12 @@ class BaseModel(abc.ABC):
     def train_val_loop(self, X_train: np.array, y_train: np.array, X_val: np.array, y_val: np.array) -> np.array:
         """
         Method that runs the whole training and validation loop
+
         :param X_train: feature matrix for the training
         :param y_train: target vector for training
         :param X_val: feature matrix for validation
         :param y_val: target vector for validation
+
         :return: predictions on validation set
         """
 
@@ -140,7 +157,9 @@ class BaseModel(abc.ABC):
         """
         Suggest a hyperparameter of hyperparam_dict to the optuna trial to optimize it.
         If you want to add a parameter to your model / in your pipeline to be optimized, you need to call this method
+
         :param hyperparam_name: name of the hyperparameter to be tuned (see define_hyperparams_to_tune())
+
         :return: suggested value
         """
         # Get specification of the hyperparameter
@@ -200,6 +219,7 @@ class BaseModel(abc.ABC):
         """
         Some models accept a dictionary with the model parameters.
         This method suggests all hyperparameters in all_hyperparams and gives back a dictionary containing them.
+
         :return: dictionary with suggested hyperparameters
         """
         for param_name in self.all_hyperparams.keys():
@@ -209,6 +229,7 @@ class BaseModel(abc.ABC):
     def save_model(self, path: str, filename: str):
         """
         Method to persist the whole model object on a hard drive (can be loaded with joblib.load(filepath))
+
         :param path: path where the model will be saved
         :param filename: filename of the model
         """

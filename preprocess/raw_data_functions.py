@@ -111,10 +111,12 @@ def check_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix_
     """
     Check if index file is available and if the datasets 'y', 'matched_sample_ids', 'X_index', 'y_index' and
     'ma_frequency' exist.
+
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
     :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
     :param phenotype: name of the phenotype to predict
+
     :return: bool reflecting check result
     """
     index_file = data_dir + '/' + genotype_matrix_name.split('.')[0] + '-' + phenotype_matrix_name.split('.')[0] \

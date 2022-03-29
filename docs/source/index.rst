@@ -4,6 +4,7 @@ We are doing crazy stuff here!
 
 .. toctree::
    :maxdepth: 4
+
    install
    quickstart
    modules
