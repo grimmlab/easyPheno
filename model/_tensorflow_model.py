@@ -9,23 +9,26 @@ from model import _base_model
 
 class TensorflowModel(_base_model.BaseModel, abc.ABC):
     """
-    Parent class based on BaseModel for all TensorFlow models to share functionalities.
-    See BaseModel for more information.
+    Parent class based on :obj:`~model._base_model.BaseModel` for all TensorFlow models to share functionalities.
+    See :obj:`~model._base_model.BaseModel` for more information.
 
     ## Attributes ##
         # Inherited attributes #
-        See BaseModel.
+
+        See :obj:`~model._base_model.BaseModel`.
+
         # Additional attributes #
-        n_outputs: int : Number of outputs of the model
-        n_features: int : Number of input features to the model
-        width_onehot: int : Number of input channels in case of onehot encoding
-        batch_size: int : Batch size for batch-based training
-        n_epochs: int : Number of epochs for optimization
-        optimizer: torch.optim.optimizer.Optimizer : optimizer for model fitting
-        loss_fn : loss function for model fitting
-        early_stopping_patience: int : epochs without improvement before early stopping
-        early_stopping_point: int : epoch at which early stopping occured
-        early_stopping_callback: tf.keras.callbacks.EarlyStopping : callback for early stopping
+
+        :n_outputs (*int*):  Number of outputs of the model
+        :n_features (*int*): Number of input features to the model
+        :width_onehot (*int*): Number of input channels in case of onehot encoding
+        :batch_size (*int*): Batch size for batch-based training
+        :n_epochs (*int*): Number of epochs for optimization
+        :optimizer (*tf.keras.optimizers.Optimizer*): optimizer for model fitting
+        :loss_fn: loss function for model fitting
+        :early_stopping_patience (*int*): epochs without improvement before early stopping
+        :early_stopping_point (*int*): epoch at which early stopping occured
+        :early_stopping_callback (*tf.keras.callbacks.EarlyStopping*): callback for early stopping
     """
 
     def __init__(self, task: str, optuna_trial: optuna.trial.Trial, encoding: str = None, n_outputs: int = 1,
@@ -63,7 +66,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
     def train_val_loop(self, X_train: np.array, y_train: np.array, X_val: np.array, y_val: np.array) -> np.array:
         """
         Implementation of a train and validation loop for  TensorFlow models.
-        See BaseModel for more information
+        See :obj:`~model._base_model.BaseModel` for more information
         """
         history = self.model.fit(x=X_train, y=y_train, batch_size=self.batch_size, epochs=self.n_epochs,
                                  validation_data=(X_val, y_val), validation_freq=1, verbose=2,
@@ -77,7 +80,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
     def retrain(self, X_retrain: np.array, y_retrain: np.array):
         """
         Implementation of the retraining for PyTorch models.
-        See BaseModel for more information
+        See :obj:`~model._base_model.BaseModel` for more information
         """
         n_epochs_to_retrain = self.n_epochs if self.early_stopping_point is None else self.early_stopping_point
         self.model.fit(x=X_retrain, y=y_retrain, batch_size=self.batch_size, epochs=n_epochs_to_retrain, verbose=2)
@@ -85,7 +88,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
     def predict(self, X_in: np.array) -> np.array:
         """
         Implementation of a prediction based on input features for PyTorch models.
-        See BaseModel for more information
+        See :obj:`~model._base_model.BaseModel` for more information
         """
         dataloader = self.get_dataloader(X=X_in, shuffle=False)
         predictions = None
@@ -122,7 +125,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
         """
         Add hyperparameters that are common for PyTorch models.
         Do not need to be included in optimization for every child model.
-        Also see BaseModel for more information
+        Also See :obj:`~model._base_model.BaseModel` for more information
         """
         return {
             'dropout': {
@@ -159,6 +162,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
     def save_model(self, path: str, filename: str):
         """
         Method to persist the whole model object on a hard drive (can be loaded with joblib.load(filepath))
+
         :param path: path where the model will be saved
         :param filename: filename of the model
         """

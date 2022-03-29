@@ -5,14 +5,14 @@ from model import _sklearn_model
 
 class XgBoost(_sklearn_model.SklearnModel):
     """
-    See BaseModel for more information on the attributes.
+    See :obj:`~model._base_model.BaseModel` for more information on the attributes.
     """
     standard_encoding = '012'
     possible_encodings = ['012']
 
     def define_model(self) -> xgboost.XGBModel:
         """
-        See BaseModel for more information.
+        See :obj:`~model._base_model.BaseModel` for more information.
         """
         # all hyperparameters defined for XGBoost are suggested for optimization
         params = self.suggest_all_hyperparams_to_optuna()
@@ -29,7 +29,7 @@ class XgBoost(_sklearn_model.SklearnModel):
 
     def define_hyperparams_to_tune(self) -> dict:
         """
-        See BaseModel for more information on the format.
+        See :obj:`~model._base_model.BaseModel` for more information on the format.
         """
         return {
             'n_estimators': {

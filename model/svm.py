@@ -5,14 +5,14 @@ from model import _sklearn_model
 
 class SupportVectorMachine(_sklearn_model.SklearnModel):
     """
-    See BaseModel for more information on the attributes.
+    See :obj:`~model._base_model.BaseModel` for more information on the attributes.
     """
     standard_encoding = '012'
     possible_encodings = ['012']
 
     def define_model(self):
         """
-        See BaseModel for more information.
+        See :obj:`~model._base_model.BaseModel` for more information.
         """
         kernel = self.suggest_hyperparam_to_optuna('kernel')
         reg_c = self.suggest_hyperparam_to_optuna('C')
@@ -32,7 +32,7 @@ class SupportVectorMachine(_sklearn_model.SklearnModel):
 
     def define_hyperparams_to_tune(self) -> dict:
         """
-        See BaseModel for more information on the format.
+        See :obj:`~model._base_model.BaseModel` for more information on the format.
         """
         return {
             'kernel': {

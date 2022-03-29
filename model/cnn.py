@@ -4,13 +4,17 @@ from model import _torch_model
 
 
 class Cnn(_torch_model.TorchModel):
+    """
+    Implementation of a class for a Convolutional Neural Network (CNN).
+
+    See :obj:`~model._base_model.BaseModel` and :obj:`~model._torch_model.TorchModel` for more information.
+    """
     standard_encoding = 'onehot'
     possible_encodings = ['onehot']
 
     def define_model(self) -> torch.nn.Sequential:
         """
         Definition of a CNN network.
-        See BaseModel and TorchModel for more information.
 
         Architecture:
             - N_LAYERS of (Conv1d + BatchNorm + Dropout + MaxPool1d)
@@ -53,8 +57,8 @@ class Cnn(_torch_model.TorchModel):
 
     def define_hyperparams_to_tune(self) -> dict:
         """
-        See BaseModel for more information on the format.
-        See TorchModel for more information on hyperparameters common for all torch models.
+        See :obj:`~model._base_model.BaseModel` for more information on the format.
+        See :obj:`~model._torch_model.TorchModel` for more information on hyperparameters common for all torch models.
         """
         return {
             'n_layers': {

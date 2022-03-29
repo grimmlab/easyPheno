@@ -10,23 +10,26 @@ from model import _base_model
 
 class TorchModel(_base_model.BaseModel, abc.ABC):
     """
-    Parent class based on BaseModel for all PyTorch models to share functionalities.
-    See BaseModel for more information.
+    Parent class based on :obj:`~model._base_model.BaseModel` for all PyTorch models to share functionalities.
+    See :obj:`~model._base_model.BaseModel` for more information.
 
     ## Attributes ##
         # Inherited attributes #
-        See BaseModel.
+
+        See :obj:`~model._base_model.BaseModel`.
+
         # Additional attributes #
-        n_outputs: int : Number of outputs of the model
-        n_features: int : Number of input features to the model
-        width_onehot: int : Number of input channels in case of onehot encoding
-        batch_size: int : Batch size for batch-based training
-        n_epochs: int : Number of epochs for optimization
-        optimizer: torch.optim.optimizer.Optimizer : optimizer for model fitting
-        loss_fn : loss function for model fitting
-        early_stopping_patience: int : epochs without improvement before early stopping
-        early_stopping_point: int : epoch at which early stopping occured
-        device: torch.device : device to use
+
+        :n_outputs (*int*):  Number of outputs of the model
+        :n_features (*int*): Number of input features to the model
+        :width_onehot (*int*): Number of input channels in case of onehot encoding
+        :batch_size (*int*): Batch size for batch-based training
+        :n_epochs (*int*): Number of epochs for optimization
+        :optimizer (*torch.optim.optimizer.Optimizer*): optimizer for model fitting
+        :loss_fn: loss function for model fitting
+        :early_stopping_patience (*int*): epochs without improvement before early stopping
+        :early_stopping_point (*int*): epoch at which early stopping occured
+        :device (*torch.device*): device to use, e.g. GPU
     """
 
     def __init__(self, task: str, optuna_trial: optuna.trial.Trial, encoding: str = None, n_outputs: int = 1,
@@ -61,7 +64,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
     def train_val_loop(self, X_train: np.array, y_train: np.array, X_val: np.array, y_val: np.array) -> np.array:
         """
         Implementation of a train and validation loop for  PyTorch models.
-        See BaseModel for more information
+        See :obj:`~model._base_model.BaseModel` for more information
         """
         train_loader = self.get_dataloader(X=X_train, y=y_train)
         val_loader = self.get_dataloader(X=X_val, y=y_val)
@@ -122,7 +125,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
     def retrain(self, X_retrain: np.array, y_retrain: np.array):
         """
         Implementation of the retraining for PyTorch models.
-        See BaseModel for more information
+        See :obj:`~model._base_model.BaseModel` for more information
         """
         retrain_loader = self.get_dataloader(X=X_retrain, y=y_retrain)
         n_epochs_to_retrain = self.n_epochs if self.early_stopping_point is None else self.early_stopping_point
@@ -134,7 +137,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
     def predict(self, X_in: np.array) -> np.array:
         """
         Implementation of a prediction based on input features for PyTorch models.
-        See BaseModel for more information
+        See :obj:`~model._base_model.BaseModel` for more information
         """
         dataloader = self.get_dataloader(X=X_in, shuffle=False)
         self.model.eval()
@@ -190,7 +193,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
         """
         Add hyperparameters that are common for PyTorch models.
         Do not need to be included in optimization for every child model.
-        Also see BaseModel for more information
+        Also See :obj:`~model._base_model.BaseModel` for more information
         """
         return {
             'dropout': {

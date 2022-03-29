@@ -45,7 +45,6 @@ epub_show_urls = 'footnote'
 exclude_patterns = ['*/docs*']
 
 autoapi_type = 'python'
-autoapi_dirs = ['../../evaluation', '../../model', '../../optimization', '../../preprocess', '../../utils', '../../']
-autoapi_template_dir = '_autoapi_templates'
+autoapi_dirs = ['../../']
 autodoc_typehints = 'description'
 autoapi_ignore = ['*conf*']

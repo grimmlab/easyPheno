@@ -7,7 +7,8 @@ import numpy as np
 class BaseModel(abc.ABC):
     """
     BaseModel parent class for all models that can be used within the framework.
-    Every model must be based on BaseModel directly or BaseModel's child classes, e.g. SklearnModel or TorchModel
+    Every model must be based on :obj:`~model._base_model.BaseModel` directly or BaseModel's child classes,
+    e.g. :obj:`~model._sklearn_model.SklearnModel` or :obj:`~model._torch_model.TorchModel`
 
     ## Attributes ##
         # Class attributes #
@@ -30,14 +31,14 @@ class BaseModel(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def standard_encoding(cls):
-        """standard_encoding: the standard encoding for this model"""
+        """the standard encoding for this model"""
         raise NotImplementedError
 
     @property
     @classmethod
     @abc.abstractmethod
     def possible_encodings(cls):
-        """possible_encodings: a list of all encodings that are possible according to the model definition"""
+        """a list of all encodings that are possible according to the model definition"""
         raise NotImplementedError
 
     # Constructor super class #
@@ -69,7 +70,7 @@ class BaseModel(abc.ABC):
         Method that defines the model that needs to be optimized.
         Hyperparams to tune have to be specified in all_hyperparams and suggested via suggest_hyperparam_to_optuna().
         The hyperparameters have to be included directly in the model definiton to be optimized.
-            e.g. if you want to optimize the number of layers, do something like
+        e.g. if you want to optimize the number of layers, do something like
 
             .. code-block:: python
 
@@ -228,7 +229,8 @@ class BaseModel(abc.ABC):
 
     def save_model(self, path: str, filename: str):
         """
-        Method to persist the whole model object on a hard drive (can be loaded with joblib.load(filepath))
+        Method to persist the whole model object on a hard drive
+        (can be loaded with :obj:`~model._model_functions.load_model`)
 
         :param path: path where the model will be saved
         :param filename: filename of the model

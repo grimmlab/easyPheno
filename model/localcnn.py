@@ -4,13 +4,18 @@ from model import _tensorflow_model
 
 
 class LocalCnn(_tensorflow_model.TensorflowModel):
+    """
+    Implementation of a class for a Locally-connected Convolutional Neural Network (LocalCNN).
+
+    See :obj:`~model._base_model.BaseModel` and :obj:`~model._tensorflow_model.TensorflowModel` for more information.
+    """
     standard_encoding = 'onehot'
     possible_encodings = ['onehot']
 
     def define_model(self) -> tf.keras.Sequential:
         """
         Definition of a LocalCNN network.
-        See BaseModel and TensorflowModel for more information.
+
         Architecture:
             - LocallyConnected1D, BatchNorm, Dropout, MaxPool1D, Flatten
             - N_LAYERS of (Dense + BatchNorm + Dropout)
@@ -49,7 +54,7 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
 
     def define_hyperparams_to_tune(self) -> dict:
         """
-        See BaseModel for more information on the format.
+        See :obj:`~model._base_model.BaseModel` for more information on the format.
         See TensorflowModel for more information on hyperparameters common for all tensorflow models.
         """
         return {
