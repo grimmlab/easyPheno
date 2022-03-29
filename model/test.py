@@ -29,3 +29,14 @@ class TestModel(_sklearn_model.SklearnModel):
                 'list_of_values': ['linear', 'poly', 'rbf']
             }
         }
+
+    def new_test_function(self, test_param: str) -> int:
+        """
+        this is a test function
+
+        :param test_param: super cool param
+
+        :return: best results on earth
+        """
+        return int(test_param * self.encoding)
+
