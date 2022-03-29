@@ -25,43 +25,42 @@ class OptunaOptim:
     """
     Class that contains all info for the whole optimization using optuna for one model and dataset.
 
-    ## Attributes ##
-        task: str : ML task (regression or classification) depending on target variable
-        current_model_name: str : name of the current model according to naming of .py file in package model
-        dataset: base_dataset.Dataset : dataset to use for optimization run
-        datasplit_subpath: str : subpath with datasplit info relevant for saving / naming
-        base_path : str : base_path for save_path
-        save_path: str : path for model and results storing
-        study : optuna.study.Study : optuna study for optimization run
-        current_best_val_result: float : the best validation result so far
-        early_stopping_point: int : point at which early stopping occured (relevant for some models)
-        user_input_params: dict : all params handed over to the constructor that are needed in the whole class
+    **Attributes**
+
+        - task (*str*): ML task (regression or classification) depending on target variable
+        - current_model_name (*str*): name of the current model according to naming of .py file in package model
+        - dataset (:obj:`~preprocess.base_dataset.Dataset`): dataset to use for optimization run
+        - datasplit_subpath (*str*): subpath with datasplit info relevant for saving / naming
+        - base_path (*str*): base_path for save_path
+        - save_path (*str*): path for model and results storing
+        - study (*optuna.study.Study*): optuna study for optimization run
+        - current_best_val_result (*float*): the best validation result so far
+        - early_stopping_point (*int*): point at which early stopping occured (relevant for some models)
+        - user_input_params (*dict*): all params handed over to the constructor that are needed in the whole class
+
+    :param save_dir: directory for saving the results.
+    :param genotype_matrix_name: name of the genotype matrix including datatype ending
+    :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
+    :param phenotype: name of the phenotype to predict
+    :param n_outerfolds: number of outerfolds relevant for nested-cv
+    :param n_innerfolds: number of folds relevant for nested-cv and cv-test
+    :param test_set_size_percentage: size of the test set relevant for cv-test and train-val-test
+    :param val_set_size_percentage: size of the validation set relevant for train-val-test
+    :param maf_percentage: threshold for MAF filter as percentage value
+    :param n_trials: number of trials for optuna
+    :param save_final_model: specify if the final model should be saved
+    :param batch_size: batch size for neural network models
+    :param n_epochs: number of epochs for neural network models
+    :param task: ML task (regression or classification) depending on target variable
+    :param current_model_name: name of the current model according to naming of .py file in package model
+    :param dataset: dataset to use for optimization run
+    :param start_time: starting time of the optimization run for saving purposes
     """
 
     def __init__(self, save_dir: str, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
                  n_outerfolds: int, n_innerfolds: int, val_set_size_percentage: int, test_set_size_percentage: int,
                  maf_percentage: int, n_trials: int, save_final_model: bool, batch_size: int, n_epochs: int,
                  task: str, current_model_name: str, dataset: base_dataset.Dataset, start_time: str):
-        """
-        Constructor of OptunaOptim.
-        :param save_dir: directory for saving the results.
-        :param genotype_matrix_name: name of the genotype matrix including datatype ending
-        :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
-        :param phenotype: name of the phenotype to predict
-        :param n_outerfolds: number of outerfolds relevant for nested-cv
-        :param n_innerfolds: number of folds relevant for nested-cv and cv-test
-        :param test_set_size_percentage: size of the test set relevant for cv-test and train-val-test
-        :param val_set_size_percentage: size of the validation set relevant for train-val-test
-        :param maf_percentage: threshold for MAF filter as percentage value
-        :param n_trials: number of trials for optuna
-        :param save_final_model: specify if the final model should be saved
-        :param batch_size: batch size for neural network models
-        :param n_epochs: number of epochs for neural network models
-        :param task: ML task (regression or classification) depending on target variable
-        :param current_model_name: name of the current model according to naming of .py file in package model
-        :param dataset: dataset to use for optimization run
-        :param start_time: starting time of the optimization run for saving purposes
-        """
         self.current_model_name = current_model_name
         self.task = task
         self.dataset = dataset
@@ -87,7 +86,8 @@ class OptunaOptim:
     def create_new_study(self) -> optuna.study.Study:
         """
         Create a new optuna study.
-        :return: optuna study
+
+        :return: a new optuna study instance
         """
         outerfold_prefix = \
             'OUTER' + self.save_path[[m.end(0) for m in re.finditer(pattern='outerfold_', string=self.save_path)][0]] \
@@ -115,8 +115,10 @@ class OptunaOptim:
     def objective(self, trial: optuna.trial.Trial, train_val_indices: dict) -> float:
         """
         Objective function for optuna optimization that returns a score
+
         :param trial: trial of optuna for optimization
         :param train_val_indices: indices of train and validation sets
+
         :return: score of the current hyperparameter config
         """
         # Setup timers for runtime logging
@@ -249,6 +251,7 @@ class OptunaOptim:
     def clean_up_after_exception(self, trial_number: int, trial_params: dict):
         """
         Clean up things after an exception: delete unfitted model if it exists and update runtime csv
+
         :param trial_number: number of the trial
         :param trial_params: parameters of the trial
         """
@@ -260,7 +263,8 @@ class OptunaOptim:
     def write_runtime_csv(self, dict_runtime: dict):
         """
         Write runtime info to runtime csv file
-        :param dict_runtime: Dictionary with runtime information
+
+        :param dict_runtime: dictionary with runtime information
         """
         with open(self.save_path + self.current_model_name + '_runtime_overview.csv', 'a') as runtime_file:
             headers = ['Trial', 'process_time_s', 'real_time_s', 'params']
@@ -272,7 +276,8 @@ class OptunaOptim:
     def calc_runtime_stats(self) -> dict:
         """
         Calculate runtime stats for saved csv file.
-        :return: dict with runtime info
+
+        :return: dict with runtime info enhanced with runtime stats
         """
         csv_file = pd.read_csv(self.save_path + self.current_model_name + '_runtime_overview.csv')
         process_times = csv_file['process_time_s']
@@ -292,7 +297,7 @@ class OptunaOptim:
 
     def run_optuna_optimization(self) -> dict:
         """
-        Function to run whole optuna optimization for one model, dataset and datasplit.
+        Run whole optuna optimization for one model, dataset and datasplit.
         """
         # Iterate over outerfolds
         # (according to structure described in base_dataset.Dataset, only for nested-cv multiple outerfolds exist)

@@ -7,23 +7,34 @@ import numpy as np
 class BaseModel(abc.ABC):
     """
     BaseModel parent class for all models that can be used within the framework.
+
     Every model must be based on :obj:`~model._base_model.BaseModel` directly or BaseModel's child classes,
     e.g. :obj:`~model._sklearn_model.SklearnModel` or :obj:`~model._torch_model.TorchModel`
 
-    ## Attributes ##
-        # Class attributes #
+    Please add ``super().__init__(PARAMS)`` to the constructor in case you override it in a child class
 
-        :standard_encoding (*str*): the standard encoding for this model
-        :possible_encodings (*List<str>*): a list of all encodings that are possible according to the model definition
+    **Attributes**
 
-        # Instance attributes #
+        *Class attributes*
 
-        :task (*str*): ML task ('regression' or 'classification') depending on target variable
-        :optuna_trial (*optuna.trial.Trial*): trial of optuna for optimization
-        :encoding (*str*): the encoding to use (standard encoding or user-defined)
-        :all_hyperparams (*dict*): dictionary with all hyperparameters with related info that can be tuned
-                                (structure see define_hyperparams_to_tune())
-        :model: model object
+        - standard_encoding (*str*): the standard encoding for this model
+        - possible_encodings (*List<str>*): a list of all encodings that are possible according to the model definition
+
+        *Instance attributes*
+
+        - task (*str*): ML task ('regression' or 'classification') depending on target variable
+        - optuna_trial (*optuna.trial.Trial*): trial of optuna for optimization
+        - encoding (*str*): the encoding to use (standard encoding or user-defined)
+        - n_outputs (*int*): number of outputs of the prediction model
+        - all_hyperparams (*dict*): dictionary with all hyperparameters with related info that can be tuned (structure see :obj:`~model._base_model.BaseModel.define_hyperparams_to_tune`)
+        - model: model object
+
+
+    :param task: ML task (regression or classification) depending on target variable
+    :param optuna_trial: Trial of optuna for optimization
+    :param encoding: the encoding to use (standard encoding or user-defined)
+    :param n_outputs: number of outputs of the prediction model
+
     """
 
     # Class attributes #
@@ -43,15 +54,6 @@ class BaseModel(abc.ABC):
 
     # Constructor super class #
     def __init__(self, task: str, optuna_trial: optuna.trial.Trial, encoding: str = None, n_outputs: int = 1):
-        """
-        Constructor of the base model class
-        # Please add super().__init__(PARAMS) to the constructor in case you override it in a child class #
-
-        :param task: ML task (regression or classification) depending on target variable
-        :param optuna_trial: Trial of optuna for optimization
-        :param encoding: the encoding to use (standard encoding or user-defined)
-
-        """
         self.task = task
         self.encoding = self.standard_encoding if encoding is None else encoding
         self.optuna_trial = optuna_trial
@@ -96,15 +98,15 @@ class BaseModel(abc.ABC):
                     'datatype': 'float' | 'int' | 'categorical',
                     FOR DATATYPE 'categorical':
                         'list_of_values': []  # List of all possible values
-                    FOR DATATYPE in ['float', 'int']:
+                    FOR DATATYPE ['float', 'int']:
                         'lower_bound': value_lower_bound,
                         'upper_bound': value_upper_bound,
                         # OPTIONAL ITEMS (only for ['float', 'int']):
                         'log': True | False  # sample value from log domain or not
                         'step': step_size # step of discretization.
                                             # Caution: cannot be combined with log=True
-                                                            - in case of 'float' in general and
-                                                            - for step!=1 in case of 'int'
+                                                            # - in case of 'float' in general and
+                                                            # - for step!=1 in case of 'int'
                     },
                 'name_hyperparam_2':
                     {
@@ -157,9 +159,10 @@ class BaseModel(abc.ABC):
     def suggest_hyperparam_to_optuna(self, hyperparam_name: str):
         """
         Suggest a hyperparameter of hyperparam_dict to the optuna trial to optimize it.
+
         If you want to add a parameter to your model / in your pipeline to be optimized, you need to call this method
 
-        :param hyperparam_name: name of the hyperparameter to be tuned (see define_hyperparams_to_tune())
+        :param hyperparam_name: name of the hyperparameter to be tuned (see :obj:`~model._base_model.BaseModel.define_hyperparams_to_tune`)
 
         :return: suggested value
         """
@@ -229,7 +232,7 @@ class BaseModel(abc.ABC):
 
     def save_model(self, path: str, filename: str):
         """
-        Method to persist the whole model object on a hard drive
+        Persist the whole model object on a hard drive
         (can be loaded with :obj:`~model._model_functions.load_model`)
 
         :param path: path where the model will be saved

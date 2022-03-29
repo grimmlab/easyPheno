@@ -7,7 +7,7 @@ class Cnn(_torch_model.TorchModel):
     """
     Implementation of a class for a Convolutional Neural Network (CNN).
 
-    See :obj:`~model._base_model.BaseModel` and :obj:`~model._torch_model.TorchModel` for more information.
+    See :obj:`~model._base_model.BaseModel` and :obj:`~model._torch_model.TorchModel` for more information on the attributes.
     """
     standard_encoding = 'onehot'
     possible_encodings = ['onehot']
@@ -17,12 +17,14 @@ class Cnn(_torch_model.TorchModel):
         Definition of a CNN network.
 
         Architecture:
+
             - N_LAYERS of (Conv1d + BatchNorm + Dropout + MaxPool1d)
             - Flatten, Linear, BatchNorm, Dropout
             - Linear output layer
-            Kernel sizes for convolutional and max pooling layers may be fixed or optimized.
-            Same applies for strides, number of output channels of the first convolutional layer,
-            frequency of a doubling of the output channels and number of units in the first linear layer.
+
+        Kernel sizes for convolutional and max pooling layers may be fixed or optimized.
+        Same applies for strides, number of output channels of the first convolutional layer,
+        frequency of a doubling of the output channels and number of units in the first linear layer.
         """
         n_layers = self.suggest_hyperparam_to_optuna('n_layers')
         model = []
@@ -58,6 +60,7 @@ class Cnn(_torch_model.TorchModel):
     def define_hyperparams_to_tune(self) -> dict:
         """
         See :obj:`~model._base_model.BaseModel` for more information on the format.
+
         See :obj:`~model._torch_model.TorchModel` for more information on hyperparameters common for all torch models.
         """
         return {

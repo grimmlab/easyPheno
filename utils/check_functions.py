@@ -7,6 +7,7 @@ from utils import helper_functions
 def check_all_specified_arguments(arguments: dict):
     """
     Check all specified arguments for plausibility
+
     :param arguments: all arguments provided by the user
     """
     # Check existence of save_dir

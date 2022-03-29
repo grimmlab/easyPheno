@@ -8,6 +8,7 @@ from utils import helper_functions
 def print_config_info(arguments: dict, dataset: base_dataset.Dataset, task: str):
     """
     Print info of current configuration.
+
     :param arguments: arguments specified by the user
     :param dataset: dataset used for optimization
     :param task: task that was detected

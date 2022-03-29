@@ -8,8 +8,9 @@ class SklearnModel(_base_model.BaseModel, abc.ABC):
     Parent class based on :obj:`~model._base_model.BaseModel` for all models with a sklearn-like API to share
     functionalities. See :obj:`~model._base_model.BaseModel` for more information.
 
-    ## Attributes ##
-        # Inherited attributes #
+    **Attributes**
+
+        *Inherited attributes*
 
         See :obj:`~model._base_model.BaseModel`
     """

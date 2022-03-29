@@ -24,10 +24,11 @@ def get_list_of_implemented_models() -> list:
 def test_likely_categorical(vector_to_test: list, abs_unique_threshold: int = 20) -> bool:
     """
     Test whether a vector is most likely categorical.
-    Simple heuristics:
-        checking if the number of unique values exceeds a specified threshold
+    Simple heuristics: checking if the number of unique values exceeds a specified threshold
+
     :param vector_to_test: vector that is tested if it is most likely categorical
     :param abs_unique_threshold: threshold of unique values' ratio to declare vector categorical
+
     :return: True if the vector is most likely categorical, False otherwise
     """
     number_unique_values = np.unique(vector_to_test).shape[0]
@@ -37,6 +38,7 @@ def test_likely_categorical(vector_to_test: list, abs_unique_threshold: int = 20
 def get_mapping_name_to_class() -> dict:
     """
     Get a mapping from model name (naming in package model without .py) to class name.
+
     :return: dictionary with mapping model name to class name
     """
     try:
@@ -60,6 +62,7 @@ def get_mapping_name_to_class() -> dict:
 def set_all_seeds(seed: int = 42):
     """
     Set all seeds of libs with a specific function for reproducibility of results
+
     :param seed: seed to use
     """
     torch.manual_seed(seed)
@@ -74,12 +77,17 @@ def set_all_seeds(seed: int = 42):
 
 def get_subpath_for_datasplit(datasplit: str, datasplit_params: list) -> str:
     """
-    Construct the subpath according to the datasplit
+    Construct the subpath according to the datasplit.
+
+    Datasplit parameters:
+
+    - nested-cv: [n_outerfolds, n_innerfolds]
+    - cv-test: [n_innerfolds, test_set_size_percentage]
+    - train-val-test: [val_set_size_percentage, train_set_size_percentage]
+
     :param datasplit: datasplit to retrieve
     :param datasplit_params: parameters to use for the specific datasplit
-        - nested-cv: [n_outerfolds, n_innerfolds]
-        - cv-test: [n_innerfolds, test_set_size_percentage]
-        - train-val-test: [val_set_size_percentage, train_set_size_percentage]
+
     :return: string with the subpath
     """
     # construct subpath due to the specified datasplit
@@ -95,6 +103,7 @@ def get_subpath_for_datasplit(datasplit: str, datasplit_params: list) -> str:
 def save_model_overview_dict(model_overview: dict, save_path: str):
     """
     Structure and save results of a whole optimization run for multiple models in one csv file
+
     :param model_overview: dictionary with results overview
     :param save_path: filepath for saving the results overview file
     """
@@ -134,7 +143,9 @@ def save_model_overview_dict(model_overview: dict, save_path: str):
 def sort_models_by_encoding(models_list: list) -> list:
     """
     Sort models by the encoding that will be used
+
     :param models_list: unsorted list of models
+
     :return: list of models sorted by encoding
     """
     encodings = [get_mapping_name_to_class()[model_name].standard_encoding for model_name in models_list]

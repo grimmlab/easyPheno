@@ -34,14 +34,3 @@ def get_evaluation_report(y_pred: np.array, y_true: np.array, task: str, prefix:
             prefix + 'explained_variance': sklearn.metrics.explained_variance_score(y_true=y_true, y_pred=y_pred)
         }
     return eval_report_dict
-
-
-def test(test_param: int, test_param2: str) -> dict:
-    """
-    This is a test.
-
-    :param test_param: the best parameter on earth
-    :param test_param2: the best parmaeter ever
-
-    :return: best result we ever had
-    """

@@ -19,6 +19,7 @@ def run_pipeline(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phe
                  batch_size: int = 32, n_epochs: int = None):
     """
     Run the whole optimization pipeline
+
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix: name of the genotype matrix including datatype ending
     :param phenotype_matrix: name of the phenotype matrix including datatype ending

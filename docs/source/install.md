@@ -1,4 +1,6 @@
-### Requirements
+# Installation Guide
+
+## Requirements
 We recommend a workflow using [Docker](https://www.docker.com/) to ensure a stable working environment.
 Subsequently, we describe the setup and operation according to it. 
 If you want to follow our recommendation, **Docker>= 20.10.12** needs to be installed and running on your machine. We provide a Dockerfile as described below.
@@ -9,7 +11,7 @@ As an alternative, you can run all programs directly on your machine.
 The pipeline was developed and tested with Python 3.8 and Ubuntu 20.04.
 All used Python packages and versions are specified in `Docker/requirements.txt`.
 
-### Setup and Operation
+## Setup and Operation
 1. Open a Terminal and navigate to the directory where you want to set up the project
 2. Clone this repository
     ```bash

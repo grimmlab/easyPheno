@@ -13,39 +13,36 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
     Parent class based on :obj:`~model._base_model.BaseModel` for all PyTorch models to share functionalities.
     See :obj:`~model._base_model.BaseModel` for more information.
 
-    ## Attributes ##
-        # Inherited attributes #
+    *Attributes*
+
+        *Inherited attributes*
 
         See :obj:`~model._base_model.BaseModel`.
 
-        # Additional attributes #
+        *Additional attributes*
 
-        :n_outputs (*int*):  Number of outputs of the model
-        :n_features (*int*): Number of input features to the model
-        :width_onehot (*int*): Number of input channels in case of onehot encoding
-        :batch_size (*int*): Batch size for batch-based training
-        :n_epochs (*int*): Number of epochs for optimization
-        :optimizer (*torch.optim.optimizer.Optimizer*): optimizer for model fitting
-        :loss_fn: loss function for model fitting
-        :early_stopping_patience (*int*): epochs without improvement before early stopping
-        :early_stopping_point (*int*): epoch at which early stopping occured
-        :device (*torch.device*): device to use, e.g. GPU
+        - n_features (*int*): Number of input features to the model
+        - width_onehot (*int*): Number of input channels in case of onehot encoding
+        - batch_size (*int*): Batch size for batch-based training
+        - n_epochs (*int*): Number of epochs for optimization
+        - optimizer (*torch.optim.optimizer.Optimizer*): optimizer for model fitting
+        - loss_fn: loss function for model fitting
+        - early_stopping_patience (*int*): epochs without improvement before early stopping
+        - early_stopping_point (*int*): epoch at which early stopping occured
+        - device (*torch.device*): device to use, e.g. GPU
+
+    :param task: ML task (regression or classification) depending on target variable
+    :param optuna_trial: optuna.trial.Trial : trial of optuna for optimization
+    :param encoding: the encoding to use (standard encoding or user-defined)
+    :param n_outputs: Number of outputs of the model
+    :param n_features: Number of input features to the model
+    :param width_onehot: Number of input channels in case of onehot encoding
+    :param batch_size: Batch size for batch-based training
+    :param n_epochs: Number of epochs for optimization
     """
 
     def __init__(self, task: str, optuna_trial: optuna.trial.Trial, encoding: str = None, n_outputs: int = 1,
                  n_features: int = None, width_onehot: int = None, batch_size: int = None, n_epochs: int = None):
-        """
-        TorchModel specific constructor
-
-        :param task: ML task (regression or classification) depending on target variable
-        :param optuna_trial: optuna.trial.Trial : trial of optuna for optimization
-        :param encoding: the encoding to use (standard encoding or user-defined)
-        :param n_outputs: Number of outputs of the model
-        :param n_features: Number of input features to the model
-        :param width_onehot: Number of input channels in case of onehot encoding
-        :param batch_size: Batch size for batch-based training
-        :param n_epochs: Number of epochs for optimization
-        """
         self.all_hyperparams = self.common_hyperparams()  # add hyperparameters commonly optimized for all torch models
         self.n_features = n_features
         self.width_onehot = width_onehot  # relevant for models using onehot encoding e.g. CNNs

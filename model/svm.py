@@ -5,6 +5,8 @@ from model import _sklearn_model
 
 class SupportVectorMachine(_sklearn_model.SklearnModel):
     """
+    Implementation of a class for Support Vector Machine respective Regression.
+
     See :obj:`~model._base_model.BaseModel` for more information on the attributes.
     """
     standard_encoding = '012'
@@ -12,6 +14,8 @@ class SupportVectorMachine(_sklearn_model.SklearnModel):
 
     def define_model(self):
         """
+        Definition of the actual prediction model.
+
         See :obj:`~model._base_model.BaseModel` for more information.
         """
         kernel = self.suggest_hyperparam_to_optuna('kernel')

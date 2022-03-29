@@ -7,4 +7,3 @@ We are doing crazy stuff here!
 
    install
    quickstart
-   modules

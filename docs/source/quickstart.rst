@@ -1,1 +1,4 @@
-lorem ipsum
+Super cool quickstart!
+=====================================
+
+easy!

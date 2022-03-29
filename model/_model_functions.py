@@ -8,7 +8,7 @@ from model import _base_model, _tensorflow_model
 def load_retrain_model(path: str, filename: str, X_retrain: np.array, y_retrain: np.array,
                        early_stopping_point: int = None) -> _base_model.BaseModel:
     """
-    Method to load and retrain persisted model
+    Load and retrain persisted model
 
     :param path: path where the model is saved
     :param filename: filename of the model
@@ -27,7 +27,7 @@ def load_retrain_model(path: str, filename: str, X_retrain: np.array, y_retrain:
 
 def load_model(path: str, filename: str) -> _base_model.BaseModel:
     """
-    Method to load persisted model
+    Load persisted model
 
     :param path: path where the model is saved
     :param filename: filename of the model

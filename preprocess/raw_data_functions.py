@@ -16,11 +16,14 @@ def prepare_data_files(data_dir: str, genotype_matrix_name: str, phenotype_matri
     Prepare all data files for a common format: genotype matrix, phenotype matrix and index file.
 
     First check if genotype file is .h5 file (standard format of this framework):
-        YES:    First check if all required information is present in the file, raise Exception if not.
-                Then check if index file exists:
-                    NO: Load genotype and create all required index files
-                    YES: Append all required data splits and maf-filters to index file
-        NO:     Load genotype and create all required files
+
+    - YES: First check if all required information is present in the file, raise Exception if not. Then check if index file exists:
+
+        - NO: Load genotype and create all required index files
+        - YES: Append all required data splits and maf-filters to index file
+
+    - NO: Load genotype and create all required files
+
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
     :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
@@ -84,13 +87,15 @@ def prepare_data_files(data_dir: str, genotype_matrix_name: str, phenotype_matri
 
 def check_genotype_h5_file(data_dir: str, genotype_matrix_name: str, encodings: list):
     """
-    Check .h5 genotype file.
-    Should contain:
-        sample_ids: vector with sample names of genotype matrix,
-        snp_ids: vector with SNP identifiers of genotype matrix,
-        X_{enc}: (samples x SNPs)-genotype matrix in enc encoding, where enc might refer to:
-                    '012': additive (number of minor alleles)
-                    'raw': raw (alleles)
+    Check .h5 genotype file. Should contain:
+
+    - sample_ids: vector with sample names of genotype matrix,
+    - snp_ids: vector with SNP identifiers of genotype matrix,
+    - X_{enc}: (samples x SNPs)-genotype matrix in enc encoding, where enc might refer to:
+
+        - '012': additive (number of minor alleles)
+        - 'raw': raw (alleles)
+
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the phenotype matrix including datatype ending
     :param encodings: list of needed encodings
@@ -138,9 +143,11 @@ def save_all_data_files(data_dir: str, genotype_matrix_name: str, phenotype_matr
                         test_set_size_percentage: int, val_set_size_percentage: int):
     """
     Prepare and save all required data files:
-        - genotype matrix in unified format as .h5 file with,
-        - phenotype matrix in unified format as .csv file,
-        - file containing maf filter and data split indices as .h5
+
+    - genotype matrix in unified format as .h5 file with,
+    - phenotype matrix in unified format as .csv file,
+    - file containing maf filter and data split indices as .h5
+
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
     :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
@@ -176,21 +183,31 @@ def check_transform_format_genotype_matrix(data_dir: str, genotype_matrix_name: 
         -> (np.array, np.array):
     """
     Check the format of the specified genotype matrix.
+
     Unified genotype matrix will be saved in subdirectory data and named NAME_OF_GENOTYPE_MATRIX.h5
+
     Unified format of the .h5 file of the genotype matrix required for the further processes:
-    mandatory:  sample_ids: vector with sample names of genotype matrix,
-                SNP_ids: vector with SNP identifiers of genotype matrix,
-                X_{enc}: (samples x SNPs)-genotype matrix in enc encoding, where enc might refer to:
-                    '012': additive (number of minor alleles)
-                    'raw': raw  (alleles)
-    optional:   genotype in additional encodings
+
+    - mandatory:
+
+        - sample_ids: vector with sample names of genotype matrix,
+        - SNP_ids: vector with SNP identifiers of genotype matrix,
+        - X_{enc}: (samples x SNPs)-genotype matrix in enc encoding, where enc might refer to:
+
+            - '012': additive (number of minor alleles)
+            - 'raw': raw  (alleles)
+
+    - optional: genotype in additional encodings
+
     Accepts .h5, .hdf5, .h5py, .csv, PLINK binary and PLINK files. .h5, .hdf5, .h5py files must satisfy the unified
     format. If the genotype matrix contains constant SNPs, those will be removed and a new file will be saved.
     Will open .csv, PLINK and binary PLINK files and generate required .h5 format.
+
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
     :param models: models to consider
     :param user_encoding: encoding specified by the user
+
     :return: genotype matrix (raw encoded if present, 012 encoded otherwise) and sample ids
     """
     suffix = genotype_matrix_name.split('.')[-1]
@@ -231,9 +248,11 @@ def check_genotype_csv_file(data_dir: str, genotype_matrix_name: str, encodings:
     The values should be the genotype matrix either in additive encoding or in raw encoding.
     If the genotype is in raw encoding, additive encoding will be calculated.
     If genotype is in additive encoding, only this encoding will be returned
+
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
     :param encodings: list of needed encodings
+
     :return: sample ids, SNP ids and genotype in additive / raw encoding (if available)
     """
     gt = pd.read_csv(data_dir + '/' + genotype_matrix_name, index_col=0)
@@ -253,8 +272,10 @@ def check_genotype_binary_plink_file(data_dir: str, genotype_matrix_name: str) -
     """
     Load binary PLINK file, .bim, .fam, .bed files with same prefix need to be in same folder.
     Compute additive and raw encoding of genotype
+
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
+
     :return: sample ids, SNP ids and genotype in raw encoding
     """
     gt_file = data_dir + '/' + genotype_matrix_name.split(".")[0]
@@ -274,8 +295,10 @@ def check_genotype_plink_file(data_dir: str, genotype_matrix_name: str) -> (np.a
     """
     Load PLINK files, .map and .ped file with same prefix need to be in same folder.
     Accepts GENOTYPENAME.ped and GENOTYPENAME.map as input
+
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
+
     :return: sample ids, SNP ids and genotype in raw encoding
     """
     gt_file = data_dir + '/' + genotype_matrix_name.split(".")[0]
@@ -308,10 +331,13 @@ def create_genotype_h5_file(data_dir: str, genotype_matrix_name: str,
                             sample_ids: np.array, snp_ids: np.array, X: np.array):
     """
     Save genotype matrix in unified .h5 file.
+
     Structure:
-                sample_ids
-                snp_ids
-                X_raw (or X_012 if X_raw not available)
+
+    - sample_ids
+    - snp_ids
+    - X_raw (or X_012 if X_raw not available)
+
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
     :param sample_ids: array containing sample ids of genotype data
@@ -337,9 +363,11 @@ def check_and_load_phenotype_matrix(data_dir: str, phenotype_matrix_name: str, p
     Check and load the specified phenotype matrix. Only accept .csv, .pheno, .txt files.
     Sample ids need to be in first column, remaining columns should contain phenotypic values
     with phenotype name as column name
+
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
     :param phenotype: name of the phenotype to predict
+
     :return: DataFrame with sample_ids as index and phenotype values as single column without NAN values
     """
     suffix = phenotype_matrix_name.split('.')[-1]
@@ -361,9 +389,11 @@ def check_and_load_phenotype_matrix(data_dir: str, phenotype_matrix_name: str, p
 def genotype_phenotype_matching(X: np.array, X_ids: np.array, y: pd.DataFrame) -> tuple:
     """
     Match the handed over genotype and phenotype matrix for the phenotype specified by the user
+
     :param X: genotype matrix in additive encoding
     :param X_ids: sample ids of genotype matrix
     :param y: pd.DataFrame containing sample ids of phenotype as index and phenotype values as single column
+
     :return: matched genotype matrix, matched sample ids, index arrays for genotype and phenotype to redo matching
     """
     y_ids = np.asarray(y.index, dtype=X_ids.dtype).flatten()
@@ -379,8 +409,10 @@ def genotype_phenotype_matching(X: np.array, X_ids: np.array, y: pd.DataFrame) -
 def get_matched_data(data: np.array, index: np.array) -> np.array:
     """
     Get elements of data specified in index array
+
     :param data: matrix or array
     :param index: index array
+
     :return: data at selected indices
     """
     if data.ndim == 2:
@@ -394,6 +426,7 @@ def append_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix
                       val_set_size_percentage: int, maf_percentage: int):
     """
     Check index file, described in create_index_file(), and append datasets if necessary
+
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
     :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
@@ -479,64 +512,70 @@ def create_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix
     Create the .h5 index file containing the maf filters and data splits for the combination of genotype matrix,
     phenotype matrix and phenotype.
     It will be created using standard values additionally to user inputs for the maf filters and data splits.
+
     Unified format of .h5 file containing the maf filters and data splits:
-        'matched_data': {
-                'y': matched phenotypic values,
-                'matched_sample_ids': sample ids of matched genotype/phenotype,
-                'X_index': indices of genotype matrix to redo matching,
-                'y_index': indices of phenotype vector to redo matching,
-                'ma_frequency': minor allele frequency of each SNP in genotype file to create new MAF filters
-                }
-        'maf_filter': {
-                'maf_{maf_percentage}': indices of SNPs to delete (with MAF < maf_percentage),
-                ...
-                }
-        'datasplits': {
-                'nested_cv': {
-                        '#outerfolds-#innerfolds': {
-                                'outerfold_0': {
-                                    'innerfold_0': {'train': indices_train, 'val': indices_val},
+
+    .. code-block:: python
+
+            'matched_data': {
+                    'y': matched phenotypic values,
+                    'matched_sample_ids': sample ids of matched genotype/phenotype,
+                    'X_index': indices of genotype matrix to redo matching,
+                    'y_index': indices of phenotype vector to redo matching,
+                    'ma_frequency': minor allele frequency of each SNP of genotype file to create new MAF filters
+                    }
+            'maf_filter': {
+                    'maf_{maf_percentage}': indices of SNPs to delete  # (with MAF < maf_percentage),
+                    ...
+                    }
+            'datasplits': {
+                    'nested_cv': {
+                            '#outerfolds-#innerfolds': {
+                                    'outerfold_0': {
+                                        'innerfold_0': {'train': indices_train, 'val': indices_val},
+                                        ...
+                                        'innerfold_n': {'train': indices_train, 'val': indices_val},
+                                        'test': test_indices
+                                        },
                                     ...
-                                    'innerfold_n': {'train': indices_train, 'val': indices_val},
-                                    'test': test_indices
+                                    'outerfold_m': {
+                                        'innerfold_0': {'train': indices_train, 'val': indices_val},
+                                        ...
+                                        'innerfold_n': {'train': indices_train, 'val': indices_val},
+                                        'test': test_indices
+                                        }
                                     },
-                                ...
-                                'outerfold_m': {
-                                    'innerfold_0': {'train': indices_train, 'val': indices_val},
-                                    ...
-                                    'innerfold_n': {'train': indices_train, 'val': indices_val},
-                                    'test': test_indices
-                                    }
-                                },
-                        ...
-                        }
-                'cv-test': {
-                        '#folds-test_percentage': {
-                                'outerfold_0': {
-                                    'innerfold_0': {'train': indices_train, 'val': indices_val},
-                                    ...
-                                    'innerfold_n': {'train': indices_train, 'val': indices_val},
-                                    'test': test_indices
-                                    }
-                                },
-                        ...
-                        }
-                'train-val-test': {
-                        'train_percentage-val_percentage-test_percentage': {
-                                'outerfold_0': {
-                                    'innerfold_0': {'train': indices_train, 'val': indices_val},
-                                    'test': test_indices
-                                    }
-                                },
-                        ...
-                        }
-                }
+                            ...
+                            }
+                    'cv-test': {
+                            '#folds-test_percentage': {
+                                    'outerfold_0': {
+                                        'innerfold_0': {'train': indices_train, 'val': indices_val},
+                                        ...
+                                        'innerfold_n': {'train': indices_train, 'val': indices_val},
+                                        'test': test_indices
+                                        }
+                                    },
+                            ...
+                            }
+                    'train-val-test': {
+                            'train_percentage-val_percentage-test_percentage': {
+                                    'outerfold_0': {
+                                        'innerfold_0': {'train': indices_train, 'val': indices_val},
+                                        'test': test_indices
+                                        }
+                                    },
+                            ...
+                            }
+                    }
 
     Standard values for the maf filters and data splits:
-        maf thresholds: 1, 3, 5
-        folds (inner-/outerfolds for 'nested-cv' and folds for 'cv-test'): 5
-        test percentage (for 'cv-test' and 'train-val-test'): 20
-        val percentage (for 'train-val-test'): 20
+
+    - maf thresholds: 1, 3, 5
+    - folds (inner-/outerfolds for 'nested-cv' and folds for 'cv-test'): 5
+    - test percentage (for 'cv-test' and 'train-val-test'): 20
+    - val percentage (for 'train-val-test'): 20
+
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
     :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
@@ -633,7 +672,9 @@ def create_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix
 def filter_non_informative_snps(X: np.array) -> (np.array, np.array):
     """
     Remove non-informative SNPs, i.e. SNPs that are constant
+
     :param X: genotype matrix in raw or additive encoding
+
     :return: filtered genotype matrix and filter-vector
     """
     tmp = X == X[0, :]
@@ -644,7 +685,9 @@ def filter_non_informative_snps(X: np.array) -> (np.array, np.array):
 def get_minor_allele_freq(X: np.array) -> np.array:
     """
     Compute minor allele frequencies of genotype matrix
+
     :param X: genotype matrix in additive encoding
+
     :return: array with frequencies
     """
     encoding = enc.check_encoding_of_genotype(X=X)
@@ -675,8 +718,10 @@ def get_minor_allele_freq(X: np.array) -> np.array:
 def create_maf_filter(maf: int, freq: np.array) -> np.array:
     """
     Create minor allele frequency filter
+
     :param maf: maf threshold as percentage value
     :param freq: array containing minor allele frequencies as decimal value
+
     :return: array containing indices of SNPs with MAF smaller than specified threshold, i.e. SNPs to delete
     """
     return np.where(freq <= (maf / 100))[0]
@@ -688,14 +733,15 @@ def check_datasplit_user_input(user_datasplit: str, user_n_outerfolds: int, user
     """
     Check if user input of data split parameters differs from standard values.
     If it does, add input to list of parameters
+
     :param user_datasplit: datasplit specified by the user
     :param user_n_outerfolds: number of outerfolds relevant for nested-cv specified by the user
     :param user_n_innerfolds: number of folds relevant for nested-cv and cv-test specified by the user
-    :param user_test_set_size_percentage:
-        size of the test set relevant for cv-test and train-val-test specified by the user
+    :param user_test_set_size_percentage: size of the test set relevant for cv-test and train-val-test specified by the user
     :param user_val_set_size_percentage: size of the validation set relevant for train-val-test specified by the user
     :param datasplit: type of data split
     :param param_to_check: standard parameters to compare to
+
     :return: adapted list of parameters
     """
     if datasplit == 'nested-cv':
@@ -713,13 +759,18 @@ def check_datasplit_user_input(user_datasplit: str, user_n_outerfolds: int, user
 
 def check_train_test_splits(y: np.array, datasplit: str, datasplit_params: list):
     """
-    Create stratified train-test splits. Continuous values will be grouped into bins and stratified according to those
+    Create stratified train-test splits. Continuous values will be grouped into bins and stratified according to those.
+
+    Datasplit parameters:
+
+    - nested-cv: [n_outerfolds, n_innerfolds]
+    - cv-test: [n_innerfolds, test_set_size_percentage]
+    - train-val-test: [val_set_size_percentage, train_set_size_percentage]
+
     :param datasplit: type of datasplit ('nested-cv', 'cv-test', 'train-val-test')
     :param y: array with phenotypic values for stratification
-    :param datasplit_params: parameters to use for split:
-        [n_outerfolds, n_innerfolds] for nested-cv
-        [n_innerfolds, test_set_size_percentage] for cv-test
-        [val_set_size_percentage, test_set_size_percentage] for train-val-test
+    :param datasplit_params: parameters to use for split
+
     :return: dictionary respectively arrays with indices
     """
     y_binned = make_bins(y=y, datasplit=datasplit, datasplit_params=datasplit_params)
@@ -737,13 +788,18 @@ def check_train_test_splits(y: np.array, datasplit: str, datasplit_params: list)
 
 def make_bins(y: np.array, datasplit: str, datasplit_params: list) -> np.array:
     """
-    Create bins of continuous values for stratification
+    Create bins of continuous values for stratification.
+
+    Datasplit parameters:
+
+    - nested-cv: [n_outerfolds, n_innerfolds]
+    - cv-test: [n_innerfolds, test_set_size_percentage]
+    - train-val-test: [val_set_size_percentage, train_set_size_percentage]
+
     :param y: array containing phenotypic values
     :param datasplit: train test split to use
-    :param datasplit_params: list of parameters to use:
-        [n_outerfolds, n_innerfolds] for nested-cv
-        [n_innerfolds, test_set_size_percentage] for cv-test
-        [val_set_size_percentage, test_set_size_percentage] for train-val-test
+    :param datasplit_params: parameters to use for split
+
     :return: binned array
     """
     if helper_functions.test_likely_categorical(y):
@@ -765,25 +821,33 @@ def make_bins(y: np.array, datasplit: str, datasplit_params: list) -> np.array:
 def make_nested_cv(y: np.array, outerfolds: int, innerfolds: int) -> dict:
     """
     Create index dictionary for stratified nested cross validation with the following structure:
-        {'outerfold_0_test': test_indices,
-        'outerfold_0': {fold_0_train: innerfold_0_train_indices,
-                        fold_0_test: innerfold_0_test_indices,
-                        ...
-                        fold_n_train: innerfold_n_train_indices,
-                        fold_n_test: innerfold_n_test_indices
-                        },
-        ...
-        'outerfold_m_test': test_indices,
-        'outerfold_m': {fold_0_train: innerfold_0_train_indices,
-                        fold_0_test: innerfold_0_test_indices,
-                        ...
-                        fold_n_train: innerfold_n_train_indices,
-                        fold_n_test: innerfold_n_test_indices
-                        }
+
+    .. code-block:: python
+
+        {
+            'outerfold_0_test': test_indices,
+            'outerfold_0': {
+                'fold_0_train': innerfold_0_train_indices,
+                'fold_0_test': innerfold_0_test_indices,
+                ...
+                'fold_n_train': innerfold_n_train_indices,
+                'fold_n_test': innerfold_n_test_indices
+            },
+            ...
+            'outerfold_m_test': test_indices,
+            'outerfold_m': {
+                'fold_0_train': innerfold_0_train_indices,
+                'fold_0_test': innerfold_0_test_indices,
+                ...
+                'fold_n_train': innerfold_n_train_indices,
+                'fold_n_test': innerfold_n_test_indices
+            }
         }
+
     :param y: target values grouped in bins for stratification
     :param outerfolds: number of outer folds
     :param innerfolds: number of inner folds
+
     :return: index dictionary
     """
     outer_cv = StratifiedKFold(n_splits=outerfolds)
@@ -801,15 +865,21 @@ def make_nested_cv(y: np.array, outerfolds: int, innerfolds: int) -> dict:
 def make_stratified_cv(x: np.array, y: np.array, split_number: int) -> dict:
     """
     Create index dictionary for stratified cross-validation with following structure:
-        {fold_0_train: fold_0_train_indices,
-        fold_0_test: fold_0_test_indices,
-        ...
-        fold_n_train: fold_n_train_indices,
-        fold_n_test: fold_n_test_indices
+
+    .. code-block:: python
+
+        {
+            'fold_0_train': fold_0_train_indices,
+            'fold_0_test': fold_0_test_indices,
+            ...
+            'fold_n_train': fold_n_train_indices,
+            'fold_n_test': fold_n_test_indices
         }
+
     :param x: whole train indices
     :param y: target values binned in groups for stratification
     :param split_number: number of folds
+
     :return: dictionary containing train and validation indices for each fold
     """
     cv = StratifiedKFold(n_splits=split_number)
@@ -828,13 +898,14 @@ def make_train_test_split(y: np.array, test_size: int, val_size=None, val=False,
         -> (np.array, np.array, np.array):
     """
     Create index arrays for stratified train-test, respectively train-val-test splits.
+
     :param y: target values grouped in bins for stratification
     :param test_size: size of test set as percentage value
     :param val_size: size of validation set as percentage value
     :param val: if True, function returns validation set additionally to train and test set
     :param random: controls shuffling of data
-    :return: either train, val and test index arrays or
-                train and test index arrays and corresponding binned target values
+
+    :return: either train, val and test index arrays or train and test index arrays and corresponding binned target values
     """
     x = np.arange(len(y))
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=test_size/100, stratify=y, random_state=random)

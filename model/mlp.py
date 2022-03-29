@@ -7,7 +7,7 @@ class Mlp(_torch_model.TorchModel):
     """
     Implementation of a class for a feedforward Multilayer Perceptron (MLP).
 
-    See :obj:`~model._base_model.BaseModel` and :obj:`~model._torch_model.TorchModel` for more information.
+    See :obj:`~model._base_model.BaseModel` and :obj:`~model._torch_model.TorchModel` for more information on the attributes.
     """
     standard_encoding = '012'
     possible_encodings = ['012']
@@ -17,9 +17,11 @@ class Mlp(_torch_model.TorchModel):
         Definition of an MLP network.
 
         Architecture:
+
             - N_LAYERS of (Linear + BatchNorm + Dropout)
             - Linear output layer
-            Number of units in the first linear layer and percentage decrease after each may be fixed or optimized.
+
+        Number of units in the first linear layer and percentage decrease after each may be fixed or optimized.
         """
         n_layers = self.suggest_hyperparam_to_optuna('n_layers')
         model = []
@@ -40,6 +42,7 @@ class Mlp(_torch_model.TorchModel):
     def define_hyperparams_to_tune(self) -> dict:
         """
         See :obj:`~model._base_model.BaseModel` for more information on the format.
+
         See :obj:`~model._torch_model.TorchModel` for more information on hyperparameters common for all torch models.
         """
         return {
