@@ -17,7 +17,7 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
-    'autoapi.extension'
+    'autoapi.extension',
     'sphinx.ext.intersphinx',
     "sphinx.ext.imgconverter",
     "sphinx.ext.mathjax",
