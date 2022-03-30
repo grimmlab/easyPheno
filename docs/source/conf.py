@@ -25,6 +25,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
     'myst_parser',
+    'sphinxcontrib.youtube',
 ]
 
 intersphinx_mapping = {

@@ -1,5 +1,6 @@
 sphinx-autoapi==1.8.4
 myst-parser==0.17.0
+sphinxcontrib-youtube==1.1.0
 torch==1.10.2
 xgboost==1.5.2
 optuna==2.10.0
