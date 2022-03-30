@@ -26,6 +26,7 @@ extensions = [
     "sphinx.ext.githubpages",
     'myst_parser',
     'sphinxcontrib.youtube',
+    'sphinx.ext.autosectionlabel',
 ]
 
 intersphinx_mapping = {
