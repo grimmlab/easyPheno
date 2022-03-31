@@ -2,30 +2,41 @@ from setuptools import setup
 from setuptools import find_packages
 import os
 
-current_directory = os.path.dirname(os.path.abspath(__file__))
 
-try:
-    with open(os.path.join(current_directory, 'README.md'), encoding='utf-8') as f:
-        long_description = f.read()
-except Exception:
-    long_description = ''
+def get_long_description():
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+    try:
+        with open(os.path.join(current_directory, 'README.md'), encoding='utf-8') as f:
+            return f.read()
+    except Exception:
+        return ''
 
-try:
-    with open('Docker/requirements.txt') as f:
-        required = f.read().splitlines()
-except:
-    print('Problems with reading the requirements.txt file')
+
+def get_version():
+    with open('easyPheno/__init__.py') as f:
+        for line in f:
+            if line.startswith("__version__"):
+                return line.strip().split()[-1][1:-1]
+
+
+def get_required():
+    try:
+        with open('Docker/requirements.txt') as f:
+            return f.read().splitlines()
+    except:
+        print('Problems with reading the requirements.txt file')
+
 
 setup(
     # Project Information
     name='easypheno',
-    version='0.0.1',
+    version=get_version(),
     author='Florian Haselbeck; Maura John, Dominik G. Grimm',
-    author_email='florian.haselbeck@tum.de; maura.john@tum.de; dominik.grimm@tum.de',
+    author_email='florian.haselbeck@tum.de',
     license='MIT',
     # Short and long description (sing readme)
     description='Easy-to-use state-of-the-art phenotype prediction framework',
-    long_description=long_description,
+    long_description=get_long_description(),
     long_description_content_type='text/markdown',
     # URLs
     url='https://github.com/grimmlab/easyPheno',
@@ -34,7 +45,7 @@ setup(
     },
     # build stuff
     packages=find_packages(),
-    install_requires=required,
+    install_requires=get_required(),
 
     # see https://pypi.org/classifiers/
     classifiers=[
