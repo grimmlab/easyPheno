@@ -7,7 +7,7 @@ class Cnn(_torch_model.TorchModel):
     """
     Implementation of a class for a Convolutional Neural Network (CNN).
 
-    See :obj:`~model._base_model.BaseModel` and :obj:`~model._torch_model.TorchModel` for more information on the attributes.
+    See :obj:`~easyPheno.model._base_model.BaseModel` and :obj:`~easyPheno.model._torch_model.TorchModel` for more information on the attributes.
     """
     standard_encoding = 'onehot'
     possible_encodings = ['onehot']
@@ -60,9 +60,9 @@ class Cnn(_torch_model.TorchModel):
 
     def define_hyperparams_to_tune(self) -> dict:
         """
-        See :obj:`~model._base_model.BaseModel` for more information on the format.
+        See :obj:`~easyPheno.model._base_model.BaseModel` for more information on the format.
 
-        See :obj:`~model._torch_model.TorchModel` for more information on hyperparameters common for all torch models.
+        See :obj:`~easyPheno.model._torch_model.TorchModel` for more information on hyperparameters common for all torch models.
         """
         return {
             'n_layers': {

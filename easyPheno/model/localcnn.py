@@ -7,7 +7,7 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
     """
     Implementation of a class for a Locally-connected Convolutional Neural Network (LocalCNN).
 
-    See :obj:`~model._base_model.BaseModel` and :obj:`~model._tensorflow_model.TensorflowModel` for more information on the attributes.
+    See :obj:`~easyPheno.model._base_model.BaseModel` and :obj:`~easyPheno.model._tensorflow_model.TensorflowModel` for more information on the attributes.
     """
     standard_encoding = 'onehot'
     possible_encodings = ['onehot']
@@ -56,7 +56,7 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
 
     def define_hyperparams_to_tune(self) -> dict:
         """
-        See :obj:`~model._base_model.BaseModel` for more information on the format.
+        See :obj:`~easyPheno.model._base_model.BaseModel` for more information on the format.
 
         See TensorflowModel for more information on hyperparameters common for all tensorflow models.
         """

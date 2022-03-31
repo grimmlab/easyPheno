@@ -10,14 +10,14 @@ from . import _base_model
 
 class TorchModel(_base_model.BaseModel, abc.ABC):
     """
-    Parent class based on :obj:`~model._base_model.BaseModel` for all PyTorch models to share functionalities.
-    See :obj:`~model._base_model.BaseModel` for more information.
+    Parent class based on :obj:`~easyPheno.model._base_model.BaseModel` for all PyTorch models to share functionalities.
+    See :obj:`~easyPheno.model._base_model.BaseModel` for more information.
 
     *Attributes*
 
         *Inherited attributes*
 
-        See :obj:`~model._base_model.BaseModel`.
+        See :obj:`~easyPheno.model._base_model.BaseModel`.
 
         *Additional attributes*
 
@@ -61,7 +61,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
     def train_val_loop(self, X_train: np.array, y_train: np.array, X_val: np.array, y_val: np.array) -> np.array:
         """
         Implementation of a train and validation loop for  PyTorch models.
-        See :obj:`~model._base_model.BaseModel` for more information
+        See :obj:`~easyPheno.model._base_model.BaseModel` for more information
         """
         train_loader = self.get_dataloader(X=X_train, y=y_train)
         val_loader = self.get_dataloader(X=X_val, y=y_val)
@@ -122,7 +122,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
     def retrain(self, X_retrain: np.array, y_retrain: np.array):
         """
         Implementation of the retraining for PyTorch models.
-        See :obj:`~model._base_model.BaseModel` for more information
+        See :obj:`~easyPheno.model._base_model.BaseModel` for more information
         """
         retrain_loader = self.get_dataloader(X=X_retrain, y=y_retrain)
         n_epochs_to_retrain = self.n_epochs if self.early_stopping_point is None else self.early_stopping_point
@@ -134,7 +134,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
     def predict(self, X_in: np.array) -> np.array:
         """
         Implementation of a prediction based on input features for PyTorch models.
-        See :obj:`~model._base_model.BaseModel` for more information
+        See :obj:`~easyPheno.model._base_model.BaseModel` for more information
         """
         dataloader = self.get_dataloader(X=X_in, shuffle=False)
         self.model.eval()
@@ -190,7 +190,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
         """
         Add hyperparameters that are common for PyTorch models.
         Do not need to be included in optimization for every child model.
-        Also See :obj:`~model._base_model.BaseModel` for more information
+        Also See :obj:`~easyPheno.model._base_model.BaseModel` for more information
         """
         return {
             'dropout': {

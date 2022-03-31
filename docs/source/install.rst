@@ -23,8 +23,8 @@ For the :ref:`Docker Workflow`, `Docker <https://www.docker.com/>`_ with a versi
 see the `Installation Guidelines at the Docker website <https://docs.docker.com/get-docker/>`_.
 On Ubuntu, you can use ``docker -v`` to check your installed version.
 
-If you want to use GPU support, you need to install `nvidia-docker-2 <https://github.com/NVIDIA/nvidia-docker>`_ (see this `Installation Guide <https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#setting-up-nvidia-container-toolkit>`_)
-and a version of `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ >= 11.2 (see this `Installation Guide <https://docs.nvidia.com/cuda/index.html#installation-guides>`_). To check your CUDA version, just run ``nvidia-smi`` in a terminal.
+If you want to use GPU support, you need to install `nvidia-docker-2 <https://github.com/NVIDIA/nvidia-docker>`_ (see this `nvidia-docker Installation Guide <https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#setting-up-nvidia-container-toolkit>`_)
+and a version of `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ >= 11.2 (see this `CUDA Installation Guide <https://docs.nvidia.com/cuda/index.html#installation-guides>`_). To check your CUDA version, just run ``nvidia-smi`` in a terminal.
 
 Setup
 ~~~~~~~~~~~~~~~~~~~~~~

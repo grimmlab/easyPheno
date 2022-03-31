@@ -23,3 +23,4 @@ tbd.
 
    install
    tutorials
+   data

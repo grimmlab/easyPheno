@@ -9,14 +9,14 @@ from . import _base_model
 
 class TensorflowModel(_base_model.BaseModel, abc.ABC):
     """
-    Parent class based on :obj:`~model._base_model.BaseModel` for all TensorFlow models to share functionalities.
-    See :obj:`~model._base_model.BaseModel` for more information.
+    Parent class based on :obj:`~easyPheno.model._base_model.BaseModel` for all TensorFlow models to share functionalities.
+    See :obj:`~easyPheno.model._base_model.BaseModel` for more information.
 
     **Attributes**
 
         *Inherited attributes*
 
-        See :obj:`~model._base_model.BaseModel`.
+        See :obj:`~easyPheno.model._base_model.BaseModel`.
 
         *Additional attributes*
 
@@ -63,7 +63,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
     def train_val_loop(self, X_train: np.array, y_train: np.array, X_val: np.array, y_val: np.array) -> np.array:
         """
         Implementation of a train and validation loop for  TensorFlow models.
-        See :obj:`~model._base_model.BaseModel` for more information
+        See :obj:`~easyPheno.model._base_model.BaseModel` for more information
         """
         history = self.model.fit(x=X_train, y=y_train, batch_size=self.batch_size, epochs=self.n_epochs,
                                  validation_data=(X_val, y_val), validation_freq=1, verbose=2,
@@ -77,7 +77,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
     def retrain(self, X_retrain: np.array, y_retrain: np.array):
         """
         Implementation of the retraining for PyTorch models.
-        See :obj:`~model._base_model.BaseModel` for more information
+        See :obj:`~easyPheno.model._base_model.BaseModel` for more information
         """
         n_epochs_to_retrain = self.n_epochs if self.early_stopping_point is None else self.early_stopping_point
         self.model.fit(x=X_retrain, y=y_retrain, batch_size=self.batch_size, epochs=n_epochs_to_retrain, verbose=2)
@@ -85,7 +85,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
     def predict(self, X_in: np.array) -> np.array:
         """
         Implementation of a prediction based on input features for PyTorch models.
-        See :obj:`~model._base_model.BaseModel` for more information
+        See :obj:`~easyPheno.model._base_model.BaseModel` for more information
         """
         dataloader = self.get_dataloader(X=X_in, shuffle=False)
         predictions = None
@@ -122,7 +122,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
         """
         Add hyperparameters that are common for PyTorch models.
         Do not need to be included in optimization for every child model.
-        Also See :obj:`~model._base_model.BaseModel` for more information
+        Also See :obj:`~easyPheno.model._base_model.BaseModel` for more information
         """
         return {
             'dropout': {
@@ -158,7 +158,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
 
     def save_model(self, path: str, filename: str):
         """
-        Method to persist the whole model object on a hard drive (can be loaded with :obj:`~model._model_functions.load_model`)
+        Method to persist the whole model object on a hard drive (can be loaded with :obj:`~easyPheno.model._model_functions.load_model`)
 
         :param path: path where the model will be saved
         :param filename: filename of the model

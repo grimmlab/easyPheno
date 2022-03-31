@@ -28,7 +28,7 @@ class OptunaOptim:
 
         - task (*str*): ML task (regression or classification) depending on target variable
         - current_model_name (*str*): name of the current model according to naming of .py file in package model
-        - dataset (:obj:`~preprocess.base_dataset.Dataset`): dataset to use for optimization run
+        - dataset (:obj:`~easyPheno.preprocess.base_dataset.Dataset`): dataset to use for optimization run
         - datasplit_subpath (*str*): subpath with datasplit info relevant for saving / naming
         - base_path (*str*): base_path for save_path
         - save_path (*str*): path for model and results storing

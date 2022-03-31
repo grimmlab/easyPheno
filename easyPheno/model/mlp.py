@@ -7,7 +7,7 @@ class Mlp(_torch_model.TorchModel):
     """
     Implementation of a class for a feedforward Multilayer Perceptron (MLP).
 
-    See :obj:`~model._base_model.BaseModel` and :obj:`~model._torch_model.TorchModel` for more information on the attributes.
+    See :obj:`~easyPheno.model._base_model.BaseModel` and :obj:`~easyPheno.model._torch_model.TorchModel` for more information on the attributes.
     """
     standard_encoding = '012'
     possible_encodings = ['012']
@@ -41,9 +41,9 @@ class Mlp(_torch_model.TorchModel):
 
     def define_hyperparams_to_tune(self) -> dict:
         """
-        See :obj:`~model._base_model.BaseModel` for more information on the format.
+        See :obj:`~easyPheno.model._base_model.BaseModel` for more information on the format.
 
-        See :obj:`~model._torch_model.TorchModel` for more information on hyperparameters common for all torch models.
+        See :obj:`~easyPheno.model._torch_model.TorchModel` for more information on hyperparameters common for all torch models.
         """
         return {
             'n_layers': {

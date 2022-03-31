@@ -7,7 +7,7 @@ class LinearRegression(_sklearn_model.SklearnModel):
     """
     Implementation of a class for Linear respective Logistic Regression.
 
-    See :obj:`~model._base_model.BaseModel` for more information on the attributes.
+    See :obj:`~easyPheno.model._base_model.BaseModel` for more information on the attributes.
     """
     standard_encoding = '012'
     possible_encodings = ['012']
@@ -16,7 +16,7 @@ class LinearRegression(_sklearn_model.SklearnModel):
         """
         Definition of the actual prediction model.
 
-        See :obj:`~model._base_model.BaseModel` for more information.
+        See :obj:`~easyPheno.model._base_model.BaseModel` for more information.
         """
         # Penalty term is fixed to l1, but might also be optimized
         penalty = 'l1'  # self.suggest_hyperparam_to_optuna('penalty')
@@ -37,7 +37,7 @@ class LinearRegression(_sklearn_model.SklearnModel):
 
     def define_hyperparams_to_tune(self) -> dict:
         """
-        See :obj:`~model._base_model.BaseModel` for more information on the format.
+        See :obj:`~easyPheno.model._base_model.BaseModel` for more information on the format.
         """
         return {
             'penalty': {

@@ -7,7 +7,7 @@ class XgBoost(_sklearn_model.SklearnModel):
     """
     Implementation of a class for XGBoost.
 
-    See :obj:`~model._base_model.BaseModel` for more information on the attributes.
+    See :obj:`~easyPheno.model._base_model.BaseModel` for more information on the attributes.
     """
     standard_encoding = '012'
     possible_encodings = ['012']
@@ -16,7 +16,7 @@ class XgBoost(_sklearn_model.SklearnModel):
         """
         Definition of the actual prediction model.
 
-        See :obj:`~model._base_model.BaseModel` for more information.
+        See :obj:`~easyPheno.model._base_model.BaseModel` for more information.
         """
         # all hyperparameters defined for XGBoost are suggested for optimization
         params = self.suggest_all_hyperparams_to_optuna()
@@ -33,7 +33,7 @@ class XgBoost(_sklearn_model.SklearnModel):
 
     def define_hyperparams_to_tune(self) -> dict:
         """
-        See :obj:`~model._base_model.BaseModel` for more information on the format.
+        See :obj:`~easyPheno.model._base_model.BaseModel` for more information on the format.
         """
         return {
             'n_estimators': {
