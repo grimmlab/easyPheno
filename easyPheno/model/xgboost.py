@@ -1,6 +1,6 @@
 import xgboost
 
-from model import _sklearn_model
+from . import _sklearn_model
 
 
 class XgBoost(_sklearn_model.SklearnModel):

@@ -1,7 +1,8 @@
 import numpy as np
 import torch
 from torch.nn.functional import one_hot
-from utils import helper_functions
+
+from ..utils import helper_functions
 
 
 def get_encoding(models, user_encoding: str) -> list:

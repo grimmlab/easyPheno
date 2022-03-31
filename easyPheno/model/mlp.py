@@ -1,6 +1,6 @@
 import torch
 
-from model import _torch_model
+from . import _torch_model
 
 
 class Mlp(_torch_model.TorchModel):

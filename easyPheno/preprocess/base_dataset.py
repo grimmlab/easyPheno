@@ -2,9 +2,8 @@ import h5py
 import numpy as np
 import sklearn.preprocessing
 
-from utils import helper_functions
-from preprocess import raw_data_functions
-from preprocess import encoding_functions
+from ..utils import helper_functions
+from . import raw_data_functions, encoding_functions
 
 
 class Dataset:

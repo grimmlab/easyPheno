@@ -3,7 +3,7 @@ Welcome to easyPheno's documentation!
 We are doing crazy stuff here!
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
 
    install
    quickstart

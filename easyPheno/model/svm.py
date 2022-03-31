@@ -1,6 +1,6 @@
 import sklearn
 
-from model import _sklearn_model
+from . import _sklearn_model
 
 
 class SupportVectorMachine(_sklearn_model.SklearnModel):

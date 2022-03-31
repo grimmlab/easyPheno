@@ -4,7 +4,7 @@ import optuna
 import tensorflow as tf
 import joblib
 
-from model import _base_model
+from . import _base_model
 
 
 class TensorflowModel(_base_model.BaseModel, abc.ABC):

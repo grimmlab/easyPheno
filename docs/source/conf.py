@@ -49,4 +49,4 @@ exclude_patterns = ['*/docs*']
 autoapi_type = 'python'
 autoapi_dirs = ['../../']
 autodoc_typehints = 'description'
-autoapi_ignore = ['*conf*']
+autoapi_ignore = ['*conf*', '*setup*']

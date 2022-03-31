@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-from utils import helper_functions
+from . import helper_functions
 
 
 def check_all_specified_arguments(arguments: dict):

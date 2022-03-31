@@ -5,8 +5,9 @@ import os
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
 from pandas_plink import read_plink1_bin
-from utils import helper_functions
-from preprocess import encoding_functions as enc
+
+from ..utils import helper_functions
+from . import encoding_functions as enc
 
 
 def prepare_data_files(data_dir: str, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,

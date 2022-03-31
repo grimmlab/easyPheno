@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from model import _tensorflow_model
+from . import _tensorflow_model
 
 
 class LocalCnn(_tensorflow_model.TensorflowModel):

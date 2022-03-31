@@ -1,6 +1,6 @@
 import sklearn
 
-from model import _sklearn_model
+from . import _sklearn_model
 
 
 class LinearRegression(_sklearn_model.SklearnModel):

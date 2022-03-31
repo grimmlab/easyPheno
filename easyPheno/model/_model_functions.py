@@ -2,7 +2,7 @@ import numpy as np
 import joblib
 import tensorflow as tf
 
-from model import _base_model, _tensorflow_model
+from . import _base_model, _tensorflow_model
 
 
 def load_retrain_model(path: str, filename: str, X_retrain: np.array, y_retrain: np.array,

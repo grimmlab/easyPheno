@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from preprocess import base_dataset
-from utils import helper_functions
+from ..preprocess import base_dataset
+from . import helper_functions
 
 
 def print_config_info(arguments: dict, dataset: base_dataset.Dataset, task: str):
@@ -19,7 +19,10 @@ def print_config_info(arguments: dict, dataset: base_dataset.Dataset, task: str)
     print('Phenotype: ' + arguments["phenotype"])
     if arguments["encoding"] is not None:
         print('Encoding: ' + arguments["encoding"])
-    print('Models: ' + ', '.join(arguments["models"]))
+    if arguments["models"] != 'all':
+        print('Models: ' + ', '.join(arguments["models"]))
+    else:
+        print('Models: ' + ', '.join(helper_functions.get_list_of_implemented_models()))
     print('Optuna Trials: ' + str(arguments["n_trials"]))
     if arguments["datasplit"] == 'train-val-test':
         datasplit_params = [arguments["val_set_size_percentage"], arguments["test_set_size_percentage"]]

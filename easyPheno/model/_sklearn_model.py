@@ -1,6 +1,7 @@
-from model import _base_model
 import abc
 import numpy as np
+
+from . import _base_model
 
 
 class SklearnModel(_base_model.BaseModel, abc.ABC):

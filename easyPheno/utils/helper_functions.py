@@ -13,10 +13,12 @@ def get_list_of_implemented_models() -> list:
     Create a list of all implemented models based on files existing in 'model' subdirectory of the repository.
     """
     # Assumption: naming of python source file is the same as the model name specified by the user
-    try:
+    if os.path.exists('../model'):
         model_src_files = os.listdir('../model')
-    except:
+    elif os.path.exists('model'):
         model_src_files = os.listdir('model')
+    elif os.path.exists('easyPheno/model'):
+        model_src_files = os.listdir('easyPheno/model')
     model_src_files = [file for file in model_src_files if file[0] != '_']
     return [model[:-3] for model in model_src_files]
 
@@ -41,10 +43,12 @@ def get_mapping_name_to_class() -> dict:
 
     :return: dictionary with mapping model name to class name
     """
-    try:
+    if os.path.exists('../model'):
         files = os.listdir('../model')
-    except:
+    elif os.path.exists('model'):
         files = os.listdir('model')
+    elif os.path.exists('easyPheno/model'):
+        files = os.listdir('easyPheno/model')
     modules_mapped = {}
     for file in files:
         if file not in ['__init__.py', '__pycache__']:
@@ -52,7 +56,7 @@ def get_mapping_name_to_class() -> dict:
                 continue
 
             file_name = file[:-3]
-            module_name = 'model.' + file_name
+            module_name = 'easyPheno.model.' + file_name
             for name, cls in inspect.getmembers(importlib.import_module(module_name), inspect.isclass):
                 if cls.__module__ == module_name:
                     modules_mapped[file_name] = cls

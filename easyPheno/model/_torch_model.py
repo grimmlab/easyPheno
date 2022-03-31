@@ -5,7 +5,7 @@ import torch.nn
 import torch.utils.data
 import copy
 
-from model import _base_model
+from . import _base_model
 
 
 class TorchModel(_base_model.BaseModel, abc.ABC):

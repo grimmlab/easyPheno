@@ -14,11 +14,10 @@ import csv
 import torch.cuda
 import tensorflow as tf
 
-import utils
-from preprocess import base_dataset
-from utils import helper_functions
-from evaluation import eval_metrics
-from model import _torch_model, _base_model, _tensorflow_model, _model_functions
+from ..preprocess import base_dataset
+from ..utils import helper_functions
+from ..evaluation import eval_metrics
+from ..model import _base_model, _model_functions, _tensorflow_model, _torch_model
 
 
 class OptunaOptim:
@@ -128,9 +127,9 @@ class OptunaOptim:
         # in case a model has attributes not part of the base class hand them over in a dictionary to keep the same call
         # (name of the attribute and key in the dictionary have to match)
         additional_attributes_dict = {}
-        if issubclass(utils.helper_functions.get_mapping_name_to_class()[self.current_model_name],
+        if issubclass(helper_functions.get_mapping_name_to_class()[self.current_model_name],
                       _torch_model.TorchModel) or \
-                issubclass(utils.helper_functions.get_mapping_name_to_class()[self.current_model_name],
+                issubclass(helper_functions.get_mapping_name_to_class()[self.current_model_name],
                            _tensorflow_model.TensorflowModel):
             # additional attributes for torch and tensorflow models
             additional_attributes_dict['n_features'] = self.dataset.X_full.shape[1]
@@ -139,7 +138,7 @@ class OptunaOptim:
             additional_attributes_dict['width_onehot'] = self.dataset.X_full.shape[-1]
             early_stopping_points = []  # log early stopping point at each fold for torch and tensorflow models
         try:
-            model: _base_model.BaseModel = utils.helper_functions.get_mapping_name_to_class()[self.current_model_name](
+            model: _base_model.BaseModel = helper_functions.get_mapping_name_to_class()[self.current_model_name](
                 task=self.task, optuna_trial=trial,
                 n_outputs=len(np.unique(self.dataset.y_full)) if self.task == 'classification' else 1,
                 **additional_attributes_dict

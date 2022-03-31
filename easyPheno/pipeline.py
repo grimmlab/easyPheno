@@ -1,14 +1,12 @@
 import argparse
 import datetime
 import warnings
+import pprint
 from optuna.exceptions import ExperimentalWarning
 
-import optimization.optuna_optim
-import preprocess.base_dataset
-from utils import check_functions, print_functions, helper_functions
-from preprocess import encoding_functions
-import pprint
-from preprocess import raw_data_functions
+from easyPheno.utils import check_functions, print_functions, helper_functions
+from easyPheno.preprocess import encoding_functions, raw_data_functions, base_dataset
+from easyPheno.optimization import optuna_optim
 
 
 def run_pipeline(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: str,
@@ -70,7 +68,7 @@ def run_pipeline(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phe
             else helper_functions.get_mapping_name_to_class()[current_model_name].standard_encoding
         if optim_run == 0:
             print('----- Starting dataset preparation -----')
-            dataset = preprocess.base_dataset.Dataset(
+            dataset = base_dataset.Dataset(
                 data_dir=data_dir, genotype_matrix_name=genotype_matrix, phenotype_matrix_name=phenotype_matrix,
                 phenotype=phenotype, datasplit=datasplit, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
                 test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage,
@@ -81,13 +79,13 @@ def run_pipeline(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phe
         else:
             if dataset.encoding != encoding:
                 print('----- Load new dataset encoding -----')
-                dataset = preprocess.base_dataset.Dataset(
+                dataset = base_dataset.Dataset(
                     data_dir=data_dir, genotype_matrix_name=genotype_matrix, phenotype_matrix_name=phenotype_matrix,
                     phenotype=phenotype, datasplit=datasplit, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
                     test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage,
                     encoding=encoding, maf_percentage=maf_percentage
                 )
-        optuna_run = optimization.optuna_optim.OptunaOptim(
+        optuna_run = optuna_optim.OptunaOptim(
             save_dir=save_dir, genotype_matrix_name=genotype_matrix, phenotype_matrix_name=phenotype_matrix,
             phenotype=phenotype, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
             val_set_size_percentage=val_set_size_percentage, test_set_size_percentage=test_set_size_percentage,
