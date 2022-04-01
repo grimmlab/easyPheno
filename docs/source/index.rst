@@ -1,13 +1,26 @@
-.. easyPheno documentation master file, created by
-   sphinx-quickstart on Fri Mar 25 13:17:17 2022.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to easyPheno's documentation!
 =====================================
-We are doing crazy stuff here!
+easyPheno is super cool introduction blabla
+
+
+
+Contributors
+----------------------------------------
+
+This pipeline is developed and maintained by members of the `Bioinformatics lab <https://bit.cs.tum.de>`_ lead by `Prof. Dr. Dominik Grimm <https://bit.cs.tum.de/team/dominik-grimm/>`_:
+
+- `Florian Haselbeck, M.Sc. <https://bit.cs.tum.de/team/florian-haselbeck/>`_
+- `Maura John, M.Sc. <https://bit.cs.tum.de/team/maura-john/>`_
+
+Citation
+---------------------
+When using this workflow, please cite our publication:
+
+tbd.
 
 .. toctree::
-      install
-      get started
-      modules
+   :maxdepth: 4
+
+   install
+   tutorials
+   data
