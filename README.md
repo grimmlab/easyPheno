@@ -2,7 +2,7 @@
 
 [![Python 3.8](https://img.shields.io/badge/Python-3.8-3776AB)](https://www.python.org/downloads/release/python-388/)
 
-easyPheno is super cool! blabla -> short intro kopieren von der Doku
+easyPheno is super cool! However, its readme will be updated soon!
 
 For more information, installation guides, tutorials and much more, see our documentation: https://easypheno.readthedocs.io/ 
 

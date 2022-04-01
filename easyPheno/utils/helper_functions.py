@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
+import easyPheno.model
+
 
 def get_list_of_implemented_models() -> list:
     """
@@ -19,6 +21,8 @@ def get_list_of_implemented_models() -> list:
         model_src_files = os.listdir('model')
     elif os.path.exists('easyPheno/model'):
         model_src_files = os.listdir('easyPheno/model')
+    else:
+        model_src_files = [model_file + '.py' for model_file in easyPheno.model.__all__]
     model_src_files = [file for file in model_src_files if file[0] != '_']
     return [model[:-3] for model in model_src_files]
 
@@ -49,6 +53,8 @@ def get_mapping_name_to_class() -> dict:
         files = os.listdir('model')
     elif os.path.exists('easyPheno/model'):
         files = os.listdir('easyPheno/model')
+    else:
+        files = [model_file + '.py' for model_file in easyPheno.model.__all__]
     modules_mapped = {}
     for file in files:
         if file not in ['__init__.py', '__pycache__']:
