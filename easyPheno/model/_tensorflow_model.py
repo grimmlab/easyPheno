@@ -129,7 +129,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
                 'datatype': 'float',
                 'lower_bound': 0,
                 'upper_bound': 0.5,
-                'step': 0.1
+                'step': 0.25
             },
             'act_function': {
                 'datatype': 'categorical',
@@ -142,11 +142,11 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
             },
             'n_epochs': {
                 'datatype': 'categorical',
-                'list_of_values': [50, 100, 500, 1000, 5000, 10000]
+                'list_of_values': [100, 500, 1000, 10000]
             },
             'learning_rate': {
                 'datatype': 'categorical',
-                'list_of_values': [1e-6, 1e-5, 1e-4, 1e-3, 1e-2]
+                'list_of_values': [1e-5, 1e-4, 1e-3, 1e-2]
             },
             'early_stopping_patience': {
                 'datatype': 'int',

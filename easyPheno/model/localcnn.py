@@ -44,13 +44,13 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
         model.add(tf.keras.layers.MaxPool1D(pool_size=kernel_size_max_pool))
         model.add(tf.keras.layers.Flatten())
         n_units = int(model.output_shape[1] * self.suggest_hyperparam_to_optuna('n_initial_units_factor'))
+        perc_decrease = self.suggest_hyperparam_to_optuna('perc_decrease_per_layer')
         for layer in range(n_layers):
             model.add(tf.keras.layers.Dense(units=n_units, activation=None))
             model.add(act_function)
             model.add(tf.keras.layers.BatchNormalization())
-            p = self.suggest_hyperparam_to_optuna('dropout')
             model.add(tf.keras.layers.Dropout(rate=p))
-            n_units = int(n_units * (1-self.suggest_hyperparam_to_optuna('perc_decrease_per_layer')))
+            n_units = int(n_units * (1-perc_decrease))
         model.add(tf.keras.layers.Dense(units=self.n_outputs))
         return model
 
@@ -70,7 +70,7 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
                 # Exponent with base 2 to get the kernel size for the convolutional layers
                 'datatype': 'int',
                 'lower_bound': 4,
-                'upper_bound': 8
+                'upper_bound': 6
             },
             'maxpool_kernel_size_exp': {
                 # Exponent with base 2 to get the kernel size for the maxpool layers
@@ -86,14 +86,14 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
             'n_initial_units_factor': {
                 # Number of units in the linear layer after flattening in relation to the number of inputs
                 'datatype': 'float',
-                'lower_bound': 0.4,
-                'upper_bound': 1,
-                'step': 0.2
+                'lower_bound': 0.3,
+                'upper_bound': 0.7,
+                'step': 0.4
             },
             'perc_decrease_per_layer': {
                 # Percentage decrease of the number of units per layer
                 'datatype': 'float',
-                'lower_bound': 0.1,
+                'lower_bound': 0.3,
                 'upper_bound': 0.5,
                 'step': 0.2
             }

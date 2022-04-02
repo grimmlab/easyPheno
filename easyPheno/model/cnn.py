@@ -32,8 +32,7 @@ class Cnn(_torch_model.TorchModel):
         in_channels = self.width_onehot
         kernel_size = self.suggest_hyperparam_to_optuna('kernel_size')
         stride = max(1, int(kernel_size * self.suggest_hyperparam_to_optuna('stride_perc_of_kernel_size')))
-        out_channels = 2 ** self.suggest_hyperparam_to_optuna('initial_out_channels_exp')
-        kernel_size_max_pool = self.suggest_hyperparam_to_optuna('maxpool_kernel_size')
+        out_channels = 2 ** 2  # self.suggest_hyperparam_to_optuna('initial_out_channels_exp')
         frequency_out_channels_doubling = 2  # self.suggest_hyperparam_to_optuna('frequency_out_channels_doubling')
         p = self.suggest_hyperparam_to_optuna('dropout')
         for layer in range(n_layers):
@@ -45,14 +44,13 @@ class Cnn(_torch_model.TorchModel):
             in_channels = out_channels
             if ((layer+1) % frequency_out_channels_doubling) == 0:
                 out_channels *= 2
-        model.append(torch.nn.MaxPool1d(kernel_size=kernel_size_max_pool))
+        model.append(torch.nn.MaxPool1d(kernel_size=kernel_size))
         model.append(torch.nn.Flatten())
         in_features = torch.nn.Sequential(*model)(torch.zeros(size=(1, self.width_onehot, self.n_features))).shape[1]
         out_features = int(in_features * self.suggest_hyperparam_to_optuna('n_units_factor_linear_layer'))
         model.append(torch.nn.Linear(in_features=in_features, out_features=out_features))
         model.append(act_function)
         model.append(torch.nn.BatchNorm1d(num_features=out_features))
-        p = self.suggest_hyperparam_to_optuna('dropout')
         model.append(torch.nn.Dropout(p))
         model.append(torch.nn.Linear(in_features=out_features, out_features=self.n_outputs))
         return torch.nn.Sequential(*model)
@@ -108,7 +106,6 @@ class Cnn(_torch_model.TorchModel):
                 'upper_bound': 2
             },
             'kernel_size': kernel_size,
-            'maxpool_kernel_size': kernel_size,
             'stride_perc_of_kernel_size': {
                 # Stride in relation to the kernel size
                 'datatype': 'float',
@@ -121,6 +118,6 @@ class Cnn(_torch_model.TorchModel):
                 'datatype': 'float',
                 'lower_bound': 0.2,
                 'upper_bound': 0.5,
-                'step': 0.15
+                'step': 0.3
             },
         }

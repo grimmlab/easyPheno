@@ -28,14 +28,15 @@ class Mlp(_torch_model.TorchModel):
         act_function = self.get_torch_object_for_string(string_to_get=self.suggest_hyperparam_to_optuna('act_function'))
         in_features = self.n_features
         out_features = int(in_features * self.suggest_hyperparam_to_optuna('n_initial_units_factor'))
+        p = self.suggest_hyperparam_to_optuna('dropout')
+        perc_decrease = self.suggest_hyperparam_to_optuna('perc_decrease_per_layer')
         for layer in range(n_layers):
             model.append(torch.nn.Linear(in_features=in_features, out_features=out_features))
             model.append(act_function)
             model.append(torch.nn.BatchNorm1d(num_features=out_features))
-            p = self.suggest_hyperparam_to_optuna('dropout')
             model.append(torch.nn.Dropout(p=p))
             in_features = out_features
-            out_features = int(in_features * (1-self.suggest_hyperparam_to_optuna('perc_decrease_per_layer')))
+            out_features = int(in_features * (1-perc_decrease))
         model.append(torch.nn.Linear(in_features=in_features, out_features=self.n_outputs))
         return torch.nn.Sequential(*model)
 

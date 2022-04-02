@@ -38,59 +38,48 @@ class XgBoost(_sklearn_model.SklearnModel):
         return {
             'n_estimators': {
                 'datatype': 'categorical',
-                'list_of_values': [10, 50, 100, 200, 300, 400, 500, 750, 1000]
+                'list_of_values': [100, 250, 500, 750, 1000]
             },
             'learning_rate': {
                     'datatype': 'float',
-                    'lower_bound': 0,
-                    'upper_bound': 0.5,
-                    'step': 0.05
+                    'lower_bound': 0.1,
+                    'upper_bound': 0.3,
+                    'step': 0.1
             },
             'gamma': {
                 'datatype': 'int',
-                'lower_bound': 1,
-                'upper_bound': 10000,
-                'log': True
+                'lower_bound': 0,
+                'upper_bound': 50,
+                'step': 10
             },
             'max_depth': {
                 'datatype': 'int',
                 'lower_bound': 1,
                 'upper_bound': 10,
+                'step': 3
             },
             'subsample': {
                 'datatype': 'float',
-                'lower_bound': 0.05,
-                'upper_bound': 1,
-                'step': 0.05
+                'lower_bound': 0.1,
+                'upper_bound': 0.7,
+                'step': 0.3
             },
             'colsample_bytree': {
                 'datatype': 'float',
-                'lower_bound': 0.05,
-                'upper_bound': 1,
-                'step': 0.05
-            },
-            'colsample_bylevel': {
-                'datatype': 'float',
-                'lower_bound': 0.05,
-                'upper_bound': 1,
-                'step': 0.05
-            },
-            'colsample_bynode': {
-                'datatype': 'float',
-                'lower_bound': 0.05,
-                'upper_bound': 1,
-                'step': 0.05
+                'lower_bound': 0.1,
+                'upper_bound': 0.7,
+                'step': 0.3
             },
             'reg_lambda': {
                 'datatype': 'float',
                 'lower_bound': 0,
-                'upper_bound': 1000,
-                'step': 10
+                'upper_bound': 500,
+                'step': 100
             },
             'reg_alpha': {
                 'datatype': 'float',
                 'lower_bound': 0,
-                'upper_bound': 1000,
-                'step': 10
+                'upper_bound': 500,
+                'step': 100
             }
         }
