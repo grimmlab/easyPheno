@@ -23,25 +23,24 @@ class Cnn(_torch_model.TorchModel):
             - Linear output layer
 
         Kernel sizes for convolutional and max pooling layers may be fixed or optimized.
-        Same applies for strides, number of output channels of the first convolutional layer,
+        Same applies for strides, number of output channels of the first convolutional layer, dropout rate,
         frequency of a doubling of the output channels and number of units in the first linear layer.
         """
         n_layers = self.suggest_hyperparam_to_optuna('n_layers')
         model = []
         act_function = self.get_torch_object_for_string(string_to_get=self.suggest_hyperparam_to_optuna('act_function'))
         in_channels = self.width_onehot
-        factor_for_kernels = 2 if self.n_features >= 10000 else 1
-        kernel_size = factor_for_kernels * self.suggest_hyperparam_to_optuna('kernel_size_factor')
+        kernel_size = self.suggest_hyperparam_to_optuna('kernel_size')
         stride = max(1, int(kernel_size * self.suggest_hyperparam_to_optuna('stride_perc_of_kernel_size')))
         out_channels = 2 ** self.suggest_hyperparam_to_optuna('initial_out_channels_exp')
-        kernel_size_max_pool = factor_for_kernels * self.suggest_hyperparam_to_optuna('maxpool_kernel_size_factor')
+        kernel_size_max_pool = self.suggest_hyperparam_to_optuna('maxpool_kernel_size')
         frequency_out_channels_doubling = 2  # self.suggest_hyperparam_to_optuna('frequency_out_channels_doubling')
+        p = self.suggest_hyperparam_to_optuna('dropout')
         for layer in range(n_layers):
             model.append(torch.nn.Conv1d(in_channels=in_channels, out_channels=out_channels,
                                          kernel_size=kernel_size, stride=stride))
             model.append(act_function)
             model.append(torch.nn.BatchNorm1d(num_features=out_channels))
-            p = self.suggest_hyperparam_to_optuna('dropout')
             model.append(torch.nn.Dropout(p))
             in_channels = out_channels
             if ((layer+1) % frequency_out_channels_doubling) == 0:
@@ -64,6 +63,32 @@ class Cnn(_torch_model.TorchModel):
 
         See :obj:`~easyPheno.model._torch_model.TorchModel` for more information on hyperparameters common for all torch models.
         """
+        kernel_size = {
+            'datatype': 'int',
+            'lower_bound': 3,
+            'upper_bound': 5
+        }
+        if self.n_features > 15000:
+            kernel_size = {
+                'datatype': 'int',
+                'lower_bound': 4,
+                'upper_bound': 8,
+                'step': 2
+            }
+        if self.n_features > 50000:
+            kernel_size = {
+                'datatype': 'int',
+                'lower_bound': 8,
+                'upper_bound': 12,
+                'step': 2
+            }
+        if self.n_features > 100000:
+            kernel_size = {
+                'datatype': 'int',
+                'lower_bound': 10,
+                'upper_bound': 20,
+                'step': 5
+            }
         return {
             'n_layers': {
                 'datatype': 'int',
@@ -82,24 +107,12 @@ class Cnn(_torch_model.TorchModel):
                 'lower_bound': 1,
                 'upper_bound': 2
             },
-            'kernel_size_factor': {
-                # Value directly used as kernel_size for the convolutional layers for self.n_features < 10.000
-                # Multiplied with factor 2 for bigger values
-                'datatype': 'int',
-                'lower_bound': 3,
-                'upper_bound': 5
-            },
-            'maxpool_kernel_size_factor': {
-                # Value directly used as kernel_size for the maxpool layer for self.n_features < 10.000
-                # Multiplied with factor 2 for bigger values
-                'datatype': 'int',
-                'lower_bound': 3,
-                'upper_bound': 5
-            },
+            'kernel_size': kernel_size,
+            'maxpool_kernel_size': kernel_size,
             'stride_perc_of_kernel_size': {
                 # Stride in relation to the kernel size
                 'datatype': 'float',
-                'lower_bound': 0,
+                'lower_bound': 0.5,
                 'upper_bound': 1,
                 'step': 0.5
             },
@@ -107,7 +120,7 @@ class Cnn(_torch_model.TorchModel):
                 # Number of units in the linear layer after flattening in relation to the number of inputs
                 'datatype': 'float',
                 'lower_bound': 0.2,
-                'upper_bound': 0.8,
-                'step': 0.2
+                'upper_bound': 0.5,
+                'step': 0.15
             },
         }
