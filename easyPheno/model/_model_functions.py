@@ -34,6 +34,7 @@ def load_model(path: str, filename: str) -> _base_model.BaseModel:
 
     :return: model instance
     """
+    path = path + '/' if path[-1] != '/' else path
     model = joblib.load(path + filename)
     # special case for loading tensorflow optimizer
     if issubclass(type(model), _tensorflow_model.TensorflowModel):
