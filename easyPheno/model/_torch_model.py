@@ -197,7 +197,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
                 'datatype': 'float',
                 'lower_bound': 0,
                 'upper_bound': 0.5,
-                'step': 0.25
+                'step': 0.1
             },
             'act_function': {
                 'datatype': 'categorical',
@@ -210,7 +210,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
             },
             'n_epochs': {
                 'datatype': 'categorical',
-                'list_of_values': [100, 500, 1000, 10000]
+                'list_of_values': [100, 500, 1000, 5000, 10000]
             },
             'learning_rate': {
                 'datatype': 'categorical',
