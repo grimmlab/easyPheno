@@ -60,8 +60,9 @@ def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: s
         models_to_optimize = helper_functions.sort_models_by_encoding(models_list=models_to_optimize)
     model_overview = {}
     start_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    user_encoding = encoding
     for optim_run, current_model_name in enumerate(models_to_optimize):
-        encoding = encoding if encoding is not None \
+        encoding = user_encoding if user_encoding is not None \
             else helper_functions.get_mapping_name_to_class()[current_model_name].standard_encoding
         if optim_run == 0:
             print('----- Starting dataset preparation -----')
