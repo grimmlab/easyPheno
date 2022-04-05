@@ -59,7 +59,7 @@ def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: s
     if len(models_to_optimize) > 1:
         models_to_optimize = helper_functions.sort_models_by_encoding(models_list=models_to_optimize)
     model_overview = {}
-    start_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    models_start_time = '+'.join(models_to_optimize) + '_' + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     user_encoding = encoding
     for optim_run, current_model_name in enumerate(models_to_optimize):
         encoding = user_encoding if user_encoding is not None \
@@ -88,7 +88,8 @@ def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: s
             phenotype=phenotype, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
             val_set_size_percentage=val_set_size_percentage, test_set_size_percentage=test_set_size_percentage,
             maf_percentage=maf_percentage, n_trials=n_trials, save_final_model=save_final_model, batch_size=batch_size,
-            n_epochs=n_epochs, task=task, start_time=start_time, current_model_name=current_model_name, dataset=dataset)
+            n_epochs=n_epochs, task=task, models_start_time=models_start_time, current_model_name=current_model_name,
+            dataset=dataset)
         print('### Starting Optuna Optimization for ' + current_model_name + ' ###')
         overall_results = optuna_run.run_optuna_optimization()
         print('### Finished Optuna Optimization for ' + current_model_name + ' ###')
