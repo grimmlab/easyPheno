@@ -46,17 +46,16 @@ class XgBoost(_sklearn_model.SklearnModel):
                     'upper_bound': 0.5,
                     'step': 0.05
             },
+            'max_depth': {
+                'datatype': 'int',
+                'lower_bound': 3,
+                'upper_bound': 10
+            },
             'gamma': {
                 'datatype': 'int',
                 'lower_bound': 0,
                 'upper_bound': 1000,
                 'step': 10
-            },
-            'max_depth': {
-                'datatype': 'int',
-                'lower_bound': 1,
-                'upper_bound': 10,
-                'step': 1
             },
             'subsample': {
                 'datatype': 'float',
