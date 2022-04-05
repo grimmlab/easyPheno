@@ -35,8 +35,7 @@ to start it in interactive mode again. If you did not create a container yet, go
 
         cd /REPO_DIRECTORY/IN/CONTAINER/easyPheno
 
-2. Run easyPheno (as module).
-By default, easyPheno starts the optimization procedure for 10 trials with XGBoost and a 5-fold nested cross-validation using the data we provide in *tutorial_data*.
+2. Run easyPheno (as module). By default, easyPheno starts the optimization procedure for 10 trials with XGBoost and a 5-fold nested cross-validation using the data we provide in *tutorials/tutorial_data*.
 
     .. code-block::
 

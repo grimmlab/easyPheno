@@ -88,13 +88,13 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
                 'datatype': 'float',
                 'lower_bound': 0.3,
                 'upper_bound': 0.7,
-                'step': 0.4
+                'step': 0.1
             },
             'perc_decrease_per_layer': {
                 # Percentage decrease of the number of units per layer
                 'datatype': 'float',
                 'lower_bound': 0.3,
                 'upper_bound': 0.5,
-                'step': 0.2
+                'step': 0.1
             }
         }

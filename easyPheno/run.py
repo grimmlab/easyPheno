@@ -20,22 +20,23 @@ if __name__ == '__main__':
     # Input Params #
     parser.add_argument("-dd", "--data_dir", type=str,
                         default='tutorials/tutorial_data',
-                        help="Provide the full path of your data directory "
-                             "(that contains the geno- and phenotype files).")
+                        help="Provide the full path of your data directory (that contains the geno- and phenotype "
+                             "files).")
     parser.add_argument("-sd", "--save_dir", type=str, default=None,
                         help="Provide the full path of the directory in which you want to save your results. "
                              "Default is same as data_dir")
     parser.add_argument("-gm", "--genotype_matrix", type=str, default='x_matrix.csv',
                         help="specify the name (including data type suffix) of the genotype matrix to be used. "
-                             "Needs to be located in the subfolder data/ of the specified base directory" +
-                             "For more info regarding the required format see our documentation at GitHub")
+                             "Needs to be located in the specified data_dir."
+                             "For more info regarding the required format see our documentation.")
     parser.add_argument("-pm", "--phenotype_matrix", type=str, default='y_matrix.csv',
                         help="specify the name (including data type suffix) of the phenotype matrix to be used. "
-                             "Needs to be located in the subfolder data/ of the specified base directory" +
-                             "For more info regarding the required format see our documentation at GitHub")
+                              "Needs to be located in the specified data_dir."
+                             "For more info regarding the required format see our documentation.")
     parser.add_argument("-ph", "--phenotype", nargs='+', type=str, default=['continuous_values'],
                         help="specify the name of the phenotype to be predicted. "
-                             "Multiple phenotypes can also be chosesn if they are in the same phenotype matrix")
+                             "Multiple phenotypes can also be chosen if they are in the same phenotype matrix. "
+                             "Just name the phenotypes, e.g. --phenotype FT10 FT16")
     parser.add_argument("-enc", "--encoding", type=str, default=None,
                         help="specify the encoding to use. Caution: has to be a possible encoding for the model to use."
                              "Valid arguments are: " + str(encoding_functions.get_list_of_encodings()))
@@ -45,24 +46,24 @@ if __name__ == '__main__':
                         help="specify the minor allele frequency (as percentage value). "
                              "specify 0 if you do not want a maf filter.")
     parser.add_argument("-split", "--datasplit", type=str, default='nested-cv',
-                        help="specify the data slit to use: 'nested-cv' | 'cv-test' | 'train-val-test'"
+                        help="specify the data split to use: 'nested-cv' | 'cv-test' | 'train-val-test'"
                              "Default values are 5 folds, train-test-split to 80/20 and train-val-test to 60/20/20")
     parser.add_argument("-testperc", "--test_set_size_percentage", type=int, default=20,
                         help="specify the size of the test set in percentage. "
                              "Standard is 20, only relevant for 'cv-test' and 'train-val-test'")
     parser.add_argument("-valperc", "--val_set_size_percentage", type=int, default=20,
                         help="specify the size of the validation set in percentage. "
-                             "Standard is 20, only relevant 'train-val-test'")
+                             "Standard is 20, only relevant for 'train-val-test'")
     parser.add_argument("-of", "--n_outerfolds", type=int, default=5,
                         help="specify the number of outerfolds to use for 'nested_cv'"
-                             "Standard is 20, only relevant 'nested_cv'")
+                             "Standard is 5, only relevant for 'nested_cv'")
     parser.add_argument("-folds", "--n_innerfolds", type=int, default=5,
                         help="specify the number of innerfolds/folds to use for 'nested_cv' respectively 'cv-test'"
-                             "Standard is 5, only relevant 'nested_cv' and 'cv-test'")
+                             "Standard is 5, only relevant for 'nested_cv' and 'cv-test'")
 
     # Model and Optimization Params #
     parser.add_argument("-mod", "--models", nargs='+', type=str, default=['xgboost'],
-                        help="specify the models to optimize: all or naming according to source file name. "
+                        help="specify the models to optimize: 'all' or naming according to source file name. "
                              "Multiple models can be selected by just naming multiple model names, "
                              "e.g. --models mlp xgboost. "
                              "The following are available: " + str(helper_functions.get_list_of_implemented_models()))
