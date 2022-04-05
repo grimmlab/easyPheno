@@ -19,9 +19,10 @@ within a `Docker <https://www.docker.com/>`_ container.
 
 Requirements
 ~~~~~~~~~~~~~~~~~~~~~~
-For the :ref:`Docker Workflow`, `Docker <https://www.docker.com/>`_ with a version >= 20.10.12 needs to be installed and running on your machine,
+For the :ref:`Docker Workflow`, `Docker <https://www.docker.com/>`_ needs to be installed and running on your machine,
 see the `Installation Guidelines at the Docker website <https://docs.docker.com/get-docker/>`_.
-On Ubuntu, you can use ``docker -v`` to check your installed version.
+On Ubuntu, you can use ``docker run hello-world`` to check if Docker works
+(Caution: add sudo if you are not in the docker group).
 
 If you want to use GPU support, you need to install `nvidia-docker-2 <https://github.com/NVIDIA/nvidia-docker>`_ (see this `nvidia-docker Installation Guide <https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#setting-up-nvidia-container-toolkit>`_)
 and a version of `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ >= 11.2 (see this `CUDA Installation Guide <https://docs.nvidia.com/cuda/index.html#installation-guides>`_). To check your CUDA version, just run ``nvidia-smi`` in a terminal.
@@ -51,11 +52,10 @@ Setup
 
     .. code-block::
 
-        docker run -it -v PATH/TO/REPO/FOLDER:/REPO_DIRECTORY/IN/CONTAINER -v /PATH/TO/DATA/DIRECTORY:/DATA_DIRECTORY/IN/CONTAINER -v /PATH/TO/RESULTS/SAVE/DIRECTORY:/SAVE_DIRECTORY/IN/CONTAINER --cpuset-cpus CPU_INDEX_START-CPU_INDEX_STOP --gpus device=DEVICE_NUMBER --name CONTAINERNAME IMAGENAME
-
+        docker run -it -v /PATH/TO/REPO/FOLDER:/REPO_DIRECTORY/IN/CONTAINER -v /PATH/TO/DATA/DIRECTORY:/DATA_DIRECTORY/IN/CONTAINER -v /PATH/TO/RESULTS/SAVE/DIRECTORY:/SAVE_DIRECTORY/IN/CONTAINER --name CONTAINERNAME IMAGENAME
 
     - Mount the directory where the repository is placed on your machine, the directory where your phenotype and genotype data is stored and the directory where you want to save your results using the option ``-v``.
-    - Restrict the number of cpus using the option ``cpuset-cpus CPU_INDEX_START-CPU_INDEX_STOP``.
+    - You can restrict the number of cpus using the option ``cpuset-cpus CPU_INDEX_START-CPU_INDEX_STOP``.
     - Specify a gpu device using ``--gpus device=DEVICE_NUMBER`` if you want to use GPU support.
 
 

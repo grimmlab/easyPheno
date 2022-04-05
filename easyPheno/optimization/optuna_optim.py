@@ -53,13 +53,13 @@ class OptunaOptim:
     :param task: ML task (regression or classification) depending on target variable
     :param current_model_name: name of the current model according to naming of .py file in package model
     :param dataset: dataset to use for optimization run
-    :param start_time: starting time of the optimization run for saving purposes
+    :param models_start_time: optimized models and starting time of the optimization run for saving purposes
     """
 
     def __init__(self, save_dir: str, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
                  n_outerfolds: int, n_innerfolds: int, val_set_size_percentage: int, test_set_size_percentage: int,
                  maf_percentage: int, n_trials: int, save_final_model: bool, batch_size: int, n_epochs: int,
-                 task: str, current_model_name: str, dataset: base_dataset.Dataset, start_time: str):
+                 task: str, current_model_name: str, dataset: base_dataset.Dataset, models_start_time: str):
         self.current_model_name = current_model_name
         self.task = task
         self.dataset = dataset
@@ -73,9 +73,9 @@ class OptunaOptim:
             datasplit=self.dataset.datasplit, datasplit_params=datasplit_params
         )
         self.base_path = save_dir + '/results/' + genotype_matrix_name.split('.')[0] + '/' + \
-                         phenotype_matrix_name.split('.')[0] + '/' + phenotype + '/' + self.dataset.datasplit + '/' + \
-                         self.datasplit_subpath + '/MAF' + str(
-            maf_percentage) + '/' + start_time + '/' + current_model_name + '/'
+                         phenotype_matrix_name.split('.')[0] + '/' + phenotype + '/' + self.dataset.datasplit + '_' + \
+                         self.datasplit_subpath + '_MAF' + str(maf_percentage) + '_' + models_start_time + '/' \
+                         + current_model_name + '/'
         self.save_path = self.base_path
         self.study = None
         self.current_best_val_result = None
@@ -300,13 +300,14 @@ class OptunaOptim:
         """
         # Iterate over outerfolds
         # (according to structure described in base_dataset.Dataset, only for nested-cv multiple outerfolds exist)
+        helper_functions.set_all_seeds()
         overall_results = {}
         for outerfold_name, outerfold_info in self.dataset.datasplit_indices.items():
             if self.dataset.datasplit == 'nested-cv':
                 # Only print outerfold info for nested-cv as it does not apply for the other splits
                 print("## Starting Optimization for " + outerfold_name + " ##")
-                maf_ind = [m.end(0) for m in re.finditer(pattern='(MAF[0-9]+/)+([0-9]|-|_)+', string=self.base_path)][0]
-                self.save_path = self.base_path[:maf_ind] + '/' + outerfold_name + self.base_path[maf_ind:]
+                end_ind = [m.end(0) for m in re.finditer(pattern='/', string=self.base_path)][-2]
+                self.save_path = self.base_path[:end_ind] + outerfold_name + '/' + self.base_path[end_ind:]
             if not os.path.exists(self.save_path):
                 os.makedirs(self.save_path)
             # Create a new study for each outerfold
@@ -317,6 +318,9 @@ class OptunaOptim:
                 lambda trial: self.objective(trial=trial, train_val_indices=outerfold_info),
                 n_trials=self.user_input_params["n_trials"]
             )
+            helper_functions.set_all_seeds()
+            # set seeds again after optuna runs are finished as number of trials might lead to different states of
+            # random number generators
             # Calculate runtime metrics after finishing optimization
             runtime_metrics = self.calc_runtime_stats()
             # Print statistics after run

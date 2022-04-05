@@ -19,17 +19,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Input Params #
     parser.add_argument("-dd", "--data_dir", type=str,
-                        default='/myhome/data/ArabidopsisThaliana/',
+                        default='tutorial_data',
                         help="Provide the full path of your data directory "
                              "(that contains the geno- and phenotype files).")
-    parser.add_argument("-sd", "--save_dir", type=str, default='/myhome',
+    parser.add_argument("-sd", "--save_dir", type=str, default='',
                         help="Provide the full path of the directory in which you want to save your results. "
                              "Default is same as data_dir")
-    parser.add_argument("-gm", "--genotype_matrix", type=str, default='ld_pruned_arabidopsis_2029_maf001.h5',
+    parser.add_argument("-gm", "--genotype_matrix", type=str, default='x_matrix.csv',
                         help="specify the name (including data type suffix) of the genotype matrix to be used. "
                              "Needs to be located in the subfolder data/ of the specified base directory" +
                              "For more info regarding the required format see our documentation at GitHub")
-    parser.add_argument("-pm", "--phenotype_matrix", type=str, default='study_38_values.csv',
+    parser.add_argument("-pm", "--phenotype_matrix", type=str, default='y_matrix.csv',
                         help="specify the name (including data type suffix) of the phenotype matrix to be used. "
                              "Needs to be located in the subfolder data/ of the specified base directory" +
                              "For more info regarding the required format see our documentation at GitHub")
@@ -41,7 +41,7 @@ if __name__ == '__main__':
                              "Valid arguments are: " + str(encoding_functions.get_list_of_encodings()))
 
     # Preprocess Params #
-    parser.add_argument("-maf", "--maf_percentage", type=int, default=10,
+    parser.add_argument("-maf", "--maf_percentage", type=int, default=0,
                         help="specify the minor allele frequency (as percentage value). "
                              "specify 0 if you do not want a maf filter.")
     parser.add_argument("-split", "--datasplit", type=str, default='nested-cv',
