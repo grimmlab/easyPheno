@@ -19,10 +19,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Input Params #
     parser.add_argument("-dd", "--data_dir", type=str,
-                        default='tutorial_data',
+                        default='tutorials/tutorial_data',
                         help="Provide the full path of your data directory "
                              "(that contains the geno- and phenotype files).")
-    parser.add_argument("-sd", "--save_dir", type=str, default='',
+    parser.add_argument("-sd", "--save_dir", type=str, default=None,
                         help="Provide the full path of the directory in which you want to save your results. "
                              "Default is same as data_dir")
     parser.add_argument("-gm", "--genotype_matrix", type=str, default='x_matrix.csv',
@@ -66,7 +66,7 @@ if __name__ == '__main__':
                              "Multiple models can be selected by just naming multiple model names, "
                              "e.g. --models mlp xgboost. "
                              "The following are available: " + str(helper_functions.get_list_of_implemented_models()))
-    parser.add_argument("-tr", "--n_trials", type=int, default=100,
+    parser.add_argument("-tr", "--n_trials", type=int, default=10,
                         help="number of trials for optuna")
     parser.add_argument("-sf", "--save_final_model", type=bool, default=False,
                         help="save the final model to hard drive "
