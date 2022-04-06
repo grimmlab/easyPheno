@@ -42,6 +42,11 @@ class RandomForest(_sklearn_model.SklearnModel):
                 'upper_bound': 0.3,
                 'step': 0.02
             },
+            'max_depth': {
+                'datatype': 'int',
+                'lower_bound': 3,
+                'upper_bound': 10
+            },
             'min_samples_leaf': {
                 'datatype': 'float',
                 'lower_bound': 0.02,
