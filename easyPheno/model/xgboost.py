@@ -21,7 +21,7 @@ class XgBoost(_sklearn_model.SklearnModel):
         # all hyperparameters defined for XGBoost are suggested for optimization
         params = self.suggest_all_hyperparams_to_optuna()
         # add random_state for reproducibility
-        params.update({'random_state': 42})
+        params.update({'random_state': 42, 'reg_lambda': 0})
         if self.task == 'classification':
             # set some parameters to prevent warnings
             params.update({'use_label_encoder': False})
