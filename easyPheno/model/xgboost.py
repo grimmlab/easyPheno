@@ -1,4 +1,5 @@
 import xgboost
+import torch
 
 from . import _sklearn_model
 
@@ -22,6 +23,8 @@ class XgBoost(_sklearn_model.SklearnModel):
         params = self.suggest_all_hyperparams_to_optuna()
         # add random_state for reproducibility
         params.update({'random_state': 42})
+        if torch.cuda.is_available():
+            params.update({'tree_method': 'gpu_hist', 'gpu_id': 0})
         if self.task == 'classification':
             # set some parameters to prevent warnings
             params.update({'use_label_encoder': False})
@@ -34,16 +37,28 @@ class XgBoost(_sklearn_model.SklearnModel):
     def define_hyperparams_to_tune(self) -> dict:
         """
         See :obj:`~easyPheno.model._base_model.BaseModel` for more information on the format.
+
+        Further params that potentially can be optimized
+
+            .. code-block:: python
+
+                'reg_lambda': {
+                    'datatype': 'float',
+                    'lower_bound': 0,
+                    'upper_bound': 1000,
+                    'step': 10
+                }
+
         """
         return {
             'n_estimators': {
                 'datatype': 'categorical',
-                'list_of_values': [50, 100, 250, 500, 750, 1000, 1500, 2000, 2500, 5000]
+                'list_of_values': [50, 100, 250, 500, 750, 1000, 1500, 2000, 2500]
             },
             'learning_rate': {
                     'datatype': 'float',
                     'lower_bound': 0.05,
-                    'upper_bound': 0.5,
+                    'upper_bound': 0.3,
                     'step': 0.05
             },
             'max_depth': {
@@ -68,12 +83,6 @@ class XgBoost(_sklearn_model.SklearnModel):
                 'lower_bound': 0.05,
                 'upper_bound': 0.7,
                 'step': 0.05
-            },
-            'reg_lambda': {
-                'datatype': 'float',
-                'lower_bound': 0,
-                'upper_bound': 1000,
-                'step': 10
             },
             'reg_alpha': {
                 'datatype': 'float',
