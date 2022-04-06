@@ -45,7 +45,7 @@ if __name__ == '__main__':
     parser.add_argument("-maf", "--maf_percentage", type=int, default=10,
                         help="specify the minor allele frequency (as percentage value). "
                              "specify 0 if you do not want a maf filter.")
-    parser.add_argument("-split", "--datasplit", type=str, default='nested-cv',
+    parser.add_argument("-split", "--datasplit", type=str, default='cv-test',
                         help="specify the data split to use: 'nested-cv' | 'cv-test' | 'train-val-test'"
                              "Default values are 5 folds, train-test-split to 80/20 and train-val-test to 60/20/20")
     parser.add_argument("-testperc", "--test_set_size_percentage", type=int, default=20,
