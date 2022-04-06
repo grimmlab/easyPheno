@@ -61,7 +61,7 @@ class OptunaOptim:
                  n_outerfolds: int, n_innerfolds: int, val_set_size_percentage: int, test_set_size_percentage: int,
                  maf_percentage: int, n_trials: int, save_final_model: bool, batch_size: int, n_epochs: int,
                  task: str, current_model_name: str, dataset: base_dataset.Dataset, models_start_time: str,
-                 intermediate_results_interval: int = 5):
+                 intermediate_results_interval: int = 50):
         self.current_model_name = current_model_name
         self.task = task
         self.dataset = dataset
