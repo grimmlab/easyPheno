@@ -1,5 +1,4 @@
 import xgboost
-import torch
 
 from . import _sklearn_model
 
@@ -23,8 +22,6 @@ class XgBoost(_sklearn_model.SklearnModel):
         params = self.suggest_all_hyperparams_to_optuna()
         # add random_state for reproducibility
         params.update({'random_state': 42})
-        if torch.cuda.is_available():
-            params.update({'tree_method': 'gpu_hist', 'gpu_id': 0})
         if self.task == 'classification':
             # set some parameters to prevent warnings
             params.update({'use_label_encoder': False})
