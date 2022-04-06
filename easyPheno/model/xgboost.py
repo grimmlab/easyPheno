@@ -50,13 +50,13 @@ class XgBoost(_sklearn_model.SklearnModel):
         return {
             'n_estimators': {
                 'datatype': 'categorical',
-                'list_of_values': [50, 100, 250, 500, 750, 1000, 1500, 2000, 2500]
+                'list_of_values': [50, 100, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2500]
             },
             'learning_rate': {
                     'datatype': 'float',
-                    'lower_bound': 0.05,
+                    'lower_bound': 0.025,
                     'upper_bound': 0.3,
-                    'step': 0.05
+                    'step': 0.025
             },
             'max_depth': {
                 'datatype': 'int',
@@ -72,13 +72,13 @@ class XgBoost(_sklearn_model.SklearnModel):
             'subsample': {
                 'datatype': 'float',
                 'lower_bound': 0.05,
-                'upper_bound': 0.7,
+                'upper_bound': 0.8,
                 'step': 0.05
             },
             'colsample_bytree': {
                 'datatype': 'float',
                 'lower_bound': 0.05,
-                'upper_bound': 0.7,
+                'upper_bound': 0.8,
                 'step': 0.05
             },
             'reg_alpha': {

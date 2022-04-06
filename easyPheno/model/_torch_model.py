@@ -214,7 +214,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
             },
             'learning_rate': {
                 'datatype': 'categorical',
-                'list_of_values': [1e-5, 1e-4, 1e-3, 1e-2]
+                'list_of_values': [1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
             },
             'early_stopping_patience': {
                 'datatype': 'int',
