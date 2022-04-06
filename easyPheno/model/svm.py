@@ -46,7 +46,7 @@ class SupportVectorMachine(_sklearn_model.SklearnModel):
             'degree': {
                 'datatype': 'int',
                 'lower_bound': 1,
-                'upper_bound': 3
+                'upper_bound': 5
             },
             'gamma': {
                 'datatype': 'float',

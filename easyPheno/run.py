@@ -19,21 +19,21 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Input Params #
     parser.add_argument("-dd", "--data_dir", type=str,
-                        default='tutorials/tutorial_data',
+                        default='/myhome/data/',
                         help="Provide the full path of your data directory (that contains the geno- and phenotype "
                              "files).")
-    parser.add_argument("-sd", "--save_dir", type=str, default=None,
+    parser.add_argument("-sd", "--save_dir", type=str, default='/myhome/',
                         help="Provide the full path of the directory in which you want to save your results. "
                              "Default is same as data_dir")
-    parser.add_argument("-gm", "--genotype_matrix", type=str, default='x_matrix.csv',
+    parser.add_argument("-gm", "--genotype_matrix", type=str, default='ld_pruned_arabidopsis_2029_maf001.h5',
                         help="specify the name (including data type suffix) of the genotype matrix to be used. "
                              "Needs to be located in the specified data_dir."
                              "For more info regarding the required format see our documentation.")
-    parser.add_argument("-pm", "--phenotype_matrix", type=str, default='y_matrix.csv',
+    parser.add_argument("-pm", "--phenotype_matrix", type=str, default='study_12_values.csv',
                         help="specify the name (including data type suffix) of the phenotype matrix to be used. "
                               "Needs to be located in the specified data_dir."
                              "For more info regarding the required format see our documentation.")
-    parser.add_argument("-ph", "--phenotype", nargs='+', type=str, default=['continuous_values'],
+    parser.add_argument("-ph", "--phenotype", nargs='+', type=str, default=['FT10'],
                         help="specify the name of the phenotype to be predicted. "
                              "Multiple phenotypes can also be chosen if they are in the same phenotype matrix. "
                              "Just name the phenotypes, e.g. --phenotype FT10 FT16")
@@ -42,10 +42,10 @@ if __name__ == '__main__':
                              "Valid arguments are: " + str(encoding_functions.get_list_of_encodings()))
 
     # Preprocess Params #
-    parser.add_argument("-maf", "--maf_percentage", type=int, default=0,
+    parser.add_argument("-maf", "--maf_percentage", type=int, default=10,
                         help="specify the minor allele frequency (as percentage value). "
                              "specify 0 if you do not want a maf filter.")
-    parser.add_argument("-split", "--datasplit", type=str, default='nested-cv',
+    parser.add_argument("-split", "--datasplit", type=str, default='cv-test',
                         help="specify the data split to use: 'nested-cv' | 'cv-test' | 'train-val-test'"
                              "Default values are 5 folds, train-test-split to 80/20 and train-val-test to 60/20/20")
     parser.add_argument("-testperc", "--test_set_size_percentage", type=int, default=20,
@@ -67,7 +67,7 @@ if __name__ == '__main__':
                              "Multiple models can be selected by just naming multiple model names, "
                              "e.g. --models mlp xgboost. "
                              "The following are available: " + str(helper_functions.get_list_of_implemented_models()))
-    parser.add_argument("-tr", "--n_trials", type=int, default=10,
+    parser.add_argument("-tr", "--n_trials", type=int, default=200,
                         help="number of trials for optuna")
     parser.add_argument("-sf", "--save_final_model", type=bool, default=False,
                         help="save the final model to hard drive "
@@ -75,10 +75,10 @@ if __name__ == '__main__':
                              "unfitted models that can be retrained are already saved by default)")
 
     # Only relevant for Neural Networks #
-    parser.add_argument("-bs", "--batch_size", type=int, default=32,
+    parser.add_argument("-bs", "--batch_size", type=int, default=64,
                         help="Only relevant for neural networks: define the batch size. If nothing is specified,"
                              "it will be considered as a hyperparameter for optimization")
-    parser.add_argument("-ep", "--n_epochs", type=int, default=None,
+    parser.add_argument("-ep", "--n_epochs", type=int, default=100000,
                         help="Only relevant for neural networks: define the number of epochs. If nothing is specified,"
                              "it will be considered as a hyperparameter for optimization")
     args = vars(parser.parse_args())

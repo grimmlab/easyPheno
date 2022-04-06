@@ -54,12 +54,14 @@ class OptunaOptim:
     :param current_model_name: name of the current model according to naming of .py file in package model
     :param dataset: dataset to use for optimization run
     :param models_start_time: optimized models and starting time of the optimization run for saving purposes
+    :param intermediate_results_interval: number of trials after which intermediate results will be saved
     """
 
     def __init__(self, save_dir: str, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
                  n_outerfolds: int, n_innerfolds: int, val_set_size_percentage: int, test_set_size_percentage: int,
                  maf_percentage: int, n_trials: int, save_final_model: bool, batch_size: int, n_epochs: int,
-                 task: str, current_model_name: str, dataset: base_dataset.Dataset, models_start_time: str):
+                 task: str, current_model_name: str, dataset: base_dataset.Dataset, models_start_time: str,
+                 intermediate_results_interval: int = 5):
         self.current_model_name = current_model_name
         self.task = task
         self.dataset = dataset
@@ -80,6 +82,7 @@ class OptunaOptim:
         self.study = None
         self.current_best_val_result = None
         self.early_stopping_point = None
+        self.intermediate_results_interval = intermediate_results_interval
         self.user_input_params = locals()  # distribute all handed over params in whole class
 
     def create_new_study(self) -> optuna.study.Study:
@@ -120,6 +123,10 @@ class OptunaOptim:
 
         :return: score of the current hyperparameter config
         """
+        if (trial.number != 0) and (trial.number % self.intermediate_results_interval == 0):
+            print('Generate intermediate test results at trial ' + str(trial.number))
+            _ = self.generate_results_on_test(outerfold_info=train_val_indices)
+
         # Setup timers for runtime logging
         start_process_time = time.process_time()
         start_realclock_time = time.time()
@@ -147,7 +154,8 @@ class OptunaOptim:
             print('Trial failed. Error in model creation.')
             print(exc)
             print(trial.params)
-            self.clean_up_after_exception(trial_number=trial.number, trial_params=trial.params)
+            self.clean_up_after_exception(trial_number=trial.number, trial_params=trial.params,
+                                          reason='model creation: ' + str(exc))
             raise optuna.exceptions.TrialPruned()
 
         # save the unfitted model
@@ -156,6 +164,11 @@ class OptunaOptim:
                          filename='unfitted_model_trial' + str(trial.number))
         print("Params for Trial " + str(trial.number))
         print(trial.params)
+        if self.check_params_for_duplicate(current_params=trial.params):
+            print('Trial params are a duplicate.')
+            self.clean_up_after_exception(trial_number=trial.number, trial_params=trial.params,
+                                          reason='pruned: duplicate')
+            raise optuna.exceptions.TrialPruned()
         # Iterate over all innerfolds
         objective_values = []
         validation_results = pd.DataFrame(index=range(0, self.dataset.y_full.shape[0]))
@@ -194,7 +207,7 @@ class OptunaOptim:
                 trial.report(value=objective_value,
                              step=0 if self.dataset.datasplit == 'train-val-test' else int(innerfold_name[-1]))
                 if trial.should_prune():
-                    self.clean_up_after_exception(trial_number=trial.number, trial_params=trial.params)
+                    self.clean_up_after_exception(trial_number=trial.number, trial_params=trial.params, reason='pruned')
                     raise optuna.exceptions.TrialPruned()
                 # store results
                 objective_values.append(objective_value)
@@ -220,7 +233,8 @@ class OptunaOptim:
                     torch.cuda.empty_cache()
                 else:
                     print('Trial failed. Error in optim loop.')
-                self.clean_up_after_exception(trial_number=trial.number, trial_params=trial.params)
+                self.clean_up_after_exception(trial_number=trial.number, trial_params=trial.params,
+                                              reason='model optimization: ' + str(exc))
                 raise optuna.exceptions.TrialPruned()
         current_val_result = float(np.mean(objective_values))
         if self.current_best_val_result is None or \
@@ -244,20 +258,21 @@ class OptunaOptim:
         self.write_runtime_csv(dict_runtime={'Trial': trial.number,
                                              'process_time_s': time.process_time() - start_process_time,
                                              'real_time_s': time.time() - start_realclock_time,
-                                             'params': trial.params})
+                                             'params': trial.params, 'note': 'successful'})
         return current_val_result
 
-    def clean_up_after_exception(self, trial_number: int, trial_params: dict):
+    def clean_up_after_exception(self, trial_number: int, trial_params: dict, reason: str):
         """
         Clean up things after an exception: delete unfitted model if it exists and update runtime csv
 
         :param trial_number: number of the trial
         :param trial_params: parameters of the trial
+        :param reason: hint for the reason of the Exception
         """
         if os.path.exists(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial_number)):
             os.remove(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial_number))
         self.write_runtime_csv(dict_runtime={'Trial': trial_number, 'process_time_s': np.nan, 'real_time_s': np.nan,
-                                             'params': trial_params})
+                                             'params': trial_params, 'note': reason})
 
     def write_runtime_csv(self, dict_runtime: dict):
         """
@@ -266,7 +281,7 @@ class OptunaOptim:
         :param dict_runtime: dictionary with runtime information
         """
         with open(self.save_path + self.current_model_name + '_runtime_overview.csv', 'a') as runtime_file:
-            headers = ['Trial', 'process_time_s', 'real_time_s', 'params']
+            headers = ['Trial', 'process_time_s', 'real_time_s', 'params', 'note']
             writer = csv.DictWriter(f=runtime_file, fieldnames=headers)
             if runtime_file.tell() == 0:
                 writer.writeheader()
@@ -279,6 +294,7 @@ class OptunaOptim:
         :return: dict with runtime info enhanced with runtime stats
         """
         csv_file = pd.read_csv(self.save_path + self.current_model_name + '_runtime_overview.csv')
+        csv_file = csv_file[csv_file["Trial"].str.contains("retrain") == False]
         process_times = csv_file['process_time_s']
         real_times = csv_file['real_time_s']
         process_time_mean, process_time_std, process_time_max, process_time_min = \
@@ -293,6 +309,78 @@ class OptunaOptim:
                 'process_time_max': process_time_max, 'process_time_min': process_time_min,
                 'real_time_mean': real_time_mean, 'real_time_std': real_time_std,
                 'real_time_max': real_time_max, 'real_time_min': real_time_min}
+
+    def check_params_for_duplicate(self, current_params: dict) -> bool:
+        """
+        Check if params were already suggested which might happen by design of TPE sampler.
+
+        :param current_params: dictionar with current parameters
+
+        :return: bool reflecting if current params were already used in the same study
+        """
+        past_params = [trial.params for trial in self.study.trials[:-1]]
+        return current_params in past_params
+
+    def generate_results_on_test(self, outerfold_info: dict) -> dict:
+        """
+        Generate the results on the testing data
+
+        :param outerfold_info: dictionary with outerfold datasplit indices
+
+        :return: evaluation metrics dictionary
+        """
+
+        helper_functions.set_all_seeds()
+        # Retrain on full train + val data with best hyperparams and apply on test
+        print("## Retrain best model and test ##")
+        X_test, y_test, sample_ids_test = \
+            self.dataset.X_full[outerfold_info['test']], self.dataset.y_full[outerfold_info['test']], \
+            self.dataset.sample_ids_full[outerfold_info['test']]
+        X_retrain, y_retrain, sample_ids_retrain = \
+            self.dataset.X_full[~np.isin(np.arange(len(self.dataset.X_full)), outerfold_info['test'])], \
+            self.dataset.y_full[~np.isin(np.arange(len(self.dataset.y_full)), outerfold_info['test'])], \
+            self.dataset.sample_ids_full[~np.isin(np.arange(len(self.dataset.sample_ids_full)),
+                                                  outerfold_info['test'])],
+        start_process_time = time.process_time()
+        start_realclock_time = time.time()
+        prefix = '' if len(self.study.trials) == self.user_input_params["n_trials"] else '/temp/'
+        final_model = _model_functions.load_retrain_model(
+            path=self.save_path, filename=prefix + 'unfitted_model_trial' + str(self.study.best_trial.number),
+            X_retrain=X_retrain, y_retrain=y_retrain, early_stopping_point=self.early_stopping_point)
+        y_pred_retrain = final_model.predict(X_in=X_retrain)
+        self.write_runtime_csv(dict_runtime={'Trial': 'retraining_after_' + str(len(self.study.trials)),
+                                             'process_time_s': time.process_time() - start_process_time,
+                                             'real_time_s': time.time() - start_realclock_time,
+                                             'params': self.study.best_trial.params, 'note': 'successful'})
+        y_pred_test = final_model.predict(X_in=X_test)
+
+        # Evaluate and save results
+        eval_scores = \
+            eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test, task=self.task, prefix='test_')
+
+        print('## Results on test set ##')
+        print(eval_scores)
+        final_results = pd.DataFrame(index=range(0, self.dataset.y_full.shape[0]))
+        final_results.at[0:len(sample_ids_retrain) - 1, 'sample_ids_retrain'] = sample_ids_retrain.flatten()
+        final_results.at[0:len(y_pred_retrain) - 1, 'y_pred_retrain'] = y_pred_retrain.flatten()
+        final_results.at[0:len(y_retrain) - 1, 'y_true_retrain'] = y_retrain.flatten()
+        final_results.at[0:len(sample_ids_test) - 1, 'sample_ids_test'] = sample_ids_test.flatten()
+        final_results.at[0:len(y_pred_test) - 1, 'y_pred_test'] = y_pred_test.flatten()
+        final_results.at[0:len(y_test) - 1, 'y_true_test'] = y_test.flatten()
+        for metric, value in eval_scores.items():
+            final_results.at[0, metric] = value
+        if len(self.study.trials) == self.user_input_params["n_trials"]:
+            results_filename = 'final_model_test_results.csv'
+            if self.user_input_params["save_final_model"]:
+                final_model.save_model(path=self.save_path, filename='final_retrained_model')
+        else:
+            results_filename = '/temp/intermediate_after_' + str(len(self.study.trials) - 1) + '_test_results.csv'
+            shutil.copyfile(self.save_path + self.current_model_name + '_runtime_overview.csv',
+                            self.save_path + '/temp/intermediate_after_' + str(len(self.study.trials) - 1) + '_' +
+                            self.current_model_name + '_runtime_overview.csv', )
+        final_results.to_csv(self.save_path + results_filename,
+                             sep=',', decimal='.', float_format='%.10f', index=False)
+        return eval_scores
 
     def run_optuna_optimization(self) -> dict:
         """
@@ -342,46 +430,8 @@ class OptunaOptim:
             shutil.rmtree(self.save_path + 'temp/')
 
             # Retrain on full train + val data with best hyperparams and apply on test
-            print("## Retrain best model and test ##")
-            X_test, y_test, sample_ids_test = \
-                self.dataset.X_full[outerfold_info['test']], self.dataset.y_full[outerfold_info['test']], \
-                self.dataset.sample_ids_full[outerfold_info['test']]
-            X_retrain, y_retrain, sample_ids_retrain = \
-                self.dataset.X_full[~np.isin(np.arange(len(self.dataset.X_full)), outerfold_info['test'])], \
-                self.dataset.y_full[~np.isin(np.arange(len(self.dataset.y_full)), outerfold_info['test'])], \
-                self.dataset.sample_ids_full[~np.isin(np.arange(len(self.dataset.sample_ids_full)),
-                                                      outerfold_info['test'])],
-            start_process_time = time.process_time()
-            start_realclock_time = time.time()
-            final_model = _model_functions.load_retrain_model(
-                path=self.save_path, filename='unfitted_model_trial' + str(self.study.best_trial.number),
-                X_retrain=X_retrain, y_retrain=y_retrain, early_stopping_point=self.early_stopping_point)
-            y_pred_retrain = final_model.predict(X_in=X_retrain)
-            self.write_runtime_csv(dict_runtime={'Trial': 'retraining',
-                                                 'process_time_s': time.process_time() - start_process_time,
-                                                 'real_time_s': time.time() - start_realclock_time})
-            y_pred_test = final_model.predict(X_in=X_test)
-
-            # Evaluate and save results
-            eval_scores = \
-                eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test, task=self.task, prefix='test_')
+            eval_scores = self.generate_results_on_test(outerfold_info=outerfold_info)
             key = outerfold_name if self.dataset.datasplit == 'nested-cv' else 'Test'
             overall_results[key] = {'best_params': self.study.best_trial.params, 'eval_metrics': eval_scores,
                                     'runtime_metrics': runtime_metrics}
-            print('## Results on test set ##')
-            print(eval_scores)
-            final_results = pd.DataFrame(index=range(0, self.dataset.y_full.shape[0]))
-            final_results.at[0:len(sample_ids_retrain) - 1, 'sample_ids_retrain'] = sample_ids_retrain.flatten()
-            final_results.at[0:len(y_pred_retrain) - 1, 'y_pred_retrain'] = y_pred_retrain.flatten()
-            final_results.at[0:len(y_retrain) - 1, 'y_true_retrain'] = y_retrain.flatten()
-            final_results.at[0:len(sample_ids_test) - 1, 'sample_ids_test'] = sample_ids_test.flatten()
-            final_results.at[0:len(y_pred_test) - 1, 'y_pred_test'] = y_pred_test.flatten()
-            final_results.at[0:len(y_test) - 1, 'y_true_test'] = y_test.flatten()
-            for metric, value in eval_scores.items():
-                final_results.at[0, metric] = value
-            final_results.to_csv(self.save_path + 'final_model_test_results.csv',
-                                 sep=',', decimal='.', float_format='%.10f', index=False)
-            if self.user_input_params["save_final_model"]:
-                final_model.save_model(path=self.save_path,
-                                       filename='final_retrained_model')
         return overall_results
