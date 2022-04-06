@@ -80,7 +80,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
                 epochs_wo_improvement += 1
             print('Epoch ' + str(epoch + 1) + ' of ' + str(self.n_epochs))
             print('Current val_loss=' + str(val_loss) + ', best val_loss=' + str(best_loss))
-            if epochs_wo_improvement >= self.early_stopping_patience:
+            if epoch >= 20 and epochs_wo_improvement >= self.early_stopping_patience:
                 print("Early Stopping at " + str(epoch + 1) + ' of ' + str(self.n_epochs))
                 self.early_stopping_point = epoch - self.early_stopping_patience
                 self.model = best_model
