@@ -17,13 +17,14 @@ def get_evaluation_report(y_pred: np.array, y_true: np.array, task: str, prefix:
         print('y_pred has one element less than y_true (e.g. due to batch size config) -> dropped last element')
         y_true = y_true[:-1]
     if task == 'classification':
+        average = 'micro' if len(np.unique(y_true)) > 2 else 'binary'
         eval_report_dict = {
             prefix + 'accuracy': sklearn.metrics.accuracy_score(y_true=y_true, y_pred=y_pred),
-            prefix + 'f1_score': sklearn.metrics.f1_score(y_true=y_true, y_pred=y_pred, average='micro'),
+            prefix + 'f1_score': sklearn.metrics.f1_score(y_true=y_true, y_pred=y_pred, average=average),
             prefix + 'precision': sklearn.metrics.precision_score(y_true=y_true, y_pred=y_pred,
-                                                                  zero_division=0, average='micro'),
+                                                                  zero_division=0, average=average),
             prefix + 'recall': sklearn.metrics.recall_score(y_true=y_true, y_pred=y_pred,
-                                                            zero_division=0, average='micro'),
+                                                            zero_division=0, average=average),
             prefix + 'mcc': sklearn.metrics.matthews_corrcoef(y_true=y_true, y_pred=y_pred)
         }
     else:

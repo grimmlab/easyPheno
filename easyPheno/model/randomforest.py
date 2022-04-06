@@ -34,7 +34,7 @@ class RandomForest(_sklearn_model.SklearnModel):
         return {
             'n_estimators': {
                 'datatype': 'categorical',
-                'list_of_values': [50, 100, 250, 500, 750, 1000, 1500, 2000, 2500, 5000]
+                'list_of_values': [50, 100, 250, 500, 750, 1000, 1500, 2000, 2500]
             },
             'min_samples_split': {
                 'datatype': 'float',

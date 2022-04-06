@@ -1,4 +1,4 @@
-,sample_id,continuous_values,binary_values,multiclass_vlaues
+,sample_id,continuous_values,binary_values,multiclass_values
 0,10000,61.0,0,2.0
 1,100000,71.6666666667,1,3.0
 2,10001,68.75,0,2.0
