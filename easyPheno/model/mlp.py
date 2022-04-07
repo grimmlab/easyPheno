@@ -56,8 +56,8 @@ class Mlp(_torch_model.TorchModel):
                 # Number of units in the first linear layer in relation to the number of inputs
                 'datatype': 'float',
                 'lower_bound': 0.1,
-                'upper_bound': 0.3,
-                'step': 0.02
+                'upper_bound': 0.2,
+                'step': 0.01
             },
             'perc_decrease_per_layer': {
                 # Percentage decrease of the number of units per layer
