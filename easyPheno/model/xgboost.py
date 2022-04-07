@@ -60,7 +60,7 @@ class XgBoost(_sklearn_model.SklearnModel):
             },
             'max_depth': {
                 'datatype': 'int',
-                'lower_bound': 3,
+                'lower_bound': 2,
                 'upper_bound': 10
             },
             'gamma': {
