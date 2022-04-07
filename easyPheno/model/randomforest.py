@@ -34,24 +34,25 @@ class RandomForest(_sklearn_model.SklearnModel):
         return {
             'n_estimators': {
                 'datatype': 'categorical',
-                'list_of_values': [50, 100, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2500]
+                'list_of_values': [50, 100, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750, 3000]
             },
             'min_samples_split': {
                 'datatype': 'float',
-                'lower_bound': 0.02,
-                'upper_bound': 0.3,
-                'step': 0.02
+                'lower_bound': 0.005,
+                'upper_bound': 0.2,
+                'step': 0.005
             },
             'max_depth': {
                 'datatype': 'int',
-                'lower_bound': 3,
-                'upper_bound': 10
+                'lower_bound': 2,
+                'upper_bound': 30,
+                'step': 2
             },
             'min_samples_leaf': {
                 'datatype': 'float',
-                'lower_bound': 0.02,
-                'upper_bound': 0.3,
-                'step': 0.02
+                'lower_bound': 0.005,
+                'upper_bound': 0.2,
+                'step': 0.005
             },
             'max_features': {
                 'datatype': 'categorical',

@@ -50,7 +50,7 @@ class Mlp(_torch_model.TorchModel):
             'n_layers': {
                 'datatype': 'int',
                 'lower_bound': 1,
-                'upper_bound': 3
+                'upper_bound': 5
             },
             'n_initial_units_factor': {
                 # Number of units in the first linear layer in relation to the number of inputs

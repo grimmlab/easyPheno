@@ -201,7 +201,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
             },
             'act_function': {
                 'datatype': 'categorical',
-                'list_of_values': ['relu']
+                'list_of_values': ['relu', 'tanh']
             },
             'batch_size_exp': {
                 'datatype': 'int',
@@ -219,8 +219,8 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
             'early_stopping_patience': {
                 'datatype': 'int',
                 'lower_bound': 0,
-                'upper_bound': 10,
-                'step': 10
+                'upper_bound': 20,
+                'step': 5
             }
         }
 
