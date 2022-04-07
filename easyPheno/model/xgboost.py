@@ -50,7 +50,7 @@ class XgBoost(_sklearn_model.SklearnModel):
         return {
             'n_estimators': {
                 'datatype': 'categorical',
-                'list_of_values': [50, 100, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2500]
+                'list_of_values': [50, 100, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750, 3000]
             },
             'learning_rate': {
                     'datatype': 'float',

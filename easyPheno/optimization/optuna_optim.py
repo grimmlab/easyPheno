@@ -101,7 +101,7 @@ class OptunaOptim:
                      '-SPLIT' + self.dataset.datasplit + self.datasplit_subpath + \
                      '-MODEL' + self.current_model_name + '-TRIALS' + str(self.user_input_params["n_trials"])
         storage = optuna.storages.RDBStorage(
-            "sqlite:////" + self.save_path + 'Optuna_DB-' + study_name + ".db", heartbeat_interval=60, grace_period=120,
+            "sqlite:////" + self.save_path + 'Optuna_DB.db', heartbeat_interval=60, grace_period=120,
             failed_trial_callback=optuna.storages.RetryFailedTrialCallback(max_retry=3)
         )
         # TPE Sampler with seed for reproducibility
@@ -348,7 +348,9 @@ class OptunaOptim:
             path=self.save_path, filename=prefix + 'unfitted_model_trial' + str(self.study.best_trial.number),
             X_retrain=X_retrain, y_retrain=y_retrain, early_stopping_point=self.early_stopping_point)
         y_pred_retrain = final_model.predict(X_in=X_retrain)
-        self.write_runtime_csv(dict_runtime={'Trial': 'retraining_after_' + str(len(self.study.trials)),
+        no_trials = len(self.study.trials) - 1 if len(self.study.trials) % self.intermediate_results_interval != 0 \
+            else len(self.study.trials)
+        self.write_runtime_csv(dict_runtime={'Trial': 'retraining_after_' + str(no_trials),
                                              'process_time_s': time.process_time() - start_process_time,
                                              'real_time_s': time.time() - start_realclock_time,
                                              'params': self.study.best_trial.params, 'note': 'successful'})
