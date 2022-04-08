@@ -1,5 +1,6 @@
 import datetime
 import pprint
+import os
 
 from easyPheno.utils import check_functions, print_functions, helper_functions
 from easyPheno.preprocess import raw_data_functions, base_dataset
@@ -37,6 +38,7 @@ def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: s
         models = ['xgboost']
     # set save directory
     save_dir = data_dir if save_dir is None else save_dir
+    save_dir = os.getcwd() + '/' + save_dir if save_dir[0] != '/' else save_dir
     if type(models) == list and models[0] == 'all':
         models = 'all'
     if type(models) != list and models != 'all':
