@@ -69,8 +69,8 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
             'kernel_size_exp': {
                 # Exponent with base 2 to get the kernel size for the convolutional layers
                 'datatype': 'int',
-                'lower_bound': 4,
-                'upper_bound': 6
+                'lower_bound': 3,
+                'upper_bound': 7
             },
             'maxpool_kernel_size_exp': {
                 # Exponent with base 2 to get the kernel size for the maxpool layers
@@ -80,21 +80,23 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
             },
             'stride_perc_of_kernel_size': {
                 # Stride in relation to the kernel size
-                'datatype': 'categorical',
-                'list_of_values': [0.5, 1]
+                'datatype': 'float',
+                'lower_bound': 0.5,
+                'upper_bound': 1,
+                'step': 0.1
             },
             'n_initial_units_factor': {
                 # Number of units in the linear layer after flattening in relation to the number of inputs
                 'datatype': 'float',
-                'lower_bound': 0.3,
+                'lower_bound': 0.1,
                 'upper_bound': 0.7,
-                'step': 0.1
+                'step': 0.05
             },
             'perc_decrease_per_layer': {
                 # Percentage decrease of the number of units per layer
                 'datatype': 'float',
-                'lower_bound': 0.3,
+                'lower_bound': 0.2,
                 'upper_bound': 0.5,
-                'step': 0.1
+                'step': 0.05
             }
         }

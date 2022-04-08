@@ -20,7 +20,7 @@ def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: s
     :param genotype_matrix: name of the genotype matrix including datatype ending
     :param phenotype_matrix: name of the phenotype matrix including datatype ending
     :param phenotype: name of the phenotype to predict
-    :param encoding: encoding to use. Default is None, so standard encoding of each model will be used
+    :param encoding: encoding to use. Default is None, so standard encoding of each model will be used. Options are: '012', 'onehot', 'raw'
     :param maf_percentage: threshold for MAF filter as percentage value. Default is 0, so no MAF filtering
     :param save_dir: directory for saving the results. Default is None, so same directory as data_dir
     :param datasplit: datasplit to use. Options are: nested-cv, cv-test, train-val-test
@@ -38,7 +38,7 @@ def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: s
         models = ['xgboost']
     # set save directory
     save_dir = data_dir if save_dir is None else save_dir
-    save_dir = os.getcwd() + '/' + save_dir if save_dir[0] != '/' else save_dir
+    save_dir = os.getcwd() + '/' + save_dir if (len(save_dir) == 0 or save_dir[0] != '/') else save_dir
     if type(models) == list and models[0] == 'all':
         models = 'all'
     if type(models) != list and models != 'all':
