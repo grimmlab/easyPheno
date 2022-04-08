@@ -294,7 +294,8 @@ class OptunaOptim:
         :return: dict with runtime info enhanced with runtime stats
         """
         csv_file = pd.read_csv(self.save_path + self.current_model_name + '_runtime_overview.csv')
-        csv_file = csv_file[csv_file["Trial"].str.contains("retrain") == False]
+        if csv_file['Trial'].dtype is object and any(["retrain" in elem for elem in csv_file["Trial"]]):
+            csv_file = csv_file[csv_file["Trial"].str.contains("retrain") == False]
         process_times = csv_file['process_time_s']
         real_times = csv_file['real_time_s']
         process_time_mean, process_time_std, process_time_max, process_time_min = \
