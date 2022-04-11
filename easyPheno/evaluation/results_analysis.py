@@ -89,9 +89,3 @@ def result_string_to_dictionary(result_string: str) -> dict:
         value = float(key_value_string.split(':')[1].strip())
         dict_result[key] = value
     return dict_result
-
-
-summarize_results_per_phenotype_and_datasplit(
-    results_directory_genotype_level=
-    '/bit_storage/Workspace/Maura/PhenotypePred/FrontiersPaperExperiments/A_thal/ld_pruned_arabidopsis_2029_maf001/'
-)
