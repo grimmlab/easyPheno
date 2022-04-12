@@ -2,6 +2,7 @@ import datetime
 import optuna
 import pandas as pd
 import sklearn
+import sklearn.inspection
 import numpy as np
 import os
 import glob
@@ -361,6 +362,9 @@ class OptunaOptim:
         eval_scores = \
             eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test, task=self.task, prefix='test_')
 
+        if self.current_model_name in ['randomforest', 'xgboost', 'linearregression']:
+            feat_import_df = self.get_feature_importance(model=final_model, X=X_test, y=y_test)
+
         print('## Results on test set ##')
         print(eval_scores)
         final_results = pd.DataFrame(index=range(0, self.dataset.y_full.shape[0]))
@@ -374,16 +378,63 @@ class OptunaOptim:
             final_results.at[0, metric] = value
         if len(self.study.trials) == self.user_input_params["n_trials"]:
             results_filename = 'final_model_test_results.csv'
+            feat_import_filename = 'final_model_feature_importances.csv'
             if self.user_input_params["save_final_model"]:
                 final_model.save_model(path=self.save_path, filename='final_retrained_model')
         else:
             results_filename = '/temp/intermediate_after_' + str(len(self.study.trials) - 1) + '_test_results.csv'
+            feat_import_filename = \
+                '/temp/intermediate_after_' + str(len(self.study.trials) - 1) + '_feat_importances.csv'
             shutil.copyfile(self.save_path + self.current_model_name + '_runtime_overview.csv',
                             self.save_path + '/temp/intermediate_after_' + str(len(self.study.trials) - 1) + '_' +
                             self.current_model_name + '_runtime_overview.csv', )
-        final_results.to_csv(self.save_path + results_filename,
-                             sep=',', decimal='.', float_format='%.10f', index=False)
+        final_results.to_csv(
+            self.save_path + results_filename, sep=',', decimal='.', float_format='%.10f', index=False
+        )
+        feat_import_df.to_csv(
+            self.save_path + feat_import_filename, sep=',', decimal='.', float_format='%.10f', index=False
+        )
         return eval_scores
+
+    def get_feature_importance(self, model: _base_model.BaseModel, X: np.array, y: np.array,
+                               top_n: int = 1000, include_perm_importance: bool = True):
+        """
+        Get feature importances for models that possess such a feature, e.g. XGBoost
+
+        :param model: model to analyze
+        :param X: feature matrix for permutation
+        :param y: target vector for permutation
+        :param top_n: top n features to select
+        :param include_perm_importance: include permutation based feature importance or not
+
+        :return: DataFrame with feature importance information
+        """
+
+        top_n = min(len(self.dataset.snp_ids), top_n)
+        feat_import_df = pd.DataFrame()
+        if self.current_model_name in ['randomforest', 'xgboost']:
+            feature_importances = model.model.feature_importances_
+            sorted_idx = feature_importances.argsort()[::-1][:top_n]
+            feat_import_df['snp_ids_standard'] = self.dataset.snp_ids[sorted_idx]
+            feat_import_df['feat_importance_standard'] = feature_importances[sorted_idx]
+        else:
+            coefs = model.model.coef_
+            dims = coefs.shape[0] if len(coefs.shape) > 1 else 1
+            for dim in range(dims):
+                coef = coefs[dim] if len(coefs.shape) > 1 else coefs
+                sorted_idx = coef.argsort()[::-1][:top_n]
+                feat_import_df['snp_ids_' + str(dim)] = self.dataset.snp_ids[sorted_idx]
+                feat_import_df['coefficients_' + str(dim)] = coef[sorted_idx]
+        if include_perm_importance:
+            perm_importance = sklearn.inspection.permutation_importance(
+                estimator=model.model, X=X, y=y
+            )
+            sorted_idx = perm_importance.importances_mean.argsort()[::-1][:top_n]
+            feat_import_df['snp_ids_perm'] = self.dataset.snp_ids[sorted_idx]
+            feat_import_df['feat_importance_perm_mean'] = perm_importance.importances_mean[sorted_idx]
+            feat_import_df['feat_importance_perm_std'] = perm_importance.importances_std[sorted_idx]
+
+        return feat_import_df
 
     def run_optuna_optimization(self) -> dict:
         """
