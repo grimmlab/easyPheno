@@ -223,7 +223,7 @@ class OptunaOptim:
                 for metric, value in eval_metrics.get_evaluation_report(y_pred=y_pred, y_true=y_val, task=self.task,
                                                                         prefix=innerfold_name + '_').items():
                     validation_results.at[0, metric] = value
-            except (RuntimeError, TypeError, tf.errors.ResourceExhaustedError) as exc:
+            except Exception as exc:
                 print(exc)
                 if 'out of memory' in str(exc) or isinstance(exc, tf.errors.ResourceExhaustedError):
                     # Recover from CUDA out of memory error
