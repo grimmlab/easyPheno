@@ -362,6 +362,7 @@ class OptunaOptim:
         eval_scores = \
             eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test, task=self.task, prefix='test_')
 
+        feat_import_df = None
         if self.current_model_name in ['randomforest', 'xgboost', 'linearregression']:
             feat_import_df = self.get_feature_importance(model=final_model, X=X_test, y=y_test)
 
@@ -391,9 +392,10 @@ class OptunaOptim:
         final_results.to_csv(
             self.save_path + results_filename, sep=',', decimal='.', float_format='%.10f', index=False
         )
-        feat_import_df.to_csv(
-            self.save_path + feat_import_filename, sep=',', decimal='.', float_format='%.10f', index=False
-        )
+        if feat_import_df is not None:
+            feat_import_df.to_csv(
+                self.save_path + feat_import_filename, sep=',', decimal='.', float_format='%.10f', index=False
+            )
         return eval_scores
 
     def get_feature_importance(self, model: _base_model.BaseModel, X: np.array, y: np.array,
