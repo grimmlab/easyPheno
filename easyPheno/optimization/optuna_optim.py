@@ -399,7 +399,7 @@ class OptunaOptim:
         return eval_scores
 
     def get_feature_importance(self, model: _base_model.BaseModel, X: np.array, y: np.array,
-                               top_n: int = 1000, include_perm_importance: bool = True):
+                               top_n: int = 1000, include_perm_importance: bool = False):
         """
         Get feature importances for models that possess such a feature, e.g. XGBoost
 
