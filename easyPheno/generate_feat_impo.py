@@ -98,7 +98,7 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
 
 
 post_generate_feature_importances(
-    results_directory_genotype_level='/home/fhaselbeck/Work/results/x_matrix',
-    # '/bit_storage/Workspace/Maura/PhenotypePred/FrontiersPaperExperiments/A_thal/ld_pruned_arabidopsis_2029_maf001',
-    data_dir='../tutorials/tutorial_data/'
+    results_directory_genotype_level=
+    '/bit_storage/Workspace/Maura/PhenotypePred/FrontiersPaperExperiments/A_thal/ld_pruned_arabidopsis_2029_maf001',
+    data_dir='/bit_storage/Workspace/Maura/PhenotypePred/data/ArabidopsisThaliana/'
 )
