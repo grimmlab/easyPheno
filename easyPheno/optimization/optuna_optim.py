@@ -342,7 +342,7 @@ class OptunaOptim:
             self.dataset.X_full[~np.isin(np.arange(len(self.dataset.X_full)), outerfold_info['test'])], \
             self.dataset.y_full[~np.isin(np.arange(len(self.dataset.y_full)), outerfold_info['test'])], \
             self.dataset.sample_ids_full[~np.isin(np.arange(len(self.dataset.sample_ids_full)),
-                                                  outerfold_info['test'])],
+                                                  outerfold_info['test'])]
         start_process_time = time.process_time()
         start_realclock_time = time.time()
         prefix = '' if len(self.study.trials) == self.user_input_params["n_trials"] else '/temp/'

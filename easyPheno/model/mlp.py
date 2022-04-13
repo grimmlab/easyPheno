@@ -46,7 +46,7 @@ class Mlp(_torch_model.TorchModel):
 
         See :obj:`~easyPheno.model._torch_model.TorchModel` for more information on hyperparameters common for all torch models.
         """
-        if self.n_features < 100000:
+        if self.n_features < 50000:
             n_layers = {
                 'datatype': 'int',
                 'lower_bound': 1,
