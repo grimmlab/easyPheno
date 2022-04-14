@@ -108,8 +108,8 @@ class Dataset:
         """
         print('Filter duplicate SNPs')
         uniques, index = np.unique(self.X_full, return_index=True, axis=1)
-        self.X_full = uniques[:, np.argsort(index)]
-        self.snp_ids = self.snp_ids[np.argsort(index)]
+        self.X_full = self.X_full[:, np.sort(index)]
+        self.snp_ids = self.snp_ids[np.sort(index)]
 
     def load_datasplit_indices(self, data_dir: str, n_outerfolds: int, n_innerfolds: int,
                                test_set_size_percentage: int, val_set_size_percentage: int) -> dict:
