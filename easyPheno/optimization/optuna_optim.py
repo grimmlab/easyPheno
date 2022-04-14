@@ -137,10 +137,12 @@ class OptunaOptim:
         # in case a model has attributes not part of the base class hand them over in a dictionary to keep the same call
         # (name of the attribute and key in the dictionary have to match)
         additional_attributes_dict = {}
+        neural_net = False
         if issubclass(helper_functions.get_mapping_name_to_class()[self.current_model_name],
                       _torch_model.TorchModel) or \
                 issubclass(helper_functions.get_mapping_name_to_class()[self.current_model_name],
                            _tensorflow_model.TensorflowModel):
+            neural_net = True
             # additional attributes for torch and tensorflow models
             additional_attributes_dict['n_features'] = self.dataset.X_full.shape[1]
             additional_attributes_dict['batch_size'] = self.user_input_params["batch_size"]
@@ -165,7 +167,9 @@ class OptunaOptim:
         os.makedirs(self.save_path + 'temp/', exist_ok=True)
         model.save_model(path=self.save_path + 'temp/',
                          filename='unfitted_model_trial' + str(trial.number))
-        unfitted_model = copy.deepcopy(model)
+        if neural_net:
+            # quicker for bigger models
+            unfitted_model = copy.deepcopy(model)
         print("Params for Trial " + str(trial.number))
         print(trial.params)
         if self.check_params_for_duplicate(current_params=trial.params):
@@ -185,9 +189,14 @@ class OptunaOptim:
             else:
                 innerfold_name = 'train-val'
             # load the unfitted model to prevent information leak between folds
-            del model
-            gc.collect()
-            model = copy.deepcopy(unfitted_model)
+            if neural_net:
+                # quicker for bigger models
+                del model
+                gc.collect()
+                model = copy.deepcopy(unfitted_model)
+            else:
+                model = _model_functions.load_model(path=self.save_path + 'temp/',
+                                                    filename='unfitted_model_trial' + str(trial.number))
 
             X_train, y_train, sample_ids_train, X_val, y_val, sample_ids_val = \
                 self.dataset.X_full[innerfold_info['train']], \
