@@ -42,7 +42,7 @@ if __name__ == '__main__':
                              "Valid arguments are: " + str(encoding_functions.get_list_of_encodings()))
 
     # Preprocess Params #
-    parser.add_argument("-maf", "--maf_percentage", type=int, default=10,
+    parser.add_argument("-maf", "--maf_percentage", type=int, default=0,
                         help="specify the minor allele frequency (as percentage value). "
                              "specify 0 if you do not want a maf filter.")
     parser.add_argument("-split", "--datasplit", type=str, default='nested-cv',
