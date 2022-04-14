@@ -65,7 +65,7 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
             kernel_size_exp = {
                 # Exponent with base 2 to get the kernel size for the convolutional layers
                 'datatype': 'categorical',
-                'list_of_values': [2, 2.6, 3, 3.4, 3.6]  # 4, 6, 8, 10, 12
+                'list_of_values': [2.6, 3, 3.4, 3.6, 3.9]  # 6, 8, 10, 12, 14
             }
         else:
             kernel_size_exp = {
