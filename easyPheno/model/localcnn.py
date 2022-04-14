@@ -32,7 +32,7 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
         width = self.n_features
         model.add(tf.keras.Input(shape=(width, in_channels)))
         n_filters = 1
-        kernel_size = 2 ** self.suggest_hyperparam_to_optuna('kernel_size_exp')
+        kernel_size = int(2 ** self.suggest_hyperparam_to_optuna('kernel_size_exp'))
         stride = max(1, int(kernel_size * self.suggest_hyperparam_to_optuna('stride_perc_of_kernel_size')))
         model.add(tf.keras.layers.LocallyConnected1D(filters=n_filters, kernel_size=kernel_size,
                                                      strides=stride, activation=None))
@@ -60,18 +60,28 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
 
         See TensorflowModel for more information on hyperparameters common for all tensorflow models.
         """
+
+        if self.n_features < 20000:
+            kernel_size_exp = {
+                # Exponent with base 2 to get the kernel size for the convolutional layers
+                'datatype': 'categorical',
+                'list_of_values': [2, 2.6, 3, 3.4, 3.6]  # 4, 6, 8, 10, 12
+            }
+        else:
+            kernel_size_exp = {
+                # Exponent with base 2 to get the kernel size for the convolutional layers
+                'datatype': 'int',
+                'lower_bound': 3,
+                'upper_bound': 7
+            }
+
         return {
             'n_layers': {
                 'datatype': 'int',
                 'lower_bound': 1,
                 'upper_bound': 3
             },
-            'kernel_size_exp': {
-                # Exponent with base 2 to get the kernel size for the convolutional layers
-                'datatype': 'int',
-                'lower_bound': 3,
-                'upper_bound': 7
-            },
+            'kernel_size_exp': kernel_size_exp,
             'maxpool_kernel_size_exp': {
                 # Exponent with base 2 to get the kernel size for the maxpool layers
                 'datatype': 'int',
