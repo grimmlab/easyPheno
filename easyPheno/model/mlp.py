@@ -46,7 +46,26 @@ class Mlp(_torch_model.TorchModel):
 
         See :obj:`~easyPheno.model._torch_model.TorchModel` for more information on hyperparameters common for all torch models.
         """
-        if self.n_features < 50000:
+        n_layers = {
+            'datatype': 'int',
+            'lower_bound': 1,
+            'upper_bound': 5
+        }
+        n_initial_units_factor = {
+            # Number of units in the first linear layer in relation to the number of inputs
+            'datatype': 'float',
+            'lower_bound': 0.1,
+            'upper_bound': 0.7,
+            'step': 0.05
+        }
+        perc_decrease_per_layer = {
+            # Percentage decrease of the number of units per layer
+            'datatype': 'float',
+            'lower_bound': 0.1,
+            'upper_bound': 0.5,
+            'step': 0.05
+        }
+        if self.n_features > 20000:
             n_layers = {
                 'datatype': 'int',
                 'lower_bound': 1,
@@ -66,7 +85,7 @@ class Mlp(_torch_model.TorchModel):
                 'upper_bound': 0.5,
                 'step': 0.05
             }
-        else:
+        if self.n_features > 50000:
             n_layers = {
                 'datatype': 'int',
                 'lower_bound': 1,
