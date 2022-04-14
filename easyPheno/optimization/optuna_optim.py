@@ -11,6 +11,8 @@ import re
 import gc
 import time
 import csv
+import copy
+import gc
 
 import torch.cuda
 import tensorflow as tf
@@ -163,6 +165,7 @@ class OptunaOptim:
         os.makedirs(self.save_path + 'temp/', exist_ok=True)
         model.save_model(path=self.save_path + 'temp/',
                          filename='unfitted_model_trial' + str(trial.number))
+        unfitted_model = copy.deepcopy(model)
         print("Params for Trial " + str(trial.number))
         print(trial.params)
         if self.check_params_for_duplicate(current_params=trial.params):
@@ -182,8 +185,10 @@ class OptunaOptim:
             else:
                 innerfold_name = 'train-val'
             # load the unfitted model to prevent information leak between folds
-            model = _model_functions.load_model(path=self.save_path + 'temp/',
-                                                filename='unfitted_model_trial' + str(trial.number))
+            del model
+            gc.collect()
+            model = copy.deepcopy(unfitted_model)
+
             X_train, y_train, sample_ids_train, X_val, y_val, sample_ids_val = \
                 self.dataset.X_full[innerfold_info['train']], \
                 self.dataset.y_full[innerfold_info['train']], \
