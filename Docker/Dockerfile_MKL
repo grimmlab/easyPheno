@@ -1,0 +1,41 @@
+FROM tensorflow/tensorflow:2.8.0-gpu
+RUN apt-get update && apt-get install -y python3 && apt-get install -y python3-pip
+RUN apt-get install -y vim
+RUN apt-get install -y git
+RUN mkdir /configfiles
+COPY requirements.txt /configfiles
+RUN pip3 install -r /configfiles/requirements.txt
+RUN pip3 install torch==1.10.2+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+
+# MKL stuff
+RUN pip3 uninstall scipy numpy
+
+# Install packages
+RUN apt-get install -y wget
+
+# Install MKL
+RUN cd /tmp && \
+  wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB && \
+  apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB && \
+  rm GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB && \
+  wget https://apt.repos.intel.com/setup/intelproducts.list -O /etc/apt/sources.list.d/intelproducts.list && \
+  apt-get update
+
+RUN git clone https://github.com/numpy/numpy.git numpy && \
+  cd numpy && \
+  cp site.cfg.example ~/.numpy-site.cfg && \
+  echo "[mkl]" >> ~/.numpy-site.cfg && \
+  echo "include_dirs = /opt/intel/compilers_and_libraries_2019.4.243/linux/mkl/include" >> ~/.numpy-site.cfg && \
+  echo "library_dirs = /opt/intel/compilers_and_libraries_2019.4.243/linux/mkl/lib/intel64" >> ~/.numpy-site.cfg && \
+  echo "libraries = mkl_rt"  >> ~/.numpy-site.cfg
+
+# Install scipy
+RUN cd /tmp && \
+ git clone https://github.com/scipy/scipy.git scipy && \
+ cd scipy && \
+ python setup.py build && \
+ python setup.py install && \
+ cd .. && \
+ rm -rf *
+
+

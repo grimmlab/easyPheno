@@ -1,11 +1,13 @@
 import numpy as np
 import os
 import glob
+
+import optuna.trial
 import pandas as pd
 
 from easyPheno.preprocess import base_dataset
 from easyPheno.utils import helper_functions
-from easyPheno.model import _model_functions
+from easyPheno.model import _model_functions, _base_model
 from easyPheno.evaluation import eval_metrics, results_analysis
 
 
@@ -27,7 +29,6 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                 test_set_size_percentage=20, val_set_size_percentage=20,
                 encoding='012', maf_percentage=10
             )
-            helper_functions.set_all_seeds()
             # Retrain on full train + val data with best hyperparams and apply on test
             print("## Retrain best model and test ##")
             outerfold_info = dataset.datasplit_indices['outerfold_0']
@@ -63,9 +64,24 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                             modelpath = glob.glob(current_directory + '/unfitted_model*')[0].split('/')[-1]
                         except:
                             continue
+                        """
                         model = _model_functions.load_retrain_model(
                             path=current_directory, filename=modelpath, X_retrain=X_retrain, y_retrain=y_retrain
                         )
+                        """
+                        best_params = results_analysis.result_string_to_dictionary(
+                            result_string=results[current_model + '___best_params'][0]
+                        )
+                        task = 'regression' if 'test_rmse' in eval_dict_saved.keys() else 'classification'
+                        trial = optuna.trial.FixedTrial(params=best_params)
+                        helper_functions.set_all_seeds()
+                        model: _base_model.BaseModel = helper_functions.get_mapping_name_to_class()[
+                            current_model](
+                            task=task, optuna_trial=trial,
+                            n_outputs=len(np.unique(dataset.y_full)) if task == 'classification' else 1,
+                            **{}
+                        )
+                        model.retrain(X_retrain=X_retrain, y_retrain=y_retrain)
                         y_pred_test = model.predict(X_in=X_test)
                         eval_scores = \
                             eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test, task=model.task,

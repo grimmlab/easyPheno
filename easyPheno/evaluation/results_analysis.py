@@ -86,6 +86,10 @@ def result_string_to_dictionary(result_string: str) -> dict:
     dict_result = {}
     for key_value_string in key_value_strings:
         key = key_value_string.split(':')[0].strip()
-        value = float(key_value_string.split(':')[1].strip())
+        value = key_value_string.split(':')[1].strip()
+        try:
+            value = float(value)
+        except:
+            value = value
         dict_result[key] = value
     return dict_result
