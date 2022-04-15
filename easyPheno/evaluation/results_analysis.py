@@ -89,6 +89,7 @@ def result_string_to_dictionary(result_string: str) -> dict:
         value = key_value_string.split(':')[1].strip()
         try:
             value = float(value)
+            value = int(value) if value == int(value) else value
         except:
             value = value
         dict_result[key] = value
