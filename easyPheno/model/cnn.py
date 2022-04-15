@@ -63,15 +63,30 @@ class Cnn(_torch_model.TorchModel):
         """
         kernel_size = {
             'datatype': 'int',
-            'lower_bound': 3,
-            'upper_bound': 6
+            'lower_bound': 2,
+            'upper_bound': 8
         }
+        n_units_factor_linear_layer = {
+            # Number of units in the linear layer after flattening in relation to the number of inputs
+            'datatype': 'float',
+            'lower_bound': 0.2,
+            'upper_bound': 1,
+            'step': 0.05
+        }
+
         if self.n_features > 15000:
             kernel_size = {
                 'datatype': 'int',
                 'lower_bound': 4,
                 'upper_bound': 10,
                 'step': 2
+            }
+            n_units_factor_linear_layer = {
+                # Number of units in the linear layer after flattening in relation to the number of inputs
+                'datatype': 'float',
+                'lower_bound': 0.2,
+                'upper_bound': 0.5,
+                'step': 0.05
             }
         if self.n_features > 50000:
             kernel_size = {
@@ -113,11 +128,5 @@ class Cnn(_torch_model.TorchModel):
                 'upper_bound': 1,
                 'step': 0.1
             },
-            'n_units_factor_linear_layer': {
-                # Number of units in the linear layer after flattening in relation to the number of inputs
-                'datatype': 'float',
-                'lower_bound': 0.2,
-                'upper_bound': 0.5,
-                'step': 0.05
-            },
+            'n_units_factor_linear_layer': n_units_factor_linear_layer
         }
