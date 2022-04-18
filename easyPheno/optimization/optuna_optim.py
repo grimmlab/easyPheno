@@ -2,14 +2,15 @@ import datetime
 import optuna
 import pandas as pd
 import sklearn
+import sklearn.inspection
 import numpy as np
 import os
 import glob
 import shutil
 import re
-import gc
 import time
 import csv
+import gc
 
 import torch.cuda
 import tensorflow as tf
@@ -183,6 +184,7 @@ class OptunaOptim:
             # load the unfitted model to prevent information leak between folds
             model = _model_functions.load_model(path=self.save_path + 'temp/',
                                                 filename='unfitted_model_trial' + str(trial.number))
+
             X_train, y_train, sample_ids_train, X_val, y_val, sample_ids_val = \
                 self.dataset.X_full[innerfold_info['train']], \
                 self.dataset.y_full[innerfold_info['train']], \
@@ -223,7 +225,7 @@ class OptunaOptim:
                 for metric, value in eval_metrics.get_evaluation_report(y_pred=y_pred, y_true=y_val, task=self.task,
                                                                         prefix=innerfold_name + '_').items():
                     validation_results.at[0, metric] = value
-            except (RuntimeError, TypeError, tf.errors.ResourceExhaustedError) as exc:
+            except (RuntimeError, TypeError, tf.errors.ResourceExhaustedError, ValueError) as exc:
                 print(exc)
                 if 'out of memory' in str(exc) or isinstance(exc, tf.errors.ResourceExhaustedError):
                     # Recover from CUDA out of memory error
@@ -294,7 +296,8 @@ class OptunaOptim:
         :return: dict with runtime info enhanced with runtime stats
         """
         csv_file = pd.read_csv(self.save_path + self.current_model_name + '_runtime_overview.csv')
-        csv_file = csv_file[csv_file["Trial"].str.contains("retrain") == False]
+        if csv_file['Trial'].dtype is object and any(["retrain" in elem for elem in csv_file["Trial"]]):
+            csv_file = csv_file[csv_file["Trial"].str.contains("retrain") == False]
         process_times = csv_file['process_time_s']
         real_times = csv_file['real_time_s']
         process_time_mean, process_time_std, process_time_max, process_time_min = \
@@ -340,7 +343,7 @@ class OptunaOptim:
             self.dataset.X_full[~np.isin(np.arange(len(self.dataset.X_full)), outerfold_info['test'])], \
             self.dataset.y_full[~np.isin(np.arange(len(self.dataset.y_full)), outerfold_info['test'])], \
             self.dataset.sample_ids_full[~np.isin(np.arange(len(self.dataset.sample_ids_full)),
-                                                  outerfold_info['test'])],
+                                                  outerfold_info['test'])]
         start_process_time = time.process_time()
         start_realclock_time = time.time()
         prefix = '' if len(self.study.trials) == self.user_input_params["n_trials"] else '/temp/'
@@ -360,6 +363,10 @@ class OptunaOptim:
         eval_scores = \
             eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test, task=self.task, prefix='test_')
 
+        feat_import_df = None
+        if self.current_model_name in ['randomforest', 'xgboost', 'linearregression']:
+            feat_import_df = self.get_feature_importance(model=final_model, X=X_test, y=y_test)
+
         print('## Results on test set ##')
         print(eval_scores)
         final_results = pd.DataFrame(index=range(0, self.dataset.y_full.shape[0]))
@@ -373,20 +380,70 @@ class OptunaOptim:
             final_results.at[0, metric] = value
         if len(self.study.trials) == self.user_input_params["n_trials"]:
             results_filename = 'final_model_test_results.csv'
+            feat_import_filename = 'final_model_feature_importances.csv'
             if self.user_input_params["save_final_model"]:
                 final_model.save_model(path=self.save_path, filename='final_retrained_model')
         else:
             results_filename = '/temp/intermediate_after_' + str(len(self.study.trials) - 1) + '_test_results.csv'
+            feat_import_filename = \
+                '/temp/intermediate_after_' + str(len(self.study.trials) - 1) + '_feat_importances.csv'
             shutil.copyfile(self.save_path + self.current_model_name + '_runtime_overview.csv',
                             self.save_path + '/temp/intermediate_after_' + str(len(self.study.trials) - 1) + '_' +
                             self.current_model_name + '_runtime_overview.csv', )
-        final_results.to_csv(self.save_path + results_filename,
-                             sep=',', decimal='.', float_format='%.10f', index=False)
+        final_results.to_csv(
+            self.save_path + results_filename, sep=',', decimal='.', float_format='%.10f', index=False
+        )
+        if feat_import_df is not None:
+            feat_import_df.to_csv(
+                self.save_path + feat_import_filename, sep=',', decimal='.', float_format='%.10f', index=False
+            )
         return eval_scores
+
+    def get_feature_importance(self, model: _base_model.BaseModel, X: np.array, y: np.array,
+                               top_n: int = 1000, include_perm_importance: bool = False) -> pd.DataFrame:
+        """
+        Get feature importances for models that possess such a feature, e.g. XGBoost
+
+        :param model: model to analyze
+        :param X: feature matrix for permutation
+        :param y: target vector for permutation
+        :param top_n: top n features to select
+        :param include_perm_importance: include permutation based feature importance or not
+
+        :return: DataFrame with feature importance information
+        """
+
+        top_n = min(len(self.dataset.snp_ids), top_n)
+        feat_import_df = pd.DataFrame()
+        if self.current_model_name in ['randomforest', 'xgboost']:
+            feature_importances = model.model.feature_importances_
+            sorted_idx = feature_importances.argsort()[::-1][:top_n]
+            feat_import_df['snp_ids_standard'] = self.dataset.snp_ids[sorted_idx]
+            feat_import_df['feat_importance_standard'] = feature_importances[sorted_idx]
+        else:
+            coefs = model.model.coef_
+            dims = coefs.shape[0] if len(coefs.shape) > 1 else 1
+            for dim in range(dims):
+                coef = coefs[dim] if len(coefs.shape) > 1 else coefs
+                sorted_idx = coef.argsort()[::-1][:top_n]
+                feat_import_df['snp_ids_' + str(dim)] = self.dataset.snp_ids[sorted_idx]
+                feat_import_df['coefficients_' + str(dim)] = coef[sorted_idx]
+        if include_perm_importance:
+            perm_importance = sklearn.inspection.permutation_importance(
+                estimator=model.model, X=X, y=y
+            )
+            sorted_idx = perm_importance.importances_mean.argsort()[::-1][:top_n]
+            feat_import_df['snp_ids_perm'] = self.dataset.snp_ids[sorted_idx]
+            feat_import_df['feat_importance_perm_mean'] = perm_importance.importances_mean[sorted_idx]
+            feat_import_df['feat_importance_perm_std'] = perm_importance.importances_std[sorted_idx]
+
+        return feat_import_df
 
     def run_optuna_optimization(self) -> dict:
         """
         Run whole optuna optimization for one model, dataset and datasplit.
+
+        :return: dictionary with results overview
         """
         # Iterate over outerfolds
         # (according to structure described in base_dataset.Dataset, only for nested-cv multiple outerfolds exist)

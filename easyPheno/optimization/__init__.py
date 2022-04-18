@@ -1,3 +1,3 @@
-__all__ = ["optuna_optim"]
+__all__ = ["optuna_optim", "paramfree_fitting"]
 
 from . import *

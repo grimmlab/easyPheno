@@ -2,6 +2,7 @@ import os
 import pandas as pd
 
 from . import helper_functions
+from ..model import _param_free_base_model, _torch_model, _tensorflow_model
 
 
 def check_all_specified_arguments(arguments: dict):
@@ -42,7 +43,9 @@ def check_all_specified_arguments(arguments: dict):
     if not (3 <= arguments["n_innerfolds"] <= 10):
         raise Exception('Specified number of innerfolds/folds ' + str(arguments["n_innerfolds"]) +
                         ' is invalid, has to be between 3 and 10.')
-    if arguments["n_trials"] < 10:
+    if any([not issubclass(helper_functions.get_mapping_name_to_class()[model],
+                           _param_free_base_model.ParamFreeBaseModel) for model in arguments["models"]]) and \
+            arguments["n_trials"] < 10:
         raise Exception('Specified number of trials with ' + str(arguments["n_trials"]) + ' is invalid, at least 10.')
 
     # Check spelling of datasplit and model
@@ -70,11 +73,14 @@ def check_all_specified_arguments(arguments: dict):
                                     '. Check possible_encodings in model file.')
 
     # Only relevant for neural networks
-    if arguments["batch_size"] is not None:
-        if not (2**3 <= arguments["batch_size"] <= 2**8):
-            raise Exception('Specified batch size ' + str(arguments["batch_size"]) +
-                            ' is invalid, has to be between 8 and 256.')
-    if arguments["n_epochs"] is not None:
-        if not (50 <= arguments["n_epochs"] <= 1000000):
-            raise Exception('Specified number of epochs ' + str(arguments["n_epochs"]) +
-                            ' is invalid, has to be between 50 and 1.000.000.')
+    if any([issubclass(helper_functions.get_mapping_name_to_class()[model], _torch_model.TorchModel) or \
+            issubclass(helper_functions.get_mapping_name_to_class()[model] ,  _tensorflow_model.TensorflowModel)
+            for model in arguments["models"]]):
+        if arguments["batch_size"] is not None:
+            if not (2**3 <= arguments["batch_size"] <= 2**8):
+                raise Exception('Specified batch size ' + str(arguments["batch_size"]) +
+                                ' is invalid, has to be between 8 and 256.')
+        if arguments["n_epochs"] is not None:
+            if not (50 <= arguments["n_epochs"] <= 1000000):
+                raise Exception('Specified number of epochs ' + str(arguments["n_epochs"]) +
+                                ' is invalid, has to be between 50 and 1.000.000.')

@@ -32,7 +32,7 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
         width = self.n_features
         model.add(tf.keras.Input(shape=(width, in_channels)))
         n_filters = 1
-        kernel_size = 2 ** self.suggest_hyperparam_to_optuna('kernel_size_exp')
+        kernel_size = int(2 ** self.suggest_hyperparam_to_optuna('kernel_size_exp'))
         stride = max(1, int(kernel_size * self.suggest_hyperparam_to_optuna('stride_perc_of_kernel_size')))
         model.add(tf.keras.layers.LocallyConnected1D(filters=n_filters, kernel_size=kernel_size,
                                                      strides=stride, activation=None))
@@ -60,18 +60,28 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
 
         See TensorflowModel for more information on hyperparameters common for all tensorflow models.
         """
+
+        if self.n_features < 20000:
+            kernel_size_exp = {
+                # Exponent with base 2 to get the kernel size for the convolutional layers
+                'datatype': 'categorical',
+                'list_of_values': [2.6, 3, 3.4, 3.6, 3.9]  # 6, 8, 10, 12, 14
+            }
+        else:
+            kernel_size_exp = {
+                # Exponent with base 2 to get the kernel size for the convolutional layers
+                'datatype': 'int',
+                'lower_bound': 3,
+                'upper_bound': 7
+            }
+
         return {
             'n_layers': {
                 'datatype': 'int',
                 'lower_bound': 1,
                 'upper_bound': 3
             },
-            'kernel_size_exp': {
-                # Exponent with base 2 to get the kernel size for the convolutional layers
-                'datatype': 'int',
-                'lower_bound': 4,
-                'upper_bound': 6
-            },
+            'kernel_size_exp': kernel_size_exp,
             'maxpool_kernel_size_exp': {
                 # Exponent with base 2 to get the kernel size for the maxpool layers
                 'datatype': 'int',
@@ -80,21 +90,23 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
             },
             'stride_perc_of_kernel_size': {
                 # Stride in relation to the kernel size
-                'datatype': 'categorical',
-                'list_of_values': [0.5, 1]
+                'datatype': 'float',
+                'lower_bound': 0.5,
+                'upper_bound': 1,
+                'step': 0.1
             },
             'n_initial_units_factor': {
                 # Number of units in the linear layer after flattening in relation to the number of inputs
                 'datatype': 'float',
-                'lower_bound': 0.3,
+                'lower_bound': 0.1,
                 'upper_bound': 0.7,
-                'step': 0.1
+                'step': 0.05
             },
             'perc_decrease_per_layer': {
                 # Percentage decrease of the number of units per layer
                 'datatype': 'float',
-                'lower_bound': 0.3,
+                'lower_bound': 0.2,
                 'upper_bound': 0.5,
-                'step': 0.1
+                'step': 0.05
             }
         }

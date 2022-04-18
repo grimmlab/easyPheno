@@ -25,11 +25,11 @@ if __name__ == '__main__':
     parser.add_argument("-sd", "--save_dir", type=str, default='/myhome/',
                         help="Provide the full path of the directory in which you want to save your results. "
                              "Default is same as data_dir")
-    parser.add_argument("-gm", "--genotype_matrix", type=str, default='ld_pruned_arabidopsis_2029_maf001.h5',
+    parser.add_argument("-gm", "--genotype_matrix", type=str, default='ld_pruned_arabidopsis_10k.h5',
                         help="specify the name (including data type suffix) of the genotype matrix to be used. "
                              "Needs to be located in the specified data_dir."
                              "For more info regarding the required format see our documentation.")
-    parser.add_argument("-pm", "--phenotype_matrix", type=str, default='study_12_values.csv',
+    parser.add_argument("-pm", "--phenotype_matrix", type=str, default='Simulation_10k_1-4.csv',
                         help="specify the name (including data type suffix) of the phenotype matrix to be used. "
                               "Needs to be located in the specified data_dir."
                              "For more info regarding the required format see our documentation.")
@@ -42,10 +42,10 @@ if __name__ == '__main__':
                              "Valid arguments are: " + str(encoding_functions.get_list_of_encodings()))
 
     # Preprocess Params #
-    parser.add_argument("-maf", "--maf_percentage", type=int, default=10,
+    parser.add_argument("-maf", "--maf_percentage", type=int, default=0,
                         help="specify the minor allele frequency (as percentage value). "
                              "specify 0 if you do not want a maf filter.")
-    parser.add_argument("-split", "--datasplit", type=str, default='cv-test',
+    parser.add_argument("-split", "--datasplit", type=str, default='nested-cv',
                         help="specify the data split to use: 'nested-cv' | 'cv-test' | 'train-val-test'"
                              "Default values are 5 folds, train-test-split to 80/20 and train-val-test to 60/20/20")
     parser.add_argument("-testperc", "--test_set_size_percentage", type=int, default=20,
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     parser.add_argument("-valperc", "--val_set_size_percentage", type=int, default=20,
                         help="specify the size of the validation set in percentage. "
                              "Standard is 20, only relevant for 'train-val-test'")
-    parser.add_argument("-of", "--n_outerfolds", type=int, default=5,
+    parser.add_argument("-of", "--n_outerfolds", type=int, default=3,
                         help="specify the number of outerfolds to use for 'nested_cv'"
                              "Standard is 5, only relevant for 'nested_cv'")
     parser.add_argument("-folds", "--n_innerfolds", type=int, default=5,

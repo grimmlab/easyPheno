@@ -16,6 +16,7 @@ class Dataset:
         - X_full (*numpy.array*): all (matched, maf- and duplicated-filtered) SNPs
         - y_full (*numpy.array*): all target values
         - sample_ids_full (*numpy.array*):all sample ids
+        - snp_ids (*numpy.array*): SNP ids
         - datasplit (*str*): datasplit to use
         - datasplit_indices (*dict*): dictionary containing all indices for the specified datasplit
 
@@ -41,7 +42,7 @@ class Dataset:
                 genotype_matrix_name=genotype_matrix_name, phenotype_matrix_name=phenotype_matrix_name,
                 phenotype=phenotype
         )
-        self.X_full, self.y_full, self.sample_ids_full = self.load_match_raw_data(
+        self.X_full, self.y_full, self.sample_ids_full, self.snp_ids = self.load_match_raw_data(
             data_dir=data_dir, genotype_matrix_name=genotype_matrix_name)
         self.maf_filter_raw_data(data_dir=data_dir, maf_percentage=maf_percentage)
         self.filter_duplicate_snps()
@@ -73,6 +74,7 @@ class Dataset:
 
         with h5py.File(data_dir + '/' + genotype_matrix_name.split('.')[0] + '.h5', "r") as f:
             # Load genotype data
+            snp_ids = f['snp_ids'][non_informative_filter].astype(str)
             if f'X_{self.encoding}' in f:
                 X = f[f'X_{self.encoding}'][:, non_informative_filter]
             elif f'X_{encoding_functions.get_base_encoding(encoding=self.encoding)}' in f:
@@ -83,7 +85,7 @@ class Dataset:
                 raise Exception('Genotype in ' + self.encoding + ' encoding missing. Can not create required encoding. '
                                                                  'See documentation for help')
         X = raw_data_functions.get_matched_data(data=X, index=X_index)
-        return X, np.reshape(y, (-1, 1)), np.reshape(sample_ids, (-1, 1))
+        return X, np.reshape(y, (-1, 1)), np.reshape(sample_ids, (-1, 1)), snp_ids
 
     def maf_filter_raw_data(self, data_dir: str, maf_percentage: int):
         """
@@ -97,6 +99,7 @@ class Dataset:
             if f'maf_filter/maf_{maf_percentage}' in f:
                 filter_indices = f[f'maf_filter/maf_{maf_percentage}'][:]
         self.X_full = np.delete(self.X_full, filter_indices, axis=1)
+        self.snp_ids = np.delete(self.snp_ids, filter_indices)
 
     def filter_duplicate_snps(self):
         """
@@ -105,7 +108,8 @@ class Dataset:
         """
         print('Filter duplicate SNPs')
         uniques, index = np.unique(self.X_full, return_index=True, axis=1)
-        self.X_full = uniques[:, np.argsort(index)]
+        self.X_full = self.X_full[:, np.sort(index)]
+        self.snp_ids = self.snp_ids[np.sort(index)]
 
     def load_datasplit_indices(self, data_dir: str, n_outerfolds: int, n_innerfolds: int,
                                test_set_size_percentage: int, val_set_size_percentage: int) -> dict:
