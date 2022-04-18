@@ -8,10 +8,8 @@ import os
 import glob
 import shutil
 import re
-import gc
 import time
 import csv
-import copy
 import gc
 
 import torch.cuda
@@ -402,7 +400,7 @@ class OptunaOptim:
         return eval_scores
 
     def get_feature_importance(self, model: _base_model.BaseModel, X: np.array, y: np.array,
-                               top_n: int = 1000, include_perm_importance: bool = False):
+                               top_n: int = 1000, include_perm_importance: bool = False) -> pd.DataFrame:
         """
         Get feature importances for models that possess such a feature, e.g. XGBoost
 
@@ -444,6 +442,8 @@ class OptunaOptim:
     def run_optuna_optimization(self) -> dict:
         """
         Run whole optuna optimization for one model, dataset and datasplit.
+
+        :return: dictionary with results overview
         """
         # Iterate over outerfolds
         # (according to structure described in base_dataset.Dataset, only for nested-cv multiple outerfolds exist)
