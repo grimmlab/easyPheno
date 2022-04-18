@@ -284,15 +284,15 @@ def check_genotype_binary_plink_file(data_dir: str, genotype_matrix_name: str) -
     sample_ids = np.array(gt['fid'], dtype=str).flatten()
     snp_ids = np.array(gt['snp']).flatten()
     # get raw encoding
-    iupac_map = {"AA": "A", "GG": "G", "TT": "T", "CC": "C", "AG": "R", "GA": "R", "CT": "Y", "TC": "Y", "GC": "S",
-                 "CG": "S", "AT": "W", "TA": "W", "GT": "K", "TG": "K", "AC": "M", "CA": "M"}
+    iupac_map = {b"AA": "A", b"GG": "G", b"TT": "T", b"CC": "C", b"AG": "R", b"GA": "R", b"CT": "Y", b"TC": "Y",
+                 b"GC": "S", b"CG": "S", b"AT": "W", b"TA": "W", b"GT": "K", b"TG": "K", b"AC": "M", b"CA": "M"}
     a_0 = np.array(gt.a1.values, dtype='S1')
     a_2 = np.array(gt.a0.values, dtype='S1')
     a_1 = []
     for i in range(len(a_0)):
         a_1.append(iupac_map[a_0[i] + a_2[i]])
     a = np.stack((a_0, np.array(a_1), a_2))
-    col = np.arange(len(a[0]))
+    col = np.arange(a.shape[1])
     X_012 = np.array(gt.values)
     X_raw = a[X_012.astype(int), col]
     return sample_ids, snp_ids, X_raw
