@@ -30,9 +30,10 @@ class SupportVectorMachine(_sklearn_model.SklearnModel):
             degree = 42  # default
             gamma = 42  # default
         if self.task == 'classification':
-            return sklearn.svm.SVC(kernel=kernel, C=reg_c, degree=degree, gamma=gamma, random_state=42)
+            return sklearn.svm.SVC(kernel=kernel, C=reg_c, degree=degree, gamma=gamma, random_state=42,
+                                   max_iter=1000000)
         else:
-            return sklearn.svm.SVR(kernel=kernel, C=reg_c, degree=degree, gamma=gamma)
+            return sklearn.svm.SVR(kernel=kernel, C=reg_c, degree=degree, gamma=gamma, max_iter=1000000)
 
     def define_hyperparams_to_tune(self) -> dict:
         """
