@@ -153,6 +153,11 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
                 'lower_bound': 0,
                 'upper_bound': 10,
                 'step': 10
+            },
+            'l1_factor': {
+                'datatype': 'float',
+                'lower_bound': 0,
+                'upper_bound': 10*3
             }
         }
 
