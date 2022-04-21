@@ -21,9 +21,14 @@ class Blup(_param_free_base_model.ParamFreeBaseModel):
     standard_encoding = '101'
     possible_encodings = ['101']
 
+    def __init__(self, task: str, encoding: str = None):
+        super().__init__(task=task, encoding=encoding)
+        self.beta = None
+        self.u = None
+
     @staticmethod
     def reml(delta: float, n: int, eigenvalues: np.array, omega2: np.array):
-        return (n-1)*np.log(sum(np.divide(omega2, (eigenvalues+delta)))) + sum(np.log(eigenvalues+delta))
+        return (n-1)*np.log(np.sum(np.divide(omega2, (eigenvalues+delta)))) + np.sum(np.log(eigenvalues+delta))
 
     def fit(self, X: np.array, y: np.array) -> np.array:
         """
