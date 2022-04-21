@@ -96,7 +96,6 @@ class ParamFreeFitting:
             model: _param_free_base_model.ParamFreeBaseModel = \
                 helper_functions.get_mapping_name_to_class()[self.current_model_name](
                     task=self.task,
-                    n_outputs=len(np.unique(self.dataset.y_full)) if self.task == 'classification' else 1
                 )
             model.save_model(path=self.save_path, filename='unfitted_model')
             helper_functions.set_all_seeds()

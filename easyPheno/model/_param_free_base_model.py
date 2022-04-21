@@ -22,13 +22,10 @@ class ParamFreeBaseModel(abc.ABC):
 
         - task (*str*): ML task ('regression' or 'classification') depending on target variable
         - encoding (*str*): the encoding to use (standard encoding or user-defined)
-        - n_outputs (*int*): number of outputs of the prediction model
-        - model: model object
 
 
     :param task: ML task (regression or classification) depending on target variable
     :param encoding: the encoding to use (standard encoding or user-defined)
-    :param n_outputs: number of outputs of the prediction model
 
     """
 
@@ -48,19 +45,11 @@ class ParamFreeBaseModel(abc.ABC):
         raise NotImplementedError
 
     # Constructor super class #
-    def __init__(self, task: str, encoding: str = None, n_outputs: int = 1):
+    def __init__(self, task: str, encoding: str = None):
         self.task = task
         self.encoding = self.standard_encoding if encoding is None else encoding
-        self.n_outputs = n_outputs if task == 'classification' else 1
-        self.model = self.define_model()
 
     # Methods required by each child class #
-    @abc.abstractmethod
-    def define_model(self):
-        """
-        Method that defines the model that will be fitted
-        """
-        # TODO: @MAURA: Check if we need such a function / attribute.
 
     @abc.abstractmethod
     def fit(self, X: np.array, y: np.array) -> np.array:
