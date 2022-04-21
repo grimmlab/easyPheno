@@ -101,8 +101,13 @@ def get_additive_encoding(X: np.array, style: str = '012') -> np.array:
     - 0: homozygous major allele,
     - 1: heterozygous
     - 2: homozygous minor allele
+    for style=012
+    - 1: homozygous major allele,
+    - 0: heterozygous
+    - -1: homozygous minor allele
 
     :param X: genotype matrix in raw encoding, i.e. containing the alleles
+    :param style: encoding style, '012' or '101' default is '012'
 
     :return: genotype matrix in additive encoding (X_012)
     """
