@@ -15,8 +15,8 @@ class Blup(_param_free_base_model.ParamFreeBaseModel):
 
         *Additional attributes*
 
-        - beta (*np.array*): TODO
-        - u (*np.array*): TODO
+        - beta (*np.array*): best linear unbiased estimate (BLUE) of the fixed effects
+        - u (*np.array*): best linear unbiased prediction (BLUP) of the random effects
     """
     standard_encoding = '101'
     possible_encodings = ['101']
@@ -28,6 +28,15 @@ class Blup(_param_free_base_model.ParamFreeBaseModel):
 
     @staticmethod
     def reml(delta: float, n: int, eigenvalues: np.array, omega2: np.array):
+        """
+        Function to compute the restricted maximum likelihood
+
+        :param delta: variance component
+        :param n: number of samples
+        :param eigenvalues: eigenvalues of SHS
+        :param omega2: point-wise product of V_SHS*y with itself
+        :return: restricted maximum likelihood
+        """
         return (n-1)*np.log(np.sum(np.divide(omega2, (eigenvalues+delta)))) + np.sum(np.log(eigenvalues+delta))
 
     def fit(self, X: np.array, y: np.array) -> np.array:
@@ -38,7 +47,7 @@ class Blup(_param_free_base_model.ParamFreeBaseModel):
         """
         n = y.shape[0]
         Z = np.ones((n, 1))
-        S = np.eye(n) - 1/n*np.ones((n,n))
+        S = np.eye(n) - 1/n*np.ones((n, n))
         sqn = np.sqrt(n)
 
         # compute spectral decomposition
