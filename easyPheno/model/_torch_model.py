@@ -53,7 +53,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
         self.optimizer = torch.optim.Adam(params=self.model.parameters(),
                                           lr=self.suggest_hyperparam_to_optuna('learning_rate'))
         self.loss_fn = torch.nn.CrossEntropyLoss() if task == 'classification' else torch.nn.MSELoss()
-        self.l1_factor = self.suggest_hyperparam_to_optuna('l1_factor')
+        # self.l1_factor = self.suggest_hyperparam_to_optuna('l1_factor')
         # early stopping if there is no improvement on validation loss for a certain number of epochs
         self.early_stopping_patience = self.suggest_hyperparam_to_optuna('early_stopping_patience')
         self.early_stopping_point = None
@@ -100,10 +100,10 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
             loss = self.get_loss(outputs=outputs, targets=targets)
-            l1_loss = 0
-            for param in self.model.parameters():
-                l1_loss += torch.sum(torch.abs(param))
-            loss += self.l1_factor * l1_loss
+            # l1_loss = 0
+            # for param in self.model.parameters():
+            #     l1_loss += torch.sum(torch.abs(param))
+            # loss += self.l1_factor * l1_loss
             loss.backward()
             self.optimizer.step()
 
