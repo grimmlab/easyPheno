@@ -28,6 +28,7 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
         n_layers = self.suggest_hyperparam_to_optuna('n_layers')
         model = tf.keras.Sequential()
         act_function = tf.keras.layers.Activation(self.suggest_hyperparam_to_optuna('act_function'))
+        l1_regularizer = tf.keras.regularizers.L1(l1=self.suggest_hyperparam_to_optuna('l1_factor'))
         in_channels = self.width_onehot
         width = self.n_features
         model.add(tf.keras.Input(shape=(width, in_channels)))
@@ -35,9 +36,10 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
         kernel_size = int(2 ** self.suggest_hyperparam_to_optuna('kernel_size_exp'))
         stride = max(1, int(kernel_size * self.suggest_hyperparam_to_optuna('stride_perc_of_kernel_size')))
         model.add(tf.keras.layers.LocallyConnected1D(filters=n_filters, kernel_size=kernel_size,
-                                                     strides=stride, activation=None))
-        model.add(tf.keras.layers.BatchNormalization())
+                                                     strides=stride, activation=None,
+                                                     kernel_regularizer=l1_regularizer))
         model.add(act_function)
+        model.add(tf.keras.layers.BatchNormalization())
         p = self.suggest_hyperparam_to_optuna('dropout')
         model.add(tf.keras.layers.Dropout(rate=p, seed=42))
         kernel_size_max_pool = 2 ** 4  # self.suggest_hyperparam_to_optuna('maxpool_kernel_size_exp')
@@ -46,7 +48,8 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
         n_units = int(model.output_shape[1] * self.suggest_hyperparam_to_optuna('n_initial_units_factor'))
         perc_decrease = self.suggest_hyperparam_to_optuna('perc_decrease_per_layer')
         for layer in range(n_layers):
-            model.add(tf.keras.layers.Dense(units=n_units, activation=None))
+            model.add(tf.keras.layers.Dense(units=n_units, activation=None,
+                                            kernel_regularizer=l1_regularizer))
             model.add(act_function)
             model.add(tf.keras.layers.BatchNormalization())
             model.add(tf.keras.layers.Dropout(rate=p))
