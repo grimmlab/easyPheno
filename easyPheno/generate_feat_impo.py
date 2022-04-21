@@ -41,6 +41,8 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                 dataset.sample_ids_full[~np.isin(np.arange(len(dataset.sample_ids_full)),
                                                       outerfold_info['test'])]
             snp_ids_df = pd.DataFrame(dataset.snp_ids)
+            print('Saving SNP ids')
+            print(snp_ids_df.shape)
             snp_ids_df.to_csv(
                 current_directory + phenotype + '_snp_ids.csv',
                 sep=',', decimal='.', float_format='%.10f',
