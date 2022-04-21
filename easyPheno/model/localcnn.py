@@ -28,7 +28,7 @@ class LocalCnn(_tensorflow_model.TensorflowModel):
         n_layers = self.suggest_hyperparam_to_optuna('n_layers')
         model = tf.keras.Sequential()
         act_function = tf.keras.layers.Activation(self.suggest_hyperparam_to_optuna('act_function'))
-        l1_regularizer = tf.keras.regularizers.L1(l1=self.suggest_hyperparam_to_optuna('l1_factor'))
+        l1_regularizer = None  # tf.keras.regularizers.L1(l1=self.suggest_hyperparam_to_optuna('l1_factor'))
         in_channels = self.width_onehot
         width = self.n_features
         model.add(tf.keras.Input(shape=(width, in_channels)))
