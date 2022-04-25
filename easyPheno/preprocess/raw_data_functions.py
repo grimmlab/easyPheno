@@ -358,7 +358,7 @@ def create_genotype_h5_file(data_dir: str, genotype_matrix_name: str,
         f.create_dataset('snp_ids', data=snp_ids.astype(bytes), chunks=True, compression="gzip")
         encoding = enc.check_encoding_of_genotype(X=X)
         if encoding == 'raw':
-            f.create_dataset('X_raw', data=X, chunks=True, compression="gzip", compression_opts=7)
+            f.create_dataset('X_raw', data=X.astype(bytes), chunks=True, compression="gzip", compression_opts=7)
         elif encoding == '012':
             f.create_dataset('X_012', data=X, chunks=True, compression="gzip", compression_opts=7)
         else:
