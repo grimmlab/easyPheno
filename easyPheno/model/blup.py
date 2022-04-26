@@ -63,7 +63,7 @@ class Blup(_param_free_base_model.ParamFreeBaseModel):
 
         # minimize REML
         x0 = np.abs(np.min(eigenvalues_SHS)) + 1e-09
-        delta_opt = minimize(self.reml, x0, args=(n, eigenvalues_SHS, omega2)).x
+        delta_opt = minimize(reml, x0=x0, args=(n, eigenvalues_SHS, omega2), bounds=[(1e-09, 1e+09)]).x
 
         # calculate inverse of H
         H_inv = np.matmul(V_H, np.divide(V_H, (eigenvalues_H + delta_opt)).T)

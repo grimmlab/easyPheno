@@ -94,6 +94,9 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
                 overview_df.to_csv(current_directory + '/Results_summary_' + phenotype + '_' + pattern + '.csv')
             writer.sheets['Overview_results'].activate()
             writer.save()
+    overview_sheet = pd.DataFrame(
+        columns=['xgboost', 'randomforest', 'linearregression', 'svm', 'mlp', 'cnn', 'localcnn', 'blup']
+    )
     for pattern in datasplit_maf_patterns:
         writer = pd.ExcelWriter(
             results_directory_genotype_level + '/Results_summary_' + pattern + '.xlsx',
@@ -104,12 +107,26 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
                            key=lambda x: int(x.split('/')[-2].split('_')[0][3:]))
         else:
             paths = glob.glob(results_directory_genotype_level + '/*/*/Results_summary*' + pattern + '*.csv')
+        overview_sheet['exp'] = [path.split('/')[-1].split('_')[2] for path in paths]
+        overview_sheet.set_index('exp', drop=True, inplace=True)
         for results_summary_path in paths:
             results_summary = pd.read_csv(results_summary_path)
             results_summary.to_excel(
                 writer, sheet_name=results_summary_path.split('/')[-2],
                 index=False
             )
+            exp = results_summary_path.split('/')[-1].split('_')[2]
+            eval_metric = 'test_explained_variance' \
+                if any(['test_explained_variance' in col for col in results_summary.columns]) else 'test_f1_score'
+            if eval_metric + '_std' in results_summary.columns:
+                for row in results_summary.iterrows():
+                    overview_sheet.at[exp, row[1]['model']] = "{:.3f} +- {:.3f}".format(
+                        row[1][eval_metric + '_mean'], row[1][eval_metric + '_std'])
+            else:
+                for row in results_summary.iterrows():
+                    overview_sheet.at[exp, row[1]['model']] = "{:.3f}".format(row[1][eval_metric + '_mean'])
+    overview_sheet.to_excel(writer, sheet_name='Overview')
+    writer.sheets['Overview'].activate()
     writer.save()
 
 
@@ -135,6 +152,6 @@ def result_string_to_dictionary(result_string: str) -> dict:
     return dict_result
 
 
-# summarize_results_per_phenotype_and_datasplit(
-#     results_directory_genotype_level='/bit_storage/Workspace/Maura/PhenotypePred/FrontiersPaperExperiments/Simulation/ld_pruned_arabidopsis_10k_maf10'
-# )
+summarize_results_per_phenotype_and_datasplit(
+    results_directory_genotype_level='/bit_storage/Workspace/Maura/PhenotypePred/FrontiersPaperExperiments/A_thal/ld_pruned_arabidopsis_2029_maf001/'
+)
