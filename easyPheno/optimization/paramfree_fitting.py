@@ -112,6 +112,9 @@ class ParamFreeFitting:
                 model.save_model(path=self.save_path, filename='final_retrained_model')
             y_pred_test = model.predict(X_in=X_test)
 
+            feat_import_df = None
+            if self.current_model_name in ['blup']:
+                feat_import_df = self.get_feature_importance(model=model, X=X_test, y=y_test)
             # Evaluate and save results
             eval_scores = \
                 eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test, task=self.task, prefix='test_')
@@ -139,6 +142,12 @@ class ParamFreeFitting:
             key = outerfold_name if self.dataset.datasplit == 'nested-cv' else 'Test'
             overall_results[key] = {'best_params': None, 'eval_metrics': eval_scores,
                                     'runtime_metrics': runtime_metrics}
+
+            if feat_import_df is not None:
+                feat_import_df.to_csv(
+                    self.save_path + 'final_model_feature_importances.csv', sep=',', decimal='.', float_format='%.10f',
+                    index=False
+                )
         return overall_results
 
     def write_runtime_csv(self, dict_runtime: dict):
@@ -153,3 +162,29 @@ class ParamFreeFitting:
             if runtime_file.tell() == 0:
                 writer.writeheader()
             writer.writerow(dict_runtime)
+
+    def get_feature_importance(self, model: _param_free_base_model.ParamFreeBaseModel, X: np.array, y: np.array,
+                               top_n: int = 1000) -> pd.DataFrame:
+        """
+        Get feature importances for models that possess such a feature, e.g. BLUP
+
+        :param model: model to analyze
+        :param X: feature matrix for permutation
+        :param y: target vector for permutation
+        :param top_n: top n features to select
+
+        :return: DataFrame with feature importance information
+        """
+
+        top_n = min(len(self.dataset.snp_ids), top_n)
+        feat_import_df = pd.DataFrame()
+        if self.current_model_name in ['blup']:
+            betas = model.model.coef_
+            dims = betas.shape[0] if len(betas.shape) > 1 else 1
+            for dim in range(dims):
+                coef = betas[dim] if len(betas.shape) > 1 else betas
+                sorted_idx = coef.argsort()[::-1][:top_n]
+                feat_import_df['snp_ids_' + str(dim)] = self.dataset.snp_ids[sorted_idx]
+                feat_import_df['coefficients_' + str(dim)] = coef[sorted_idx]
+
+        return feat_import_df

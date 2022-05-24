@@ -364,7 +364,7 @@ class OptunaOptim:
             eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test, task=self.task, prefix='test_')
 
         feat_import_df = None
-        if self.current_model_name in ['randomforest', 'xgboost', 'linearregression']:
+        if self.current_model_name in ['randomforest', 'xgboost', 'linearregression', 'elasticnet']:
             feat_import_df = self.get_feature_importance(model=final_model, X=X_test, y=y_test)
 
         print('## Results on test set ##')
