@@ -216,8 +216,9 @@ class OptunaOptim:
                 validation_results.at[0:len(sample_ids_train) - 1, innerfold_name + '_train_sampleids'] = \
                     sample_ids_train.flatten()
                 validation_results.at[0:len(y_train) - 1, innerfold_name + '_train_true'] = y_train.flatten()
-                validation_results.at[0:len(y_train) - 1, innerfold_name + '_train_pred'] = \
-                    model.predict(X_in=X_train).flatten()
+                y_train_pred = model.predict(X_in=X_train)
+                validation_results.at[0:len(y_train_pred) - 1, innerfold_name + '_train_pred'] = \
+                    y_train_pred.flatten()
                 validation_results.at[0:len(sample_ids_val) - 1, innerfold_name + '_val_sampleids'] = \
                     sample_ids_val.flatten()
                 validation_results.at[0:len(y_val) - 1, innerfold_name + '_val_true'] = y_val.flatten()
