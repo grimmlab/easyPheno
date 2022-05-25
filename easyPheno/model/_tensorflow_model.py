@@ -57,7 +57,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
         self.early_stopping_point = None
         self.early_stopping_callback = tf.keras.callbacks.EarlyStopping(
             monitor='val_loss', patience=self.early_stopping_patience, mode='min', restore_best_weights=True,
-            min_delta=0.01
+            min_delta=0.1
         )
         self.model.compile(self.optimizer, loss=self.loss_fn)
 
