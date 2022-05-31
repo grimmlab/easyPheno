@@ -63,7 +63,7 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                     except:
                         print('No results file')
                         continue
-                    if current_model in ['randomforest', 'xgboost', 'linearregression']:
+                    if current_model in ['randomforest', 'xgboost', 'linearregression', 'elasticnet']:
                         current_directory = path + '/' + current_model + '/'
                         if os.path.exists(current_directory + 'final_model_feature_importances.csv'):
                             print('Already existing')
