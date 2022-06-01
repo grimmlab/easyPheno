@@ -45,13 +45,9 @@ class Bayes(_param_free_base_model.ParamFreeBaseModel):
         R_X = robjects.r['matrix'](X, nrow=X.shape[0], ncol=X.shape[1])
         R_y = robjects.FloatVector(y)
 
-        # fix number of iterations
-        nIter = 12000
-        burnIn = 2000
-
         # run BGLR for BayesB
         ETA = base.list(base.list(X=R_X, model='BayesB'))
-        fmBB = BGLR.BGLR(y=R_y, ETA=ETA, nIter=nIter, burnIn=burnIn, verbose=False)
+        fmBB = BGLR.BGLR(y=R_y, ETA=ETA, verbose=False)
 
         # save results as numpy arrays
         self.beta = np.asarray(fmBB.rx2('ETA').rx2(1).rx2('b'))
