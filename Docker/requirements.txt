@@ -9,3 +9,4 @@ h5py==3.5.0
 scikit-learn==1.0.2
 tensorflow==2.8.0
 XlsxWriter==3.0.3
+rpy2==3.5.2
