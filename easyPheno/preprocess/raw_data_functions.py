@@ -247,25 +247,37 @@ def check_genotype_csv_file(data_dir: str, genotype_matrix_name: str, encodings:
     Load .csv genotype file. File must have the following structure:
     First column must contain the sample ids, the column names should be the SNP ids.
     The values should be the genotype matrix either in additive encoding or in raw encoding.
-    If the genotype is in raw encoding, additive encoding will be calculated.
-    If genotype is in additive encoding, only this encoding will be returned
+    If the name of the first column is 'MarkerID' it is assumed that the rows contain the markers and the column contain
+    the samples and the genotype matrix will be transposed.
+    If the csv file contains the genotype in biallelic notation (i.e. 'AA', 'AT', ...), this function generates a
+    genotype matrix in iupac notation (i.e. 'A', 'W', ...).
 
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
     :param encodings: list of needed encodings
 
-    :return: sample ids, SNP ids and genotype in additive / raw encoding (if available)
+    :return: sample ids, SNP ids and genotype in additive / raw encoding
     """
     gt = pd.read_csv(data_dir + '/' + genotype_matrix_name, index_col=0)
+    if gt.index.name == 'MarkerID':
+        gt = gt.T
     snp_ids = np.asarray(gt.columns.values)
     sample_ids = np.asarray(gt.index)
     X = np.asarray(gt.values)
-    # check encoding of X, only accept additive or raw and check if required encoding can be created
     enc_of_X = enc.check_encoding_of_genotype(X=X)
+    # if genotype in biallelic notation, will change to iupac notation
+    if enc_of_X == 'biallelic':
+        iupac_map = {"AA": "A", "GG": "G", "TT": "T", "CC": "C", "AG": "R", "GA": "R", "CT": "Y", "TC": "Y", "GC": "S",
+                     "CG": "S", "AT": "W", "TA": "W", "GT": "K", "TG": "K", "AC": "M", "CA": "M"}
+        gt = gt.applymap(lambda x: x.decode() if isinstance(x, bytes) else x)
+        X = np.asarray(gt.replace(iupac_map).values)
+        enc_of_X = 'raw'
+    # check encoding of X, only accept additive or raw and check if required encoding can be created
     for elem in encodings:
         if elem != enc_of_X and enc.get_base_encoding(encoding=elem) != enc_of_X:
             raise Exception('Genotype in ' + genotype_matrix_name + ' in wrong encoding. Can not create'
                             ' required encoding. See documentation for help.')
+
     return sample_ids, snp_ids, X
 
 

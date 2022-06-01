@@ -71,6 +71,9 @@ def check_encoding_of_genotype(X: np.array) -> str:
         return 'raw'
     elif all(z in [0, 1, 2] for z in unique):
         return '012'
+    elif all(z in ["AA", "GG", "TT", "CC", "AG", "GA", "CT", "TC", "GC",
+                   "CG", "AT", "TA", "GT", "TG", "AC", "CA"] for z in unique.astype(str)):
+        return 'biallelic'
 
 
 def encode_genotype(X: np.array, required_encoding: str) -> np.array:
