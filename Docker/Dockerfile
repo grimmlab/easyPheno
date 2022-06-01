@@ -1,4 +1,4 @@
-FROM tensorflow/tensorflow:2.8.0-gpu
+FROM tensorflow/tensorflow:2.8.2-gpu
 RUN apt-get update && apt-get install -y python3 && apt-get install -y python3-pip
 RUN apt-get install -y vim
 RUN apt-get install -y git
