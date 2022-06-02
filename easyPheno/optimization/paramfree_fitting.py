@@ -113,7 +113,7 @@ class ParamFreeFitting:
             y_pred_test = model.predict(X_in=X_test)
 
             feat_import_df = None
-            if self.current_model_name in ['blup', 'bayes']:
+            if self.current_model_name in ['blup', 'bayesA', 'bayesB', 'bayesC']:
                 feat_import_df = self.get_feature_importance(model=model, X=X_test, y=y_test)
             # Evaluate and save results
             eval_scores = \
@@ -178,13 +178,12 @@ class ParamFreeFitting:
 
         top_n = min(len(self.dataset.snp_ids), top_n)
         feat_import_df = pd.DataFrame()
-        if self.current_model_name in ['blup', 'bayes']:
-            feat_imps = model.u if self.current_model_name == 'blup' else model.beta
-            dims = feat_imps.shape[0] if len(feat_imps.shape) > 1 else 1
-            for dim in range(dims):
-                coef = feat_imps[dim] if len(feat_imps.shape) > 1 else feat_imps
-                sorted_idx = coef.argsort()[::-1][:top_n]
-                feat_import_df['snp_ids_' + str(dim)] = self.dataset.snp_ids[sorted_idx]
-                feat_import_df['coefficients_' + str(dim)] = coef[sorted_idx]
+        feat_imps = model.u if self.current_model_name == 'blup' else model.beta
+        dims = feat_imps.shape[0] if len(feat_imps.shape) > 1 else 1
+        for dim in range(dims):
+            coef = feat_imps[dim] if len(feat_imps.shape) > 1 else feat_imps
+            sorted_idx = coef.argsort()[::-1][:top_n]
+            feat_import_df['snp_ids_' + str(dim)] = self.dataset.snp_ids[sorted_idx]
+            feat_import_df['coefficients_' + str(dim)] = coef[sorted_idx]
 
         return feat_import_df
