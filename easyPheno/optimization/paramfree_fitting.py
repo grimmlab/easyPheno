@@ -178,8 +178,8 @@ class ParamFreeFitting:
 
         top_n = min(len(self.dataset.snp_ids), top_n)
         feat_import_df = pd.DataFrame()
-        if self.current_model_name in ['blup']:
-            feat_imps = model.u
+        if self.current_model_name in ['blup', 'bayes']:
+            feat_imps = model.u if self.current_model_name == 'blup' else model.beta
             dims = feat_imps.shape[0] if len(feat_imps.shape) > 1 else 1
             for dim in range(dims):
                 coef = feat_imps[dim] if len(feat_imps.shape) > 1 else feat_imps
