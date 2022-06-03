@@ -52,10 +52,10 @@ class Blup(_param_free_base_model.ParamFreeBaseModel):
 
         # compute spectral decomposition
         H = np.matmul(X, X.T) + sqn*np.eye(n)
-        eigenvalues_H, V_H = np.linalg.eig(H)
+        eigenvalues_H, V_H = np.linalg.eigh(H)
         eigenvalues_H = eigenvalues_H - sqn
         SHS = np.matmul(S, np.matmul(H, S))
-        eigenvalues_SHS, V_SHS = np.linalg.eig(SHS)
+        eigenvalues_SHS, V_SHS = np.linalg.eigh(SHS)
         V_SHS = np.delete(V_SHS, -1, axis=1)
         eigenvalues_SHS = np.delete(eigenvalues_SHS, -1) - sqn
         omega = np.matmul(V_SHS.T, y)
