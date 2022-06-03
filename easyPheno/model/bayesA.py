@@ -30,7 +30,6 @@ class Bayes(_param_free_base_model.ParamFreeBaseModel):
         self.mu = None
         self.beta = None
 
-
     def fit(self, X: np.array, y: np.array) -> np.array:
         """
         Implementation of fit function for Bayesian alphabet.
@@ -46,8 +45,8 @@ class Bayes(_param_free_base_model.ParamFreeBaseModel):
         R_y = robjects.FloatVector(y)
 
         # run BGLR for BayesB
-        ETA = base.list(base.list(X=R_X, model='BayesB'))
-        fmBB = BGLR.BGLR(y=R_y, ETA=ETA, verbose=False)
+        ETA = base.list(base.list(X=R_X, model='BayesA'))
+        fmBB = BGLR.BGLR(y=R_y, ETA=ETA, verbose=True, nIter=6000, burnIn=1000)
 
         # save results as numpy arrays
         self.beta = np.asarray(fmBB.rx2('ETA').rx2(1).rx2('b'))
