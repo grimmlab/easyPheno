@@ -61,23 +61,23 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                     print('working on ' + path)
                     for current_model in models:
                         print('Model: ' + current_model)
-                        try:
-                            results_file = glob.glob(path + '/*.csv')[0]
-                            results = pd.read_csv(results_file)
-                            results = results[results[results.columns[0]] == 'outerfold_' + str(outerfold)]
-                            results = results.loc[:, [current_model in col for col in results.columns]]
-                            eval_dict_saved = results_analysis.result_string_to_dictionary(
-                                result_string=results[current_model + '___eval_metrics'][outerfold]
-                            )
-                        except:
-                            print('No results file')
-                            continue
                         if current_model in ['randomforest', 'xgboost', 'linearregression', 'elasticnet',
                                              'bayesB', 'blup']:
                             current_directory = path + '/outerfold_' + str(outerfold) + '/' + current_model + '/'
                             if os.path.exists(current_directory + 'final_model_feature_importances.csv') and \
                                     current_model != 'blup':
                                 print('Already existing')
+                                continue
+                            try:
+                                results_file = glob.glob(path + '/*.csv')[0]
+                                results = pd.read_csv(results_file)
+                                results = results[results[results.columns[0]] == 'outerfold_' + str(outerfold)]
+                                results = results.loc[:, [current_model in col for col in results.columns]]
+                                eval_dict_saved = results_analysis.result_string_to_dictionary(
+                                    result_string=results[current_model + '___eval_metrics'][outerfold]
+                                )
+                            except:
+                                print('No results file')
                                 continue
                             try:
                                 modelpath = glob.glob(current_directory + '/unfitted_model*')[0].split('/')[-1]
@@ -98,7 +98,7 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                                 _ = model.fit(X=X_retrain, y=y_retrain)
                             else:
                                 best_params = results_analysis.result_string_to_dictionary(
-                                    result_string=results[current_model + '___best_params'][0]
+                                    result_string=results[current_model + '___best_params'][outerfold]
                                 )
                                 trial = optuna.trial.FixedTrial(params=best_params)
                                 model: _base_model.BaseModel = helper_functions.get_mapping_name_to_class()[
