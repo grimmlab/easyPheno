@@ -25,7 +25,7 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
         study_name = study + '.csv'
         for phenotype in os.listdir(results_directory_genotype_level + '/' + study):
             print('++++++++++++++ PHENOTYPE ' + phenotype + ' ++++++++++++++')
-            current_directory = results_directory_genotype_level + '/' + study + '/' + phenotype + '/'
+            all_results_directory = results_directory_genotype_level + '/' + study + '/' + phenotype + '/'
             maf_perc = 10 if 'A_thal' in results_directory_genotype_level else 0
             n_outerfolds = 3
             dataset = base_dataset.Dataset(
@@ -39,11 +39,12 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
             print('Saving SNP ids')
             print(snp_ids_df.shape)
             snp_ids_df.to_csv(
-                current_directory + phenotype + '_snp_ids.csv',
+                all_results_directory + phenotype + '_snp_ids.csv',
                 sep=',', decimal='.', float_format='%.10f',
                 index=False
             )
             for outerfold in range(n_outerfolds):
+                print('Working on outerfold ' + str(outerfold))
                 # Retrain on full train + val data with best hyperparams and apply on test
                 print("## Retrain best model and test ##")
                 outerfold_info = dataset.datasplit_indices['outerfold_' + str(outerfold)]
@@ -55,7 +56,7 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                     dataset.y_full[~np.isin(np.arange(len(dataset.y_full)), outerfold_info['test'])], \
                     dataset.sample_ids_full[~np.isin(np.arange(len(dataset.sample_ids_full)),
                                                           outerfold_info['test'])]
-                for path in glob.glob(current_directory + 'nested-cv*'):
+                for path in glob.glob(all_results_directory + 'nested-cv*'):
                     models = path.split('/')[-1].split('_')[3].split('+')
                     print('working on ' + path)
                     for current_model in models:
@@ -66,7 +67,7 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                             results = results[results[results.columns[0]] == 'outerfold_' + str(outerfold)]
                             results = results.loc[:, [current_model in col for col in results.columns]]
                             eval_dict_saved = results_analysis.result_string_to_dictionary(
-                                result_string=results[current_model + '___eval_metrics'][0]
+                                result_string=results[current_model + '___eval_metrics'][outerfold]
                             )
                         except:
                             print('No results file')
