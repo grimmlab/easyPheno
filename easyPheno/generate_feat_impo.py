@@ -30,7 +30,8 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
             n_outerfolds = 3
             dataset = base_dataset.Dataset(
                 data_dir=data_dir, genotype_matrix_name=genotype_name, phenotype_matrix_name=study_name,
-                phenotype=phenotype, datasplit='nested-cv', n_outerfolds=n_outerfolds, n_innerfolds=5,
+                phenotype=phenotype if 'corn' not in results_directory_genotype_level else 'Value',
+                datasplit='nested-cv', n_outerfolds=n_outerfolds, n_innerfolds=5,
                 test_set_size_percentage=20, val_set_size_percentage=20,
                 encoding='012', maf_percentage=maf_perc
             )
