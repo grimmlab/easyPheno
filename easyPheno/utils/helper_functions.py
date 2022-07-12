@@ -6,6 +6,7 @@ import random
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import pathlib
 
 import easyPheno.model
 
@@ -93,7 +94,7 @@ def get_subpath_for_datasplit(datasplit: str, datasplit_params: list) -> str:
 
     - nested-cv: [n_outerfolds, n_innerfolds]
     - cv-test: [n_innerfolds, test_set_size_percentage]
-    - train-val-test: [val_set_size_percentage, train_set_size_percentage]
+    - train-val-test: [val_set_size_percentage, test_set_size_percentage]
 
     :param datasplit: datasplit to retrieve
     :param datasplit_params: parameters to use for the specific datasplit
@@ -161,3 +162,37 @@ def sort_models_by_encoding(models_list: list) -> list:
     encodings = [get_mapping_name_to_class()[model_name].standard_encoding for model_name in models_list]
     sorted_models_list = [el[0] for el in sorted(zip(models_list, encodings), key=lambda x: x[1])]
     return sorted_models_list
+
+
+def get_all_subdirectories_non_recursive(path: pathlib.Path) -> list:
+    """
+    Get all non-recursive subdirectories of path
+
+    :param path: path to search
+
+    :return: list with all non-recursive subdirs
+    """
+    return list(filter(lambda x: x.is_dir(), path.iterdir()))
+
+
+def get_all_files(path: pathlib.Path) -> list:
+    """
+    Get all non-recursive files of path
+
+    :param path: path to search
+
+    :return: list with all non-recursive files
+    """
+    return list(filter(lambda x: x.is_file(), path.iterdir()))
+
+
+def get_all_files_with_suffix(path: pathlib.Path, suffix: str) -> list:
+    """
+    Get all non-recursive files of path
+
+    :param path: path to search
+    :param suffix: suffix to search
+
+    :return: list with all non-recursive files
+    """
+    return list(filter(lambda x: x.suffix == suffix, path.iterdir()))
