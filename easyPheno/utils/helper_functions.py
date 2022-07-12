@@ -196,3 +196,29 @@ def get_all_files_with_suffix(path: pathlib.Path, suffix: str) -> list:
     :return: list with all non-recursive files
     """
     return list(filter(lambda x: x.suffix == suffix, path.iterdir()))
+
+
+def get_datasplit_config_info_for_resultfolder(resultfolder: str) -> tuple:
+    """
+    Get all datasplit info for a result folder
+
+    :param resultfolder: path to retrieve info
+
+    :return: datasplit info with datasplit, n_outerfolds, n_innerfolds, val_set_size_percentage, test_set_size_percentage, maf_percentage
+    """
+    maf_perc = int(resultfolder.split('_')[-1][3:])
+    datasplit = resultfolder.split('_')[0]
+    n_outerfolds = 5
+    n_innerfolds = 5
+    test_set_size_percentage = 20
+    val_set_size_percentage = 20
+    if datasplit == 'nested-cv':
+        n_outerfolds = int(resultfolder.split('_')[1].split('-')[0])
+        n_innerfolds = int(resultfolder.split('_')[1].split('-')[1])
+    elif datasplit == 'cv-test':
+        n_innerfolds = int(resultfolder.split('_')[1].split('-')[0])
+        test_set_size_percentage = int(resultfolder.split('_')[1].split('-')[1])
+    else:
+        val_set_size_percentage = int(resultfolder.split('_')[1].split('-')[1][:-1])
+        test_set_size_percentage = int(resultfolder.split('_')[1].split('-')[-1])
+    return datasplit, n_outerfolds, n_innerfolds, val_set_size_percentage, test_set_size_percentage, maf_perc

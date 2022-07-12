@@ -26,36 +26,23 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
     data_dir = pathlib.Path(data_dir)
 
     genotype_name = results_directory_genotype_level.parts[-1] + '.h5'
-    for study in list(filter(lambda x: x.is_dir(), results_directory_genotype_level.iterdir())):
-        study_name = study + '.csv'
-        for phenotype in os.listdir(results_directory_genotype_level + '/' + study):
-            print('++++++++++++++ PHENOTYPE ' + phenotype + ' ++++++++++++++')
-            all_results_directory = results_directory_genotype_level + '/' + study + '/' + phenotype + '/'
-            subdirs = \
-                [name for name in os.listdir(all_results_directory) if
-                 os.path.isdir(os.path.join(all_results_directory, name))]
+    for phenotype_matrix in helper_functions.get_all_subdirectories_non_recursive(results_directory_genotype_level):
+        study_name = phenotype_matrix.parts[-1] + '.csv'
+        results_directory_phenotype_matrix_level = results_directory_genotype_level.joinpath(phenotype_matrix)
+        for phenotype_folder in \
+                helper_functions.get_all_subdirectories_non_recursive(results_directory_phenotype_matrix_level):
+            print('++++++++++++++ PHENOTYPE ' + phenotype_folder.parts[-1] + ' ++++++++++++++')
+            subdirs = [fullpath.parts[-1]
+                       for fullpath in helper_functions.get_all_subdirectories_non_recursive(phenotype_folder)]
             datasplit_maf_patterns = \
                 set(['_'.join(path.split('/')[-1].split('_')[:3]) for path in subdirs])
             for pattern in list(datasplit_maf_patterns):
-                maf_perc = int(pattern.split('_')[-1][3:])
-                datasplit = pattern.split('_')[0]
-                n_outerfolds = 5
-                n_innerfolds = 5
-                test_set_size_percentage = 20
-                val_set_size_percentage = 20
-                if datasplit == 'nested-cv':
-                    n_outerfolds = int(pattern.split('_')[1].split('-')[0])
-                    n_innerfolds = int(pattern.split('_')[1].split('-')[1])
-                elif datasplit == 'cv-test':
-                    n_innerfolds = int(pattern.split('_')[1].split('-')[0])
-                    test_set_size_percentage = int(pattern.split('_')[1].split('-')[1])
-                else:
-                    val_set_size_percentage = int(pattern.split('_')[1].split('-')[1][:-1])
-                    test_set_size_percentage = int(pattern.split('_')[1].split('-')[-1])
-
+                datasplit, n_outerfolds, n_innerfolds, val_set_size_percentage, test_set_size_percentage, maf_perc = \
+                    helper_functions.get_datasplit_config_info_for_resultfolder(resultfolder=pattern)
+                data_dir = str(data_dir) # TODO: delete after reconstruct
                 dataset = base_dataset.Dataset(
                     data_dir=data_dir, genotype_matrix_name=genotype_name, phenotype_matrix_name=study_name,
-                    phenotype=phenotype,
+                    phenotype=phenotype_folder.parts[-1],
                     datasplit=datasplit, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
                     test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage,
                     encoding='012', maf_percentage=maf_perc
@@ -65,7 +52,7 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                 print('Saving SNP ids')
                 print(snp_ids_df.shape)
                 snp_ids_df.to_csv(
-                    all_results_directory + phenotype + '_snp_ids.csv',
+                    phenotype_folder.joinpath('snp_ids.csv'),
                     sep=',', decimal='.', float_format='%.10f',
                     index=False
                 )
@@ -82,20 +69,20 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                         dataset.y_full[~np.isin(np.arange(len(dataset.y_full)), outerfold_info['test'])], \
                         dataset.sample_ids_full[~np.isin(np.arange(len(dataset.sample_ids_full)),
                                                          outerfold_info['test'])]
-                    for path in glob.glob(all_results_directory + pattern + '*'):
-                        models = path.split('/')[-1].split('_')[3].split('+')
-                        print('working on ' + path)
+                    for path in phenotype_folder.glob(pattern + '*'):
+                        models = path.parts[-1].split('_')[3].split('+')
+                        print('working on ' + str(path))
                         for current_model in models:
                             print('Model: ' + current_model)
                             if current_model in ['randomforest', 'xgboost', 'linearregression', 'elasticnet',
                                                  'bayesB', 'blup']:
-                                current_directory = path + '/' + current_model + '/' if datasplit != 'nested-cv' \
-                                    else path + '/outerfold_' + str(outerfold) + '/' + current_model + '/'
-                                if os.path.exists(current_directory + 'final_model_feature_importances.csv'):
+                                current_directory = path.joinpath(current_model) if datasplit != 'nested-cv' \
+                                    else path.joinpath('outerfold_' + str(outerfold), current_model)
+                                if os.path.exists(current_directory.joinpath('final_model_feature_importances.csv')):
                                     print('Already existing')
                                     continue
                                 try:
-                                    results_file = glob.glob(path + '/Results_over' + '*.csv')[0]
+                                    results_file = path.glob('/Results_over' + '*.csv')[0]
                                     results = pd.read_csv(results_file)
                                     results = results[results[results.columns[0]] == 'outerfold_' + str(outerfold)] \
                                         if datasplit == 'nested-cv' else results
@@ -161,7 +148,7 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                                         feat_import_df['snp_ids_' + str(dim)] = dataset.snp_ids[sorted_idx]
                                         feat_import_df['coefficients_' + str(dim)] = coef[sorted_idx]
                                 feat_import_df.to_csv(
-                                    current_directory + 'final_model_feature_importances.csv',
+                                    current_directory.joinpath('final_model_feature_importances.csv'),
                                     sep=',', decimal='.', float_format='%.10f',
                                     index=False
                                 )
