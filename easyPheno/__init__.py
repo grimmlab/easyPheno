@@ -7,6 +7,7 @@ with warnings.catch_warnings():
     import easyPheno.utils as utils
     import easyPheno.optimization as optimization
     import easyPheno.preprocess as preprocess
+    import easyPheno.postprocess as postprocess
 
     from . import optim_pipeline
 

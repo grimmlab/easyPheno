@@ -4,11 +4,10 @@ import glob
 
 import optuna.trial
 import pandas as pd
-import argparse
 
 from easyPheno.preprocess import base_dataset
 from easyPheno.utils import helper_functions
-from easyPheno.model import _model_functions, _base_model, _param_free_base_model
+from easyPheno.model import _base_model, _param_free_base_model
 from easyPheno.evaluation import eval_metrics, results_analysis
 
 
@@ -145,29 +144,3 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                                 sep=',', decimal='.', float_format='%.10f',
                                 index=False
                             )
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    # Input Params #
-    parser.add_argument("-spec", "--species", type=str,
-                        default='arabidopsis',
-                        help="arabidopsis or soy or corn or simulation")
-    species = vars(parser.parse_args())['species']
-    if species == 'arabidopsis':
-        results_directory_genotype_level = '/bit_storage/Workspace/Maura/PhenotypePred/FrontiersPaperExperiments/' \
-                                           'A_thal/ld_pruned_arabidopsis_2029_maf001'
-    elif species == 'soy':
-         results_directory_genotype_level = '/bit_storage/Workspace/Maura/PhenotypePred/FrontiersPaperExperiments/' \
-                                            'computomics/soy/genotypes_modified_soy_clean'
-    elif species == 'corn':
-        results_directory_genotype_level = '/bit_storage/Workspace/Maura/PhenotypePred/FrontiersPaperExperiments/' \
-                                           'computomics/corn/dataset1_genotypes_modified'
-    elif species == 'simulation':
-        results_directory_genotype_level = '/bit_storage/Workspace/Maura/PhenotypePred/FrontiersPaperExperiments/' \
-                                           'Simulation/ld_pruned_arabidopsis_10k_maf10'
-    post_generate_feature_importances(
-        results_directory_genotype_level=results_directory_genotype_level,
-        data_dir='/bit_storage/Workspace/Maura/PhenotypePred/data/serverxchange/'
-
-    )
