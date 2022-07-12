@@ -1,3 +1,3 @@
-__all__ = ["eval_metrics", "results_analysis"]
+__all__ = ["eval_metrics"]
 
 from . import *
