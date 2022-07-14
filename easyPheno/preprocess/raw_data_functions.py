@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import h5py
 import os
+import pathlib
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
 from pandas_plink import read_plink1_bin
@@ -10,7 +11,7 @@ from ..utils import helper_functions
 from . import encoding_functions as enc
 
 
-def prepare_data_files(data_dir: str, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
+def prepare_data_files(data_dir: pathlib.Path, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
                        datasplit: str, n_outerfolds: int, n_innerfolds: int, test_set_size_percentage: int,
                        val_set_size_percentage: int, models, user_encoding: str, maf_percentage: int):
     """
@@ -39,7 +40,7 @@ def prepare_data_files(data_dir: str, genotype_matrix_name: str, phenotype_matri
     :param maf_percentage: threshold for MAF filter as percentage value
     """
     print('Check if all data files have the required format')
-    if os.path.isfile(data_dir + '/' + genotype_matrix_name.split('.')[0] + '.h5') and \
+    if data_dir.joinpath(genotype_matrix_name).with_suffix('.h5').is_file() and \
             (genotype_matrix_name.split('.')[-1] != 'h5'):
         print("Found same file name with ending .h5")
         print("Assuming that the raw file was already prepared using our pipepline. Will continue with the .h5 file.")
@@ -86,7 +87,7 @@ def prepare_data_files(data_dir: str, genotype_matrix_name: str, phenotype_matri
         print('Done checking data files. All required datasets are available.')
 
 
-def check_genotype_h5_file(data_dir: str, genotype_matrix_name: str, encodings: list):
+def check_genotype_h5_file(data_dir: pathlib.Path, genotype_matrix_name: str, encodings: list):
     """
     Check .h5 genotype file. Should contain:
 
@@ -101,7 +102,7 @@ def check_genotype_h5_file(data_dir: str, genotype_matrix_name: str, encodings: 
     :param genotype_matrix_name: name of the phenotype matrix including datatype ending
     :param encodings: list of needed encodings
     """
-    with h5py.File(data_dir + '/' + genotype_matrix_name, "r") as f:
+    with h5py.File(data_dir.joinpath(genotype_matrix_name), "r") as f:
         keys = list(f.keys())
         if {'sample_ids', 'snp_ids'}.issubset(keys):
             # check if required encoding is available or can be created
@@ -113,7 +114,7 @@ def check_genotype_h5_file(data_dir: str, genotype_matrix_name: str, encodings: 
             raise Exception('sample_ids and/or snp_ids are missing in' + genotype_matrix_name)
 
 
-def check_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str) -> bool:
+def check_index_file(data_dir: pathlib.Path, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str) -> bool:
     """
     Check if index file is available and if the datasets 'y', 'matched_sample_ids', 'X_index', 'y_index' and
     'ma_frequency' exist.
@@ -125,9 +126,9 @@ def check_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix_
 
     :return: bool reflecting check result
     """
-    index_file = data_dir + '/' + genotype_matrix_name.split('.')[0] + '-' + phenotype_matrix_name.split('.')[0] \
-                 + '-' + phenotype + '.h5'
-    if os.path.isfile(index_file):
+    index_file = data_dir.joinpath(genotype_matrix_name.split('.')[0] + '-' + phenotype_matrix_name.split('.')[0] \
+                 + '-' + phenotype + '.h5')
+    if index_file.is_file():
         matched_datasets = ['y', 'matched_sample_ids', 'X_index', 'y_index', 'non_informative_filter', 'ma_frequency']
         with h5py.File(index_file, 'a') as f:
             if 'matched_data' in f and all(z in f['matched_data'] for z in matched_datasets):
@@ -138,7 +139,7 @@ def check_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix_
         return False
 
 
-def save_all_data_files(data_dir: str, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
+def save_all_data_files(data_dir: pathlib.Path, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
                         models, user_encoding: str, maf_percentage: int,
                         datasplit: str, n_outerfolds: int, n_innerfolds: int,
                         test_set_size_percentage: int, val_set_size_percentage: int):
@@ -162,10 +163,10 @@ def save_all_data_files(data_dir: str, genotype_matrix_name: str, phenotype_matr
     :param test_set_size_percentage: size of the test set relevant for cv-test and train-val-test
     :param val_set_size_percentage: size of the validation set relevant for train-val-test
     """
-    print('Load genotype file ' + data_dir + '/' + genotype_matrix_name)
+    print('Load genotype file ' + str(data_dir.joinpath(genotype_matrix_name)))
     X, X_ids = check_transform_format_genotype_matrix(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
                                                       models=models, user_encoding=user_encoding)
-    print('Have genotype matrix. Load phenotype ' + phenotype + ' from ' + data_dir + '/' + phenotype_matrix_name)
+    print('Have genotype matrix. Load phenotype ' + phenotype + ' from ' + str(data_dir.joinpath(phenotype_matrix_name)))
     y = check_and_load_phenotype_matrix(data_dir=data_dir,
                                         phenotype_matrix_name=phenotype_matrix_name, phenotype=phenotype)
     print('Have phenotype vector. Start matching genotype and phenotype.')
@@ -180,7 +181,7 @@ def save_all_data_files(data_dir: str, genotype_matrix_name: str, phenotype_matr
                       )
 
 
-def check_transform_format_genotype_matrix(data_dir: str, genotype_matrix_name: str, models, user_encoding: str) \
+def check_transform_format_genotype_matrix(data_dir: pathlib.Path, genotype_matrix_name: str, models, user_encoding: str) \
         -> (np.array, np.array):
     """
     Check the format of the specified genotype matrix.
@@ -211,26 +212,27 @@ def check_transform_format_genotype_matrix(data_dir: str, genotype_matrix_name: 
 
     :return: genotype matrix (raw encoded if present, 012 encoded otherwise) and sample ids
     """
-    suffix = genotype_matrix_name.split('.')[-1]
+    genotype_file = data_dir.joinpath(genotype_matrix_name)
+    suffix = genotype_file.suffix
     encoding = enc.get_encoding(models=models, user_encoding=user_encoding)
-    if suffix in ('h5', 'hdf5', 'h5py'):
-        with h5py.File(data_dir + '/' + genotype_matrix_name, "r") as f:
+    if suffix in ('.h5', '.hdf5', '.h5py'):
+        with h5py.File(genotype_file, "r") as f:
             sample_ids = f['sample_ids'][:].astype(str)
             if 'X_raw' in f:
                 X = f['X_raw'][:]
             elif 'X_012' in f:
                 X = f['X_012'][:]
     else:
-        if suffix == 'csv':
+        if suffix == '.csv':
             sample_ids, snp_ids, X = check_genotype_csv_file(data_dir=data_dir,
                                                              genotype_matrix_name=genotype_matrix_name,
                                                              encodings=encoding)
 
-        elif suffix in ('bed', 'bim', 'fam'):
+        elif suffix in ('.bed', '.bim', '.fam'):
             sample_ids, snp_ids, X = check_genotype_binary_plink_file(data_dir=data_dir,
                                                                       genotype_matrix_name=genotype_matrix_name)
 
-        elif suffix in ('map', 'ped'):
+        elif suffix in ('.map', '.ped'):
             sample_ids, snp_ids, X = check_genotype_plink_file(data_dir=data_dir,
                                                                genotype_matrix_name=genotype_matrix_name)
         else:
@@ -241,7 +243,7 @@ def check_transform_format_genotype_matrix(data_dir: str, genotype_matrix_name: 
     return X, sample_ids
 
 
-def check_genotype_csv_file(data_dir: str, genotype_matrix_name: str, encodings: list) \
+def check_genotype_csv_file(data_dir: pathlib.Path, genotype_matrix_name: str, encodings: list) \
         -> (np.array, np.array, np.array):
     """
     Load .csv genotype file. File must have the following structure:
@@ -258,7 +260,7 @@ def check_genotype_csv_file(data_dir: str, genotype_matrix_name: str, encodings:
 
     :return: sample ids, SNP ids and genotype in additive / raw encoding
     """
-    gt = pd.read_csv(data_dir + '/' + genotype_matrix_name, index_col=0)
+    gt = pd.read_csv(data_dir.joinpath(genotype_matrix_name), index_col=0)
     if gt.index.name == 'MarkerID':
         gt = gt.T
     snp_ids = np.asarray(gt.columns.values)
@@ -281,7 +283,7 @@ def check_genotype_csv_file(data_dir: str, genotype_matrix_name: str, encodings:
     return sample_ids, snp_ids, X
 
 
-def check_genotype_binary_plink_file(data_dir: str, genotype_matrix_name: str) -> (np.array, np.array, np.array):
+def check_genotype_binary_plink_file(data_dir: pathlib.Path, genotype_matrix_name: str) -> (np.array, np.array, np.array):
     """
     Load binary PLINK file, .bim, .fam, .bed files with same prefix need to be in same folder.
     Compute additive and raw encoding of genotype
@@ -291,7 +293,7 @@ def check_genotype_binary_plink_file(data_dir: str, genotype_matrix_name: str) -
 
     :return: sample ids, SNP ids and genotype in raw encoding
     """
-    gt_file = data_dir + '/' + genotype_matrix_name.split(".")[0]
+    gt_file = data_dir.joinpath(genotype_matrix_name).with_suffix('').as_posix()
     gt = read_plink1_bin(gt_file + '.bed', gt_file + '.bim', gt_file + '.fam', ref="a0", verbose=False)
     sample_ids = np.array(gt['fid'], dtype=str).flatten()
     snp_ids = np.array(gt['snp']).flatten()
@@ -310,7 +312,7 @@ def check_genotype_binary_plink_file(data_dir: str, genotype_matrix_name: str) -
     return sample_ids, snp_ids, X_raw
 
 
-def check_genotype_plink_file(data_dir: str, genotype_matrix_name: str) -> (np.array, np.array, np.array):
+def check_genotype_plink_file(data_dir: pathlib.Path, genotype_matrix_name: str) -> (np.array, np.array, np.array):
     """
     Load PLINK files, .map and .ped file with same prefix need to be in same folder.
     Accepts GENOTYPENAME.ped and GENOTYPENAME.map as input
@@ -320,7 +322,7 @@ def check_genotype_plink_file(data_dir: str, genotype_matrix_name: str) -> (np.a
 
     :return: sample ids, SNP ids and genotype in raw encoding
     """
-    gt_file = data_dir + '/' + genotype_matrix_name.split(".")[0]
+    gt_file = data_dir.joinpath(genotype_matrix_name).with_suffix('').as_posix()
     with open(gt_file + '.map', 'r') as f:
         snp_ids = []
         for line in f:
@@ -346,7 +348,7 @@ def check_genotype_plink_file(data_dir: str, genotype_matrix_name: str) -> (np.a
     return sample_ids, snp_ids, X_raw
 
 
-def create_genotype_h5_file(data_dir: str, genotype_matrix_name: str,
+def create_genotype_h5_file(data_dir: pathlib.Path, genotype_matrix_name: str,
                             sample_ids: np.array, snp_ids: np.array, X: np.array):
     """
     Save genotype matrix in unified .h5 file.
@@ -363,8 +365,8 @@ def create_genotype_h5_file(data_dir: str, genotype_matrix_name: str,
     :param snp_ids: array containing snp ids of genotype data
     :param X: matrix containing genotype either in raw or in additive encoding
     """
-    x_file = data_dir + '/' + genotype_matrix_name.split(".")[0] + '.h5'
-    print('Save unified genotype file ' + x_file)
+    x_file = data_dir.joinpath(genotype_matrix_name).with_suffix('.h5')
+    print('Save unified genotype file ' + str(x_file))
     with h5py.File(x_file, 'w') as f:
         f.create_dataset('sample_ids', data=sample_ids.astype(bytes), chunks=True, compression="gzip")
         f.create_dataset('snp_ids', data=snp_ids.astype(bytes), chunks=True, compression="gzip")
@@ -377,7 +379,7 @@ def create_genotype_h5_file(data_dir: str, genotype_matrix_name: str,
             raise Exception('Genotype neither in raw or additive encoding. Cannot save .h5 genotype file.')
 
 
-def check_and_load_phenotype_matrix(data_dir: str, phenotype_matrix_name: str, phenotype: str) -> pd.DataFrame:
+def check_and_load_phenotype_matrix(data_dir: pathlib.Path, phenotype_matrix_name: str, phenotype: str) -> pd.DataFrame:
     """
     Check and load the specified phenotype matrix. Only accept .csv, .pheno, .txt files.
     Sample ids need to be in first column, remaining columns should contain phenotypic values
@@ -389,11 +391,12 @@ def check_and_load_phenotype_matrix(data_dir: str, phenotype_matrix_name: str, p
 
     :return: DataFrame with sample_ids as index and phenotype values as single column without NAN values
     """
-    suffix = phenotype_matrix_name.split('.')[-1]
-    if suffix == "csv":
-        y = pd.read_csv(data_dir + '/' + phenotype_matrix_name)
-    elif suffix in ("pheno", "txt"):
-        y = pd.read_csv(data_dir + '/' + phenotype_matrix_name, sep=" ")
+    phenotype_file = data_dir.joinpath(phenotype_matrix_name)
+    suffix = phenotype_file.suffix
+    if suffix == ".csv":
+        y = pd.read_csv(phenotype_file)
+    elif suffix in (".pheno", ".txt"):
+        y = pd.read_csv(phenotype_file, sep=" ")
     else:
         raise Exception('Only accept .csv, .pheno, .txt phenotype files. See documentation for help')
     y = y.sort_values(y.columns[0]).groupby(y.columns[0]).mean()
@@ -440,7 +443,7 @@ def get_matched_data(data: np.array, index: np.array) -> np.array:
         return data[index]
 
 
-def append_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
+def append_index_file(data_dir: pathlib.Path, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
                       datasplit: str, n_outerfolds: int, n_innerfolds: int, test_set_size_percentage: int,
                       val_set_size_percentage: int, maf_percentage: int):
     """
@@ -457,8 +460,8 @@ def append_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix
     :param test_set_size_percentage: size of the test set relevant for cv-test and train-val-test
     :param val_set_size_percentage: size of the validation set relevant for train-val-test
     """
-    with h5py.File(data_dir + '/' + genotype_matrix_name.split('.')[0] + '-'
-                   + phenotype_matrix_name.split('.')[0] + '-' + phenotype + '.h5', 'a') as f:
+    with h5py.File(data_dir.joinpath(genotype_matrix_name.split('.')[0] + '-'
+                   + phenotype_matrix_name.split('.')[0] + '-' + phenotype + '.h5'), 'a') as f:
         # check if group 'maf_filter' is available and if user input maf is available, if not: create group/dataset
         if 'maf_filter' not in f:
             maf = f.create_group('maf_filter')
@@ -491,8 +494,7 @@ def append_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix
                                          compression="gzip")
         elif datasplit == 'cv-test':
             subpath = helper_functions.get_subpath_for_datasplit(datasplit=datasplit,
-                                                                 datasplit_params=
-                                                                 [n_innerfolds, test_set_size_percentage])
+                                                            datasplit_params=[n_innerfolds, test_set_size_percentage])
             if 'datasplits' not in f or ('datasplits' in f and 'cv-test' not in f['datasplits']) or \
                     ('datasplits' in f and 'cv-test' in f['datasplits'] and
                      f'{subpath}' not in f['datasplits/cv-test']):
@@ -523,7 +525,7 @@ def append_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix
                 i.create_dataset('val', data=val, chunks=True, compression="gzip")
 
 
-def create_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
+def create_index_file(data_dir: pathlib.Path, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
                       datasplit: str, n_outerfolds: int, n_innerfolds: int, test_set_size_percentage: int,
                       val_set_size_percentage: int, maf_percentage: int,
                       X: np.array, y: np.array,  sample_ids: np.array, X_index: np.array, y_index: np.array):
@@ -635,8 +637,8 @@ def create_index_file(data_dir: str, genotype_matrix_name: str, phenotype_matrix
                                            user_val_set_size_percentage=val_set_size_percentage,
                                            datasplit='train-val-test', param_to_check=param_tvt)
 
-    with h5py.File(data_dir + '/' + genotype_matrix_name.split('.')[0] + '-'
-                   + phenotype_matrix_name.split('.')[0] + '-' + phenotype + '.h5', 'w') as f:
+    with h5py.File(data_dir.joinpath(genotype_matrix_name.split('.')[0] + '-'
+                   + phenotype_matrix_name.split('.')[0] + '-' + phenotype + '.h5'), 'w') as f:
         # all data needed to redo matching of X and y and to create new mafs and new data splits
         data = f.create_group('matched_data')
         data.create_dataset('y', data=y, chunks=True, compression="gzip")
