@@ -493,8 +493,9 @@ def append_index_file(data_dir: pathlib.Path, genotype_matrix_name: str, phenoty
                                          chunks=True,
                                          compression="gzip")
         elif datasplit == 'cv-test':
-            subpath = helper_functions.get_subpath_for_datasplit(datasplit=datasplit,
-                                                            datasplit_params=[n_innerfolds, test_set_size_percentage])
+            subpath = helper_functions.get_subpath_for_datasplit(
+                datasplit=datasplit, datasplit_params=[n_innerfolds, test_set_size_percentage]
+            )
             if 'datasplits' not in f or ('datasplits' in f and 'cv-test' not in f['datasplits']) or \
                     ('datasplits' in f and 'cv-test' in f['datasplits'] and
                      f'{subpath}' not in f['datasplits/cv-test']):
@@ -513,7 +514,7 @@ def append_index_file(data_dir: pathlib.Path, genotype_matrix_name: str, phenoty
                                                                                    test_set_size_percentage])
             if 'datasplits' not in f or ('datasplits' in f and 'train-val-test' not in f['datasplits']) or \
                     ('datasplits' in f and 'train-val-test' in f['datasplits'] and
-                     f'{subpath}' not in f['datasplits/cv-test']):
+                     f'{subpath}' not in f['datasplits/train-val-test']):
                 tvt = f.create_group(f'datasplits/train-val-test/{subpath}')
                 train, val, test = check_train_test_splits(y=f['matched_data/y'], datasplit='train-val-test',
                                                            datasplit_params=[val_set_size_percentage,
