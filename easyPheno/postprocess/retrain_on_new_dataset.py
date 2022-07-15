@@ -13,14 +13,20 @@ from ..evaluation import eval_metrics
 from . import results_analysis
 
 
-def post_generate_feature_importances(results_directory_genotype_level: str, data_dir: str):
+def retrain_new_data(path_to_model_results_folder: str,
+                     data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: str,
+                     encoding: str = None, maf_percentage: int = 0, save_dir: str = None,
+                     datasplit: str = 'nested-cv', n_outerfolds: int = 5,
+                     test_set_size_percentage: int = 20, save_final_model: bool = False,
+                     batch_size: int = 32, n_epochs: int = 100000):
     """
-    Post-generate the feature importances for several models for all sub-folders of the specified directory of already optimized models.
-    Only needed in case you e.g. forgot to implement the saving of the feature importances.
+    Train a prediction model on a new dataset using the hyperparameters found during optimization on another dataset.
 
-    :param results_directory_genotype_level: Results directory at the level of the name of the genotype matrix
-    :param data_dir: data directory where the phenotype and genotype matrix as well as index file are stored
+    :param results_directory_genotype_level:
+    :param data_dir:
+    :return:
     """
+
     results_directory_genotype_level = pathlib.Path(results_directory_genotype_level)
     data_dir = pathlib.Path(data_dir)
 

@@ -13,7 +13,7 @@ def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: s
         datasplit: str = 'nested-cv', n_outerfolds: int = 5, n_innerfolds: int = 5,
         test_set_size_percentage: int = 20, val_set_size_percentage: int = 20,
         models: list = None, n_trials: int = 100, save_final_model: bool = False,
-        batch_size: int = 32, n_epochs: int = None):
+        batch_size: int = 32, n_epochs: int = 100000):
     """
     Run the whole optimization pipeline
 

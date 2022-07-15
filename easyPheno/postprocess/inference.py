@@ -13,14 +13,23 @@ from ..evaluation import eval_metrics
 from . import results_analysis
 
 
-def post_generate_feature_importances(results_directory_genotype_level: str, data_dir: str):
+def apply_final_model(path_to_model_results_folder: str, initial_data_dir: str, new_data_dir: str,
+                      genotype_matrix: str, phenotype_matrix: str, phenotype: str, save_dir: str = None):
     """
-    Post-generate the feature importances for several models for all sub-folders of the specified directory of already optimized models.
-    Only needed in case you e.g. forgot to implement the saving of the feature importances.
+    Apply a final model on a new dataset. It will be applied to the whole dataset.
+    So the main purpose of this function is, if you get new samples you want to predict on.
+    If the final model was saved, this will be used for inference on the new dataset.
+    Otherwise, it will be retrained on the initial dataset and then used for inference on the new dataset.
 
-    :param results_directory_genotype_level: Results directory at the level of the name of the genotype matrix
-    :param data_dir: data directory where the phenotype and genotype matrix as well as index file are stored
+    The new dataset will be filtered for the SNP ids that the model was initially trained on.
+
+    CAUTION: the number of SNPs of the old and the new dataset has to be the same!
+
+    :param results_directory_genotype_level:
+    :param data_dir:
+    :return:
     """
+
     results_directory_genotype_level = pathlib.Path(results_directory_genotype_level)
     data_dir = pathlib.Path(data_dir)
 
