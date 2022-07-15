@@ -11,6 +11,7 @@ import re
 import time
 import csv
 import gc
+import pathlib
 
 import torch.cuda
 import tensorflow as tf
@@ -58,7 +59,7 @@ class OptunaOptim:
     :param intermediate_results_interval: number of trials after which intermediate results will be saved
     """
 
-    def __init__(self, save_dir: str, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
+    def __init__(self, save_dir: pathlib.Path, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
                  n_outerfolds: int, n_innerfolds: int, val_set_size_percentage: int, test_set_size_percentage: int,
                  maf_percentage: int, n_trials: int, save_final_model: bool, batch_size: int, n_epochs: int,
                  task: str, current_model_name: str, dataset: base_dataset.Dataset, models_start_time: str,
@@ -75,10 +76,10 @@ class OptunaOptim:
         self.datasplit_subpath = helper_functions.get_subpath_for_datasplit(
             datasplit=self.dataset.datasplit, datasplit_params=datasplit_params
         )
-        self.base_path = save_dir + '/results/' + genotype_matrix_name.split('.')[0] + '/' + \
-                         phenotype_matrix_name.split('.')[0] + '/' + phenotype + '/' + self.dataset.datasplit + '_' + \
-                         self.datasplit_subpath + '_MAF' + str(maf_percentage) + '_' + models_start_time + '/' \
-                         + current_model_name + '/'
+        self.base_path = save_dir.joinpath('results', genotype_matrix_name.split('.')[0], \
+                         phenotype_matrix_name.split('.')[0], phenotype, self.dataset.datasplit + '_' + \
+                         self.datasplit_subpath + '_MAF' + str(maf_percentage) + '_' + models_start_time, \
+                         current_model_name)
         self.save_path = self.base_path
         self.study = None
         self.current_best_val_result = None
@@ -92,9 +93,11 @@ class OptunaOptim:
 
         :return: a new optuna study instance
         """
+        # outerfold_prefix = \
+        #    'OUTER' + self.save_path[[m.end(0) for m in re.finditer(pattern='outerfold_', string=self.save_path)][0]] \
+        #    + '-' if 'outerfold' in self.save_path else ''
         outerfold_prefix = \
-            'OUTER' + self.save_path[[m.end(0) for m in re.finditer(pattern='outerfold_', string=self.save_path)][0]] \
-            + '-' if 'outerfold' in self.save_path else ''
+            'OUTER' + self.save_path.parts[-2].split('_')[1] + '-' if 'outerfold' in self.save_path.parts[-2] else ''
         study_name = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + '_' + outerfold_prefix + \
                      self.user_input_params["genotype_matrix_name"].split('.')[0] + '-' + \
                      self.user_input_params["phenotype_matrix_name"].split('.')[0] + '-' + \
@@ -102,7 +105,7 @@ class OptunaOptim:
                      '-SPLIT' + self.dataset.datasplit + self.datasplit_subpath + \
                      '-MODEL' + self.current_model_name + '-TRIALS' + str(self.user_input_params["n_trials"])
         storage = optuna.storages.RDBStorage(
-            "sqlite:////" + self.save_path + 'Optuna_DB.db', heartbeat_interval=60, grace_period=120,
+            "sqlite:////" + self.save_path.as_posix() + 'Optuna_DB.db', heartbeat_interval=60, grace_period=120,
             failed_trial_callback=optuna.storages.RetryFailedTrialCallback(max_retry=3)
         )
         # TPE Sampler with seed for reproducibility
@@ -160,8 +163,8 @@ class OptunaOptim:
             raise optuna.exceptions.TrialPruned()
 
         # save the unfitted model
-        os.makedirs(self.save_path + 'temp/', exist_ok=True)
-        model.save_model(path=self.save_path + 'temp/',
+        self.save_path.joinpath('temp').mkdir(parents=True, exist_ok=True)
+        model.save_model(path=self.save_path.joinpath('temp'),
                          filename='unfitted_model_trial' + str(trial.number))
         print("Params for Trial " + str(trial.number))
         print(trial.params)
@@ -182,7 +185,7 @@ class OptunaOptim:
             else:
                 innerfold_name = 'train-val'
             # load the unfitted model to prevent information leak between folds
-            model = _model_functions.load_model(path=self.save_path + 'temp/',
+            model = _model_functions.load_model(path=self.save_path.joinpath('temp'),
                                                 filename='unfitted_model_trial' + str(trial.number))
 
             X_train, y_train, sample_ids_train, X_val, y_val, sample_ids_val = \
@@ -248,15 +251,15 @@ class OptunaOptim:
                 # take mean of early stopping points of all innerfolds for refitting of final model
                 self.early_stopping_point = int(np.mean(early_stopping_points))
             # persist results
-            validation_results.to_csv(self.save_path + 'temp/validation_results_trial' + str(trial.number) + '.csv',
-                                      sep=',', decimal='.', float_format='%.10f', index=False)
+            validation_results.to_csv(self.save_path.joinpath('temp/validation_results_trial' + str(trial.number) +
+                                                    '.csv'), sep=',', decimal='.', float_format='%.10f', index=False)
             # delete previous results
-            for file in os.listdir(self.save_path + 'temp/'):
+            for file in self.save_path.joinpath('temp').iterdir():
                 if 'trial' + str(trial.number) not in file:
-                    os.remove(self.save_path + 'temp/' + file)
+                    self.save_path.joinpath('temp', file).unlink()
         else:
             # delete unfitted model
-            os.remove(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial.number))
+            self.save_path.joinpath('temp', 'unfitted_model_trial' + str(trial.number)).unlink()
         # save runtime information of this trial
         self.write_runtime_csv(dict_runtime={'Trial': trial.number,
                                              'process_time_s': time.process_time() - start_process_time,
@@ -272,8 +275,8 @@ class OptunaOptim:
         :param trial_params: parameters of the trial
         :param reason: hint for the reason of the Exception
         """
-        if os.path.exists(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial_number)):
-            os.remove(self.save_path + 'temp/' + 'unfitted_model_trial' + str(trial_number))
+        if self.save_path.joinpath('temp', 'unfitted_model_trial' + str(trial_number)).exists():
+            self.save_path.joinpath('temp', 'unfitted_model_trial' + str(trial_number)).unlink()
         self.write_runtime_csv(dict_runtime={'Trial': trial_number, 'process_time_s': np.nan, 'real_time_s': np.nan,
                                              'params': trial_params, 'note': reason})
 
@@ -283,7 +286,7 @@ class OptunaOptim:
 
         :param dict_runtime: dictionary with runtime information
         """
-        with open(self.save_path + self.current_model_name + '_runtime_overview.csv', 'a') as runtime_file:
+        with open(self.save_path.joinpath(self.current_model_name + '_runtime_overview.csv'), 'a') as runtime_file:
             headers = ['Trial', 'process_time_s', 'real_time_s', 'params', 'note']
             writer = csv.DictWriter(f=runtime_file, fieldnames=headers)
             if runtime_file.tell() == 0:
@@ -296,7 +299,7 @@ class OptunaOptim:
 
         :return: dict with runtime info enhanced with runtime stats
         """
-        csv_file = pd.read_csv(self.save_path + self.current_model_name + '_runtime_overview.csv')
+        csv_file = pd.read_csv(self.save_path.joinpath(self.current_model_name + '_runtime_overview.csv'))
         if csv_file['Trial'].dtype is object and any(["retrain" in elem for elem in csv_file["Trial"]]):
             csv_file = csv_file[csv_file["Trial"].str.contains("retrain") == False]
         process_times = csv_file['process_time_s']
@@ -388,15 +391,15 @@ class OptunaOptim:
             results_filename = '/temp/intermediate_after_' + str(len(self.study.trials) - 1) + '_test_results.csv'
             feat_import_filename = \
                 '/temp/intermediate_after_' + str(len(self.study.trials) - 1) + '_feat_importances.csv'
-            shutil.copyfile(self.save_path + self.current_model_name + '_runtime_overview.csv',
-                            self.save_path + '/temp/intermediate_after_' + str(len(self.study.trials) - 1) + '_' +
-                            self.current_model_name + '_runtime_overview.csv', )
+            shutil.copyfile(self.save_path.joinpath(self.current_model_name + '_runtime_overview.csv'),
+                            self.save_path.joinpath('/temp/intermediate_after_' + str(len(self.study.trials) - 1) + '_' +
+                            self.current_model_name + '_runtime_overview.csv'), )
         final_results.to_csv(
-            self.save_path + results_filename, sep=',', decimal='.', float_format='%.10f', index=False
+            self.save_path.joinpath(results_filename), sep=',', decimal='.', float_format='%.10f', index=False
         )
         if feat_import_df is not None:
             feat_import_df.to_csv(
-                self.save_path + feat_import_filename, sep=',', decimal='.', float_format='%.10f', index=False
+                self.save_path.joinpath(feat_import_filename), sep=',', decimal='.', float_format='%.10f', index=False
             )
         return eval_scores
 
@@ -454,10 +457,11 @@ class OptunaOptim:
             if self.dataset.datasplit == 'nested-cv':
                 # Only print outerfold info for nested-cv as it does not apply for the other splits
                 print("## Starting Optimization for " + outerfold_name + " ##")
-                end_ind = [m.end(0) for m in re.finditer(pattern='/', string=self.base_path)][-2]
-                self.save_path = self.base_path[:end_ind] + outerfold_name + '/' + self.base_path[end_ind:]
-            if not os.path.exists(self.save_path):
-                os.makedirs(self.save_path)
+                #end_ind = [m.end(0) for m in re.finditer(pattern='/', string=self.base_path)][-2]
+                #self.save_path = self.base_path[:end_ind] + outerfold_name + '/' + self.base_path[end_ind:]
+                self.save_path = self.base_path.parent.joinpath(outerfold_name, self.base_path.name)
+            if not self.save_path.exists():
+                self.save_path.mkdir(parents=True, exist_ok=True)
             # Create a new study for each outerfold
             self.study = self.create_new_study()
             self.current_best_val_result = None
@@ -484,10 +488,12 @@ class OptunaOptim:
                 print("    {}: {}".format(key, value))
 
             # Move validation results and models of best trial
-            files_to_keep = glob.glob(self.save_path + 'temp/' + '*trial' + str(self.study.best_trial.number) + '*')
+            # files_to_keep = glob.glob(self.save_path + 'temp/' + '*trial' + str(self.study.best_trial.number) + '*')
+            files_to_keep_path = self.save_path.joinpath('temp', '*trial' + str(self.study.best_trial.number) + '*')
+            files_to_keep = pathlib.Path(files_to_keep_path.parent).expanduser().glob(files_to_keep_path.name)
             for file in files_to_keep:
-                shutil.copyfile(file, self.save_path + file.split('/')[-1])
-            shutil.rmtree(self.save_path + 'temp/')
+                shutil.copyfile(file, self.save_path.joinpath(file.name))
+            shutil.rmtree(self.save_path.joinpath('temp'))
 
             # Retrain on full train + val data with best hyperparams and apply on test
             eval_scores = self.generate_results_on_test(outerfold_info=outerfold_info)

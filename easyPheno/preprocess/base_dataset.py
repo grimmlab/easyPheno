@@ -1,6 +1,7 @@
 import h5py
 import numpy as np
 import sklearn.preprocessing
+import pathlib
 
 from ..utils import helper_functions
 from . import raw_data_functions, encoding_functions
@@ -33,7 +34,7 @@ class Dataset:
     :param encoding: the encoding to use (standard encoding or user-defined)
     """
 
-    def __init__(self, data_dir: str, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
+    def __init__(self, data_dir: pathlib.Path, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
                  datasplit: str, n_outerfolds: int, n_innerfolds: int, test_set_size_percentage: int,
                  val_set_size_percentage: int, encoding: str, maf_percentage: int):
         self.encoding = encoding
@@ -51,7 +52,7 @@ class Dataset:
             test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage
         )
 
-    def load_match_raw_data(self, data_dir: str, genotype_matrix_name: str) -> (np.ndarray, np.ndarray, np.ndarray):
+    def load_match_raw_data(self, data_dir: pathlib.Path, genotype_matrix_name: str) -> (np.ndarray, np.ndarray, np.ndarray):
         """
         Load the full genotype and phenotype matrices specified and match them
 
@@ -61,7 +62,7 @@ class Dataset:
         :return: matched genotype, phenotype and sample ids
         """
         print('Load and match raw data')
-        with h5py.File(data_dir + '/' + self.index_file_name, "r") as f:
+        with h5py.File(data_dir.joinpath(self.index_file_name), "r") as f:
             # Load information from index file
             y = f['matched_data/y'][:]  # TODO change if multiple phenotypes
             if helper_functions.test_likely_categorical(y):
@@ -72,7 +73,7 @@ class Dataset:
             non_informative_filter = f['matched_data/non_informative_filter'][:]
             X_index = f['matched_data/X_index'][:]
 
-        with h5py.File(data_dir + '/' + genotype_matrix_name.split('.')[0] + '.h5', "r") as f:
+        with h5py.File(data_dir.joinpath(genotype_matrix_name).with_suffix('.h5'), "r") as f:
             # Load genotype data
             snp_ids = f['snp_ids'][non_informative_filter].astype(str)
             if f'X_{self.encoding}' in f:
@@ -87,7 +88,7 @@ class Dataset:
         X = raw_data_functions.get_matched_data(data=X, index=X_index)
         return X, np.reshape(y, (-1, 1)), np.reshape(sample_ids, (-1, 1)), snp_ids
 
-    def maf_filter_raw_data(self, data_dir: str, maf_percentage: int):
+    def maf_filter_raw_data(self, data_dir: pathlib.Path, maf_percentage: int):
         """
         Apply maf filter to full raw data, if maf=0 only non-informative SNPs will be removed
 
@@ -95,7 +96,7 @@ class Dataset:
         :param maf_percentage: threshold for MAF filter as percentage value
         """
         print('Apply MAF filter')
-        with h5py.File(data_dir + '/' + self.index_file_name, "r") as f:
+        with h5py.File(data_dir.joinpath(self.index_file_name), "r") as f:
             if f'maf_filter/maf_{maf_percentage}' in f:
                 filter_indices = f[f'maf_filter/maf_{maf_percentage}'][:]
         self.X_full = np.delete(self.X_full, filter_indices, axis=1)
@@ -111,7 +112,7 @@ class Dataset:
         self.X_full = self.X_full[:, np.sort(index)]
         self.snp_ids = self.snp_ids[np.sort(index)]
 
-    def load_datasplit_indices(self, data_dir: str, n_outerfolds: int, n_innerfolds: int,
+    def load_datasplit_indices(self, data_dir: pathlib.Path, n_outerfolds: int, n_innerfolds: int,
                                test_set_size_percentage: int, val_set_size_percentage: int) -> dict:
         """
         Load the datasplit indices saved during file unification.
@@ -167,7 +168,7 @@ class Dataset:
                                                                         datasplit_params=datasplit_params)
 
         datasplit_indices = {}
-        with h5py.File(data_dir + '/' + self.index_file_name, "r") as f:
+        with h5py.File(data_dir.joinpath(self.index_file_name), "r") as f:
             # load datasplit indices from index file to ensure comparability between different models
             for m in range(n_outerfolds):
                 outerfold_path = \

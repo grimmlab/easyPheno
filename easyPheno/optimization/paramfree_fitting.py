@@ -4,6 +4,7 @@ import os
 import re
 import time
 import csv
+import pathlib
 
 from ..preprocess import base_dataset
 from ..utils import helper_functions
@@ -41,7 +42,7 @@ class ParamFreeFitting:
     :param models_start_time: optimized models and starting time of the optimization run for saving purposes
     """
 
-    def __init__(self, save_dir: str, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
+    def __init__(self, save_dir: pathlib.Path, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
                  n_outerfolds: int, n_innerfolds: int, val_set_size_percentage: int, test_set_size_percentage: int,
                  maf_percentage: int, save_final_model: bool, task: str, current_model_name: str,
                  dataset: base_dataset.Dataset, models_start_time: str):
@@ -57,10 +58,10 @@ class ParamFreeFitting:
         self.datasplit_subpath = helper_functions.get_subpath_for_datasplit(
             datasplit=self.dataset.datasplit, datasplit_params=datasplit_params
         )
-        self.base_path = save_dir + '/results/' + genotype_matrix_name.split('.')[0] + '/' + \
-                         phenotype_matrix_name.split('.')[0] + '/' + phenotype + '/' + self.dataset.datasplit + '_' + \
-                         self.datasplit_subpath + '_MAF' + str(maf_percentage) + '_' + models_start_time + '/' \
-                         + current_model_name + '/'
+        self.base_path = save_dir.joinpath('results', genotype_matrix_name.split('.')[0],
+                         phenotype_matrix_name.split('.')[0], phenotype, self.dataset.datasplit + '_' + \
+                         self.datasplit_subpath + '_MAF' + str(maf_percentage) + '_' + models_start_time,
+                                           current_model_name)
         self.save_path = self.base_path
         self.user_input_params = locals()  # distribute all handed over params in whole class
 
@@ -78,10 +79,11 @@ class ParamFreeFitting:
             if self.dataset.datasplit == 'nested-cv':
                 # Only print outerfold info for nested-cv as it does not apply for the other splits
                 print("## Starting Fitting for " + outerfold_name + " ##")
-                end_ind = [m.end(0) for m in re.finditer(pattern='/', string=self.base_path)][-2]
-                self.save_path = self.base_path[:end_ind] + outerfold_name + '/' + self.base_path[end_ind:]
-            if not os.path.exists(self.save_path):
-                os.makedirs(self.save_path)
+                # end_ind = [m.end(0) for m in re.finditer(pattern='/', string=self.base_path)][-2]
+                # self.save_path = self.base_path[:end_ind] + outerfold_name + '/' + self.base_path[end_ind:]
+                self.save_path = self.base_path.parent.joinpath(outerfold_name, self.base_path.name)
+            if not self.save_path.exists():
+                self.save_path.mkdir(parents=True, exist_ok=True)
 
             # get datasets
             X_test, y_test, sample_ids_test = \
@@ -129,9 +131,8 @@ class ParamFreeFitting:
             final_results.at[0:len(y_test) - 1, 'y_true_test'] = y_test.flatten()
             for metric, value in eval_scores.items():
                 final_results.at[0, metric] = value
-            final_results.to_csv(
-                self.save_path + 'final_model_test_results.csv', sep=',', decimal='.', float_format='%.10f', index=False
-            )
+            final_results.to_csv(self.save_path.joinpath('final_model_test_results.csv'), sep=',', decimal='.',
+                                 float_format='%.10f', index=False)
 
             runtime_metrics = {
                 'process_time_mean': process_time_s, 'process_time_std': 0,
@@ -144,10 +145,8 @@ class ParamFreeFitting:
                                     'runtime_metrics': runtime_metrics}
 
             if feat_import_df is not None:
-                feat_import_df.to_csv(
-                    self.save_path + 'final_model_feature_importances.csv', sep=',', decimal='.', float_format='%.10f',
-                    index=False
-                )
+                feat_import_df.to_csv(self.save_path.joinpath('final_model_feature_importances.csv'), sep=',',
+                                      decimal='.', float_format='%.10f', index=False)
         return overall_results
 
     def write_runtime_csv(self, dict_runtime: dict):
@@ -156,7 +155,7 @@ class ParamFreeFitting:
 
         :param dict_runtime: dictionary with runtime information
         """
-        with open(self.save_path + self.current_model_name + '_runtime_overview.csv', 'a') as runtime_file:
+        with open(self.save_path.joinpath(self.current_model_name + '_runtime_overview.csv'), 'a') as runtime_file:
             headers = ['Trial', 'process_time_s', 'real_time_s', 'params', 'note']
             writer = csv.DictWriter(f=runtime_file, fieldnames=headers)
             if runtime_file.tell() == 0:

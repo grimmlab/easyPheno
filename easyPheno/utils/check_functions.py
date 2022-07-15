@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import pathlib
 
 from . import helper_functions
 from ..model import _param_free_base_model, _torch_model, _tensorflow_model
@@ -12,20 +13,21 @@ def check_all_specified_arguments(arguments: dict):
     :param arguments: all arguments provided by the user
     """
     # Check existence of save_dir
-    if not os.path.exists(arguments["save_dir"]):
-        raise Exception("Specified save_dir " + arguments["save_dir"] + " does not exist. Please double-check.")
+    if not arguments["save_dir"].exists():
+        raise Exception("Specified save_dir " + str(arguments["save_dir"]) + " does not exist. Please double-check.")
     # Check existence of genotype and phenotype file
-    if not os.path.isfile(arguments["data_dir"] + '/' + arguments["genotype_matrix"]):
+    if not arguments["data_dir"].joinpath(arguments["genotype_matrix"]).is_file():
         raise Exception('Specified genotype file ' + arguments["genotype_matrix"] + ' does not exist in '
-                        + arguments["data_dir"] + '/. Please check spelling.')
-    if not os.path.isfile(arguments["data_dir"] + '/' + arguments["phenotype_matrix"]):
+                        + str(arguments["data_dir"]) + '. Please check spelling.')
+    phenotype_file = arguments["data_dir"].joinpath(arguments["phenotype_matrix"])
+    if not phenotype_file.is_file():
         raise Exception('Specified phenotype file ' + arguments["phenotype_matrix"] + ' does not exist in '
-                        + arguments["data_dir"] + '/. Please check spelling.')
+                        + str(arguments["data_dir"]) + '. Please check spelling.')
     # Check existence of specified phenotype in phenotype file
-    phenotype_file = pd.read_csv(arguments["data_dir"] + '/' + arguments["phenotype_matrix"])
-    if arguments["phenotype"] not in phenotype_file.columns:
+    phenotype = pd.read_csv(phenotype_file)
+    if arguments["phenotype"] not in phenotype.columns:
         raise Exception('Specified phenotype ' + arguments["phenotype"] + ' does not exist in phenotype file '
-                        + arguments["data_dir"] + '/' + arguments["phenotype_matrix"] + '. Check spelling.')
+                        + str(phenotype_file) + '. Check spelling.')
 
     # Check meaningfulness of specified values
     if not (0 <= arguments["maf_percentage"] <= 20):
