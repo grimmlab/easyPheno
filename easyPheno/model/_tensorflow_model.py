@@ -3,6 +3,7 @@ import numpy as np
 import optuna
 import tensorflow as tf
 import joblib
+import pathlib
 
 from . import _base_model
 
@@ -162,7 +163,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
             }
         }
 
-    def save_model(self, path: str, filename: str):
+    def save_model(self, path: pathlib.Path, filename: str):
         """
         Method to persist the whole model object on a hard drive (can be loaded with :obj:`~easyPheno.model._model_functions.load_model`)
 
@@ -172,5 +173,5 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
         optimizer = self.optimizer
         # special case for serialization of optimizer prior to saving
         self.optimizer = tf.keras.optimizers.serialize(self.optimizer)
-        joblib.dump(self, path + filename, compress=3)
+        joblib.dump(self, path.joinpath(filename), compress=3)
         self.optimizer = optimizer

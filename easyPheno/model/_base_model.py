@@ -2,6 +2,7 @@ import abc
 import optuna
 import joblib
 import numpy as np
+import pathlib
 
 
 class BaseModel(abc.ABC):
@@ -230,7 +231,7 @@ class BaseModel(abc.ABC):
             _ = self.suggest_hyperparam_to_optuna(param_name)
         return self.optuna_trial.params
 
-    def save_model(self, path: str, filename: str):
+    def save_model(self, path: pathlib.Path, filename: str):
         """
         Persist the whole model object on a hard drive
         (can be loaded with :obj:`~easyPheno.model._model_functions.load_model`)
@@ -238,4 +239,4 @@ class BaseModel(abc.ABC):
         :param path: path where the model will be saved
         :param filename: filename of the model
         """
-        joblib.dump(self, path + filename, compress=3)
+        joblib.dump(self, path.joinpath(filename), compress=3)
