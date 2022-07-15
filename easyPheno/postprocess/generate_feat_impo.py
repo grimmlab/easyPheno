@@ -33,12 +33,10 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
             print('++++++++++++++ PHENOTYPE ' + phenotype_folder.parts[-1] + ' ++++++++++++++')
             subdirs = [fullpath.parts[-1]
                        for fullpath in helper_functions.get_all_subdirectories_non_recursive(phenotype_folder)]
-            datasplit_maf_patterns = \
-                set(['_'.join(path.split('/')[-1].split('_')[:3]) for path in subdirs])
+            datasplit_maf_patterns = set(['_'.join(path.split('_')[:3]) for path in subdirs])
             for pattern in list(datasplit_maf_patterns):
                 datasplit, n_outerfolds, n_innerfolds, val_set_size_percentage, test_set_size_percentage, maf_perc = \
                     helper_functions.get_datasplit_config_info_for_resultfolder(resultfolder=pattern)
-                data_dir = str(data_dir) # TODO: delete after reconstruct
                 dataset = base_dataset.Dataset(
                     data_dir=data_dir, genotype_matrix_name=genotype_name, phenotype_matrix_name=study_name,
                     phenotype=phenotype_folder.parts[-1],
@@ -49,7 +47,6 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                 # CAUTION: currently the '012' encoding works for all algos with featimps, may need reimplementation
                 snp_ids_df = pd.DataFrame(dataset.snp_ids)
                 print('Saving SNP ids')
-                print(snp_ids_df.shape)
                 snp_ids_df.to_csv(
                     phenotype_folder.joinpath('snp_ids.csv'),
                     sep=',', decimal='.', float_format='%.10f',
@@ -81,7 +78,7 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                                     print('Already existing')
                                     continue
                                 try:
-                                    results_file = path.glob('/Results_over' + '*.csv')[0]
+                                    results_file = list(path.glob('Results*.csv'))[0]
                                     results = pd.read_csv(results_file)
                                     results = results[results[results.columns[0]] == 'outerfold_' + str(outerfold)] \
                                         if datasplit == 'nested-cv' else results

@@ -118,7 +118,7 @@ def save_model_overview_dict(model_overview: dict, save_path: str):
     :param model_overview: dictionary with results overview
     :param save_path: filepath for saving the results overview file
     """
-    results_overiew = pd.DataFrame()
+    results_overview = pd.DataFrame()
     for model_name, fold_dicts in model_overview.items():
         result_dicts = {}
         result_dicts_std = {}
@@ -126,7 +126,7 @@ def save_model_overview_dict(model_overview: dict, save_path: str):
         runtime_dicts_std = {}
         for fold_name, fold_info in fold_dicts.items():
             for result_name, result_info in fold_info.items():
-                results_overiew.at[fold_name, model_name + '___' + result_name] = [result_info]
+                results_overview.at[fold_name, model_name + '___' + result_name] = [result_info]
                 if 'eval_metric' in result_name:
                     for metric_name, metric_result in result_info.items():
                         if metric_name not in result_dicts.keys():
@@ -143,12 +143,12 @@ def save_model_overview_dict(model_overview: dict, save_path: str):
         for metric_name, results in runtime_dicts.items():
             runtime_dicts[metric_name] = np.mean(results)
             runtime_dicts_std[metric_name] = np.std(results)
-        if 'nested' in save_path:
-            results_overiew.at['mean_over_all_folds', model_name + '___' + 'eval_metrics'] = [result_dicts]
-            results_overiew.at['std_over_all_folds', model_name + '___' + 'eval_metrics'] = [result_dicts_std]
-            results_overiew.at['mean_over_all_folds', model_name + '___' + 'runtime_metrics'] = [runtime_dicts]
-            results_overiew.at['std_over_all_folds', model_name + '___' + 'runtime_metrics'] = [runtime_dicts_std]
-    results_overiew.to_csv(save_path)
+        if 'nested' in str(save_path):
+            results_overview.at['mean_over_all_folds', model_name + '___' + 'eval_metrics'] = [result_dicts]
+            results_overview.at['std_over_all_folds', model_name + '___' + 'eval_metrics'] = [result_dicts_std]
+            results_overview.at['mean_over_all_folds', model_name + '___' + 'runtime_metrics'] = [runtime_dicts]
+            results_overview.at['std_over_all_folds', model_name + '___' + 'runtime_metrics'] = [runtime_dicts_std]
+    results_overview.to_csv(save_path)
 
 
 def sort_models_by_encoding(models_list: list) -> list:
@@ -208,7 +208,7 @@ def get_datasplit_config_info_for_resultfolder(resultfolder: str) -> tuple:
     """
     maf_perc = int(resultfolder.split('_')[-1][3:])
     datasplit = resultfolder.split('_')[0]
-    n_outerfolds = 5
+    n_outerfolds = 1
     n_innerfolds = 5
     test_set_size_percentage = 20
     val_set_size_percentage = 20

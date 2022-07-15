@@ -1,6 +1,5 @@
 import datetime
 import pprint
-import os
 import pathlib
 
 from easyPheno.utils import check_functions, print_functions, helper_functions
@@ -116,7 +115,5 @@ def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: s
     print('# Optimization runs done for models ' + str(models_to_optimize))
     print('Results overview on the test set(s)')
     pprint.PrettyPrinter(depth=4).pprint(model_overview)
-    path_overview_file = \
-        optim_run.base_path[:[index for index, letter in enumerate(optim_run.base_path) if letter == '/'][-2]] + \
-        '/Results_overiew_' + '_'.join(models) + '.csv'
+    path_overview_file = optim_run.base_path.parent.joinpath('Results_overview_' + '_'.join(models) + '.csv')
     helper_functions.save_model_overview_dict(model_overview=model_overview, save_path=path_overview_file)
