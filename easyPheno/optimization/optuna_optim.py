@@ -4,10 +4,7 @@ import pandas as pd
 import sklearn
 import sklearn.inspection
 import numpy as np
-import os
-import glob
 import shutil
-import re
 import time
 import csv
 import gc
@@ -105,7 +102,7 @@ class OptunaOptim:
                      '-SPLIT' + self.dataset.datasplit + self.datasplit_subpath + \
                      '-MODEL' + self.current_model_name + '-TRIALS' + str(self.user_input_params["n_trials"])
         storage = optuna.storages.RDBStorage(
-            "sqlite:////" + self.save_path.as_posix() + 'Optuna_DB.db', heartbeat_interval=60, grace_period=120,
+            "sqlite:////" + str(self.save_path.joinpath('Optuna_DB.db')), heartbeat_interval=60, grace_period=120,
             failed_trial_callback=optuna.storages.RetryFailedTrialCallback(max_retry=3)
         )
         # TPE Sampler with seed for reproducibility
@@ -255,7 +252,7 @@ class OptunaOptim:
                                                     '.csv'), sep=',', decimal='.', float_format='%.10f', index=False)
             # delete previous results
             for file in self.save_path.joinpath('temp').iterdir():
-                if 'trial' + str(trial.number) not in file:
+                if 'trial' + str(trial.number) not in str(file):
                     self.save_path.joinpath('temp', file).unlink()
         else:
             # delete unfitted model
