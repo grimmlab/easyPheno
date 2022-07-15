@@ -498,6 +498,17 @@ class OptunaOptim:
             # Retrain on full train + val data with best hyperparams and apply on test
             eval_scores = self.generate_results_on_test(outerfold_info=outerfold_info)
             key = outerfold_name if self.dataset.datasplit == 'nested-cv' else 'Test'
-            overall_results[key] = {'best_params': self.study.best_trial.params, 'eval_metrics': eval_scores,
+            best_params = self.study.best_trial.params
+            if issubclass(helper_functions.get_mapping_name_to_class()[self.current_model_name],
+                          _torch_model.TorchModel) or \
+                    issubclass(helper_functions.get_mapping_name_to_class()[self.current_model_name],
+                               _tensorflow_model.TensorflowModel):
+                # additional attributes for torch and tensorflow models
+                if 'n_epochs' not in best_params.keys():
+                    best_params['n_epochs'] = self.user_input_params["n_epochs"]
+                if 'batch_size' not in best_params.keys():
+                    best_params['batch_size'] = self.user_input_params["batch_size"]
+
+            overall_results[key] = {'best_params': best_params, 'eval_metrics': eval_scores,
                                     'runtime_metrics': runtime_metrics}
         return overall_results

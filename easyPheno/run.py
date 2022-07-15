@@ -75,10 +75,9 @@ if __name__ == '__main__':
                              "unfitted models that can be retrained are already saved by default)")
 
     # Only relevant for Neural Networks #
-    parser.add_argument("-bs", "--batch_size", type=int, default=64,
-                        help="Only relevant for neural networks: define the batch size. If nothing is specified,"
-                             "it will be considered as a hyperparameter for optimization")
-    parser.add_argument("-ep", "--n_epochs", type=int, default=100000,
+    parser.add_argument("-bs", "--batch_size", type=int, default=None,
+                        help="Only relevant for neural networks: define the batch size.")
+    parser.add_argument("-ep", "--n_epochs", type=int, default=None,
                         help="Only relevant for neural networks: define the number of epochs. If nothing is specified,"
                              "it will be considered as a hyperparameter for optimization")
     args = vars(parser.parse_args())
