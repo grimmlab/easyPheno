@@ -2,8 +2,9 @@
     :width: 800
     :alt: easyPheno
 
-Welcome to easyPheno's documentation!
-=====================================
+
+easyPheno: A state-of-the-art and easy-to-use Python framework for plant phenotype prediction
+=============================================================================================================
 easyPheno is a Python framework that enables the rigorous training, comparison and analysis of phenotype predictions for a variety of different models.
 easyPheno includes multiple state-of-the-art prediction models.
 Besides common genomic selection approaches, such as best linear unbiased prediction (BLUP) and models from the Bayesian alphabet, our framework includes several machine learning methods.
