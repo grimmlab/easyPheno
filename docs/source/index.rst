@@ -1,5 +1,5 @@
 .. image:: https://raw.githubusercontent.com/grimmlab/easyPheno/main/docs/image/Logo_easyPheno_Text.png
-    :width: 800
+    :width: 600
     :alt: easyPheno
 
 
