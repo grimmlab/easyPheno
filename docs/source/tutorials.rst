@@ -57,9 +57,9 @@ Feel free to test easyPheno, e.g. with other prediction models.
 If you want to start using your own data, please carefully read our :ref:`Data Guide`: to make sure that your data fulfills all requirements.
 
 ..
-A video guide with similar information on how to run easyPheno using Docker can be found here:
+    A video guide with similar information on how to run easyPheno using Docker can be found here:
 
- .. youtube:: jZ6hZNMa-TE
+     .. youtube:: jZ6hZNMa-TE
 ..
 
 HowTo: Run easyPheno as a pip package
