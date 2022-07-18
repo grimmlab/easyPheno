@@ -92,4 +92,5 @@ Just install easyPheno via ``pip``:
 
         pip install PACKAGENAME
 
-our setup is finished! Go to :ref:`HowTo: Run easyPheno as a pip package` to see how you can now use easyPheno!
+Our setup is finished! Go to :ref:`HowTo: Run easyPheno as a pip package` to see how you can now use easyPheno!
+
