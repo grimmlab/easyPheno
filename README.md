@@ -1,5 +1,6 @@
 <div align="center"><img src="https://raw.githubusercontent.com/grimmlab/easyPheno/main/docs/image/Logo_easyPheno_Text.png" width="800"/></div>
 
+# easyPheno: A state-of-the-art Python framework for plant phenotype prediction
 
 [![Python 3.8](https://img.shields.io/badge/Python-3.8-3776AB)](https://www.python.org/downloads/release/python-388/)
 
