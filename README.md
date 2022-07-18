@@ -22,4 +22,4 @@ This pipeline is developed and maintained by members of the [Bioinformatics lab]
 - [Maura John, M.Sc.](https://bit.cs.tum.de/team/maura-john/)
 
 ## Citation
-Manuscript for publishing easyPheno as a scientific paper is currently under preparation.
+A manuscript for publishing easyPheno as a scientific paper is currently under preparation.
