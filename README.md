@@ -1,11 +1,11 @@
 <div align="center"><img src="https://raw.githubusercontent.com/grimmlab/easyPheno/main/docs/image/Logo_easyPheno_Text.png" width="800"/></div>
 
-# easyPheno: A state-of-the-art Python framework for plant phenotype prediction
+# easyPheno: A state-of-the-art and easy-to-use Python framework for plant phenotype prediction
 
 [![Python 3.8](https://img.shields.io/badge/Python-3.8-3776AB)](https://www.python.org/downloads/release/python-388/)
 
-easyPheno is an easy-to-use Python framework for phenotype prediction that enables the rigorous training, comparison and analysis of phenotype predictions for a variety of different models.
-easyPheno includes multiple state-of-the-art prediction models to enable phenotype prediction in an easy-to-use way.
+easyPheno is a Python framework that enables the rigorous training, comparison and analysis of phenotype predictions for a variety of different models.
+easyPheno includes multiple state-of-the-art prediction models.
 Besides common genomic selection approaches, such as best linear unbiased prediction (BLUP) and models from the Bayesian alphabet, our framework includes several machine learning methods.
 These range from classical models, such as regularized linear regression over ensemble learners, e.g. XGBoost, to deep learning-based architectures, such as Convolutional Neural Networks (CNN).
 To enable automatic hyperparameter optimization, we leverage  state-of-the-art and efficient Bayesian optimization techniques.
