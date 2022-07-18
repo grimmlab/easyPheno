@@ -3,7 +3,7 @@
     :alt: easyPheno
 
 |
-easyPheno: easy-to-use plant phenotype prediction
+easyPheno: A phenotype prediction framework
 ===================================================
 easyPheno is a Python framework that enables the rigorous training, comparison and analysis of phenotype predictions for a variety of different models.
 easyPheno includes multiple state-of-the-art prediction models.
