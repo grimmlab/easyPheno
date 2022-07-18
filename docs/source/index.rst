@@ -26,9 +26,7 @@ This pipeline is developed and maintained by members of the `Bioinformatics lab 
 
 Citation
 ---------------------
-When using this workflow, please cite our publication:
-
-tbd.
+A manuscript for publishing easyPheno as a scientific paper is currently under preparation.
 
 .. toctree::
    :maxdepth: 4
