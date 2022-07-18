@@ -20,3 +20,6 @@ The pip-package is not yet available, but feel free to already test the Docker w
 This pipeline is developed and maintained by members of the [Bioinformatics lab](https://bit.cs.tum.de) lead by [Prof. Dr. Dominik Grimm](https://bit.cs.tum.de/team/dominik-grimm/):
 - [Florian Haselbeck, M.Sc.](https://bit.cs.tum.de/team/florian-haselbeck/)
 - [Maura John, M.Sc.](https://bit.cs.tum.de/team/maura-john/)
+
+## Citation
+Manuscript for publishing easyPheno as a scientific paper is currently under preparation.
