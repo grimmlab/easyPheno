@@ -162,14 +162,12 @@ class ParamFreeFitting:
                 writer.writeheader()
             writer.writerow(dict_runtime)
 
-    def get_feature_importance(self, model: _param_free_base_model.ParamFreeBaseModel, X: np.array, y: np.array,
+    def get_feature_importance(self, model: _param_free_base_model.ParamFreeBaseModel,
                                top_n: int = 1000) -> pd.DataFrame:
         """
         Get feature importances for models that possess such a feature, e.g. BLUP
 
         :param model: model to analyze
-        :param X: feature matrix for permutation
-        :param y: target vector for permutation
         :param top_n: top n features to select
 
         :return: DataFrame with feature importance information

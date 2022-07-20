@@ -18,7 +18,7 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
     Post-generate the feature importances for several models for all sub-folders of the specified directory of already optimized models.
     Only needed in case you e.g. forgot to implement the saving of the feature importances.
 
-    :param results_directory_genotype_level: Results directory at the level of the name of the genotype matrix
+    :param results_directory_genotype_level: results directory at the level of the name of the genotype matrix
     :param data_dir: data directory where the phenotype and genotype matrix as well as index file are stored
     """
     results_directory_genotype_level = pathlib.Path(results_directory_genotype_level)
@@ -52,6 +52,7 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                     sep=',', decimal='.', float_format='%.10f',
                     index=False
                 )
+
                 for outerfold in range(n_outerfolds):
                     print('Working on outerfold ' + str(outerfold))
                     # Retrain on full train + val data with best hyperparams and apply on test
@@ -92,7 +93,8 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
 
                                 task = 'regression' if 'test_rmse' in eval_dict_saved.keys() else 'classification'
                                 helper_functions.set_all_seeds()
-                                if current_model in ['bayesB', 'blup']:
+                                if issubclass(helper_functions.get_mapping_name_to_class()[current_model],
+                                              _param_free_base_model.ParamFreeBaseModel):
                                     model: _param_free_base_model.ParamFreeBaseModel = \
                                         helper_functions.get_mapping_name_to_class()[current_model](
                                             task=task,
