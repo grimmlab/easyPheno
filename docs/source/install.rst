@@ -61,10 +61,6 @@ Setup
 
 Your setup is finished! Go to :ref:`HowTo: Run easyPheno using Docker` to see how you can now use easyPheno!
 
-A video guide with similar information on how to set up easyPheno using Docker can be found here:
-
-.. youtube:: jZ6hZNMa-TE
-
 Useful Docker commands
 ~~~~~~~~~~~~~~~~~~~~~~
 The subsequent Docker commands might be useful when using easyPheno.
@@ -92,4 +88,5 @@ Just install easyPheno via ``pip``:
 
         pip install PACKAGENAME
 
-our setup is finished! Go to :ref:`HowTo: Run easyPheno as a pip package` to see how you can now use easyPheno!
+Our setup is finished! Go to :ref:`HowTo: Run easyPheno as a pip package` to see how you can now use easyPheno!
+

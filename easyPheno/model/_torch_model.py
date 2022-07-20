@@ -48,7 +48,7 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
         self.width_onehot = width_onehot  # relevant for models using onehot encoding e.g. CNNs
         super().__init__(task=task, optuna_trial=optuna_trial, encoding=encoding, n_outputs=n_outputs)
         self.batch_size = \
-            batch_size if batch_size is not None else 2**self.suggest_hyperparam_to_optuna('batch_size_exp')
+            batch_size if batch_size is not None else self.suggest_hyperparam_to_optuna('batch_size')
         self.n_epochs = n_epochs if n_epochs is not None else self.suggest_hyperparam_to_optuna('n_epochs')
         self.optimizer = torch.optim.Adam(params=self.model.parameters(),
                                           lr=self.suggest_hyperparam_to_optuna('learning_rate'))
@@ -208,10 +208,9 @@ class TorchModel(_base_model.BaseModel, abc.ABC):
                 'datatype': 'categorical',
                 'list_of_values': ['relu', 'tanh']
             },
-            'batch_size_exp': {
-                'datatype': 'int',
-                'lower_bound': 3,
-                'upper_bound': 6
+            'batch_size': {
+                'datatype': 'categorical',
+                'list_of_values': [4, 8, 16, 32, 64]
             },
             'n_epochs': {
                 'datatype': 'categorical',

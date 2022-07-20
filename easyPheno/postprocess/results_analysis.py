@@ -1,6 +1,9 @@
 import glob
 import pandas as pd
 import os
+import argparse
+
+from ..utils import helper_functions
 
 
 def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_level: str):
@@ -9,6 +12,9 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
 
     :param results_directory_genotype_level: Results directory at the level of the name of the genotype matrix
     """
+    results_directory_genotype_level = results_directory_genotype_level + '/' \
+        if results_directory_genotype_level[-1] != '/' \
+        else results_directory_genotype_level
     for study in os.listdir(results_directory_genotype_level):
         if not os.path.isdir(results_directory_genotype_level + '/' + study):
             continue
@@ -95,7 +101,7 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
                 writer.sheets['Overview_results'].activate()
                 writer.save()
     overview_sheet = pd.DataFrame(
-        columns=['xgboost', 'randomforest', 'linearregression', 'svm', 'mlp', 'cnn', 'localcnn', 'blup']
+        columns=helper_functions.get_list_of_implemented_models()
     )
     for pattern in datasplit_maf_patterns:
         writer = pd.ExcelWriter(
@@ -152,5 +158,12 @@ def result_string_to_dictionary(result_string: str) -> dict:
     return dict_result
 
 
-#summarize_results_per_phenotype_and_datasplit(results_directory_genotype_level=...
-#)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-rd", "--results_dir", type=str,
+                        help="Provide the full path of the directory where your results are stored and for which "
+                             "you want to post-generate feature importances")
+    args = vars(parser.parse_args())
+    results_directory_genotype_level = args['results_dir']
+
+    summarize_results_per_phenotype_and_datasplit(results_directory_genotype_level=results_directory_genotype_level)
