@@ -1,7 +1,6 @@
-import glob
 import pandas as pd
-import os
 import argparse
+import pathlib
 
 from ..utils import helper_functions
 
@@ -10,37 +9,43 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
     """
     Summarize the results for each phenotype and datasplit for all models and save in a file.
 
-    :param results_directory_genotype_level: Results directory at the level of the name of the genotype matrix
+    The following files will be created:
+
+        - at phenotype-folder level within results directories:
+
+            - Detailed_results_summary_*PHENOTYPE*DATASPLIT-PATTERN*.xlsx: .xlsx-file containing detailed results for each phenotype and datasplit-maf pattern (e.g. with all runtime results etc.)
+            - Results_summary**PHENOTYPE*DATASPLIT-PATTERN*.csv: .csv-file containing an overview of the performance of each model for a phenotype and datasplit-maf pattern combination
+
+        - at genotype-folder level within results directories (the one that was specified):
+
+            - Results_summary*DATASPLIT-PATTERN*.xlsx: .xlsx-file containing an overview of the performance of each model on each phenotype used for this genotype matrix with the specified datasplit-maf pattern
+            - Results_summary*DATASPLIT-PATTERN*.csv: only overview sheet of Results_summary*DATASPLIT-PATTERN*.xlsx
+
+    :param results_directory_genotype_level: results directory at the level of the name of the genotype matrix
     """
-    results_directory_genotype_level = results_directory_genotype_level + '/' \
-        if results_directory_genotype_level[-1] != '/' \
-        else results_directory_genotype_level
-    for study in os.listdir(results_directory_genotype_level):
-        if not os.path.isdir(results_directory_genotype_level + '/' + study):
-            continue
-        for phenotype in os.listdir(results_directory_genotype_level + '/' + study):
-            current_directory = results_directory_genotype_level + '/' + study + '/' + phenotype + '/'
-            if not os.path.isdir(current_directory):
-                continue
+    results_directory_genotype_level = pathlib.Path(results_directory_genotype_level)
+    for phenotype_matrix in helper_functions.get_all_subdirectories_non_recursive(results_directory_genotype_level):
+        results_directory_phenotype_matrix_level = results_directory_genotype_level.joinpath(phenotype_matrix)
+        for phenotype_folder in \
+                helper_functions.get_all_subdirectories_non_recursive(results_directory_phenotype_matrix_level):
+            phenotype = phenotype_folder.parts[-1]
             print('++++++++++++++ PHENOTYPE ' + phenotype + ' ++++++++++++++')
-            current_directory = results_directory_genotype_level + '/' + study + '/' + phenotype + '/'
-            subdirs = \
-                [name for name in os.listdir(current_directory) if os.path.isdir(os.path.join(current_directory, name))]
-            datasplit_maf_patterns = \
-                set(['_'.join(path.split('/')[-1].split('_')[:3]) for path in subdirs])
-            for pattern in datasplit_maf_patterns:
+            subdirs = [fullpath.parts[-1]
+                       for fullpath in helper_functions.get_all_subdirectories_non_recursive(phenotype_folder)]
+            datasplit_maf_patterns = set(['_'.join(path.split('_')[:3]) for path in subdirs])
+            for pattern in list(datasplit_maf_patterns):
                 writer = pd.ExcelWriter(
-                    current_directory + '/Detailed_results_summary_' + phenotype + '_' + pattern + '.xlsx',
+                    phenotype_folder.joinpath('Detailed_results_summary_' + phenotype + '_' + pattern + '.xlsx'),
                     engine='xlsxwriter'
                 )
                 overview_df = None
                 print('----- Datasplit pattern ' + pattern + ' -----')
-                for path in glob.glob(current_directory + pattern + '*'):
-                    models = path.split('/')[-1].split('_')[3].split('+')
+                for path in phenotype_folder.glob(pattern + '*'):
+                    models = path.parts[-1].split('_')[3].split('+')
                     for current_model in models:
                         print('### Results for ' + current_model + ' ###')
                         try:
-                            results_file = glob.glob(path + '/*.csv')[0]
+                            results_file = list(path.glob('Results*.csv'))[0]
                             results = pd.read_csv(results_file)
                             results = results.loc[:, [current_model in col for col in results.columns]]
                             if 'nested' in pattern:
@@ -83,57 +88,57 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
                             print('No Results File')
                             continue
                         if 'nested' in pattern:
-                            for outerfold_path in glob.glob(path + '/outerfold*'):
+                            for outerfold_path in path.glob('outerfold*'):
                                 runtime_file = pd.read_csv(
-                                    outerfold_path + '/' + current_model + '/' + current_model + '_runtime_overview.csv'
+                                    outerfold_path.joinpath(current_model, current_model + '_runtime_overview.csv')
                                 )
                                 runtime_file.to_excel(
-                                    writer, sheet_name=current_model + '_of' + outerfold_path.split('_')[-1] \
-                                    + '_runtime',
+                                    writer, sheet_name=current_model + '_of' + outerfold_path.parts[-1].split('_')[-1]
+                                                       + '_runtime',
                                     index=False
                                 )
                         else:
                             runtime_file = \
-                                pd.read_csv(path + '/' + current_model + '/' + current_model + '_runtime_overview.csv')
+                                pd.read_csv(path.joinpath(current_model, current_model + '_runtime_overview.csv'))
                             runtime_file.to_excel(writer, sheet_name=current_model + '_runtime', index=False)
                 overview_df.to_excel(writer, sheet_name='Overview_results', index=False)
-                overview_df.to_csv(current_directory + '/Results_summary_' + phenotype + '_' + pattern + '.csv')
+                overview_df.to_csv(phenotype_folder.joinpath('Results_summary_' + phenotype + '_' + pattern + '.csv'))
                 writer.sheets['Overview_results'].activate()
                 writer.save()
-    overview_sheet = pd.DataFrame(
-        columns=helper_functions.get_list_of_implemented_models()
-    )
     for pattern in datasplit_maf_patterns:
+        overview_sheet = pd.DataFrame(
+            columns=helper_functions.get_list_of_implemented_models()
+        )
         writer = pd.ExcelWriter(
-            results_directory_genotype_level + '/Results_summary_' + pattern + '.xlsx',
+            results_directory_genotype_level.joinpath('Results_summary_all_phenotypes_' + pattern + '.xlsx'),
             engine='xlsxwriter'
         )
-        if 'Simulation' in results_directory_genotype_level:
-            paths = sorted(glob.glob(results_directory_genotype_level + '/*/*/Results_summary*' + pattern + '*.csv'),
-                           key=lambda x: int(x.split('/')[-2].split('_')[0][3:]))
-        else:
-            paths = glob.glob(results_directory_genotype_level + '/*/*/Results_summary*' + pattern + '*.csv')
-        overview_sheet['exp'] = [path.split('/')[-1].split('_')[2] for path in paths]
-        overview_sheet.set_index('exp', drop=True, inplace=True)
+        paths = list(results_directory_genotype_level.rglob('Results_summary*' + pattern + '*.csv'))
+        overview_sheet['phenotype'] = [path.parts[-2] for path in paths]
+        overview_sheet.set_index('phenotype', drop=True, inplace=True)
         for results_summary_path in paths:
             results_summary = pd.read_csv(results_summary_path)
             results_summary.to_excel(
-                writer, sheet_name=results_summary_path.split('/')[-2],
+                writer, sheet_name=results_summary_path.parts[-2],
                 index=False
             )
-            exp = results_summary_path.split('/')[-1].split('_')[2]
+            phenotype = results_summary_path.parts[-2]
             eval_metric = 'test_explained_variance' \
                 if any(['test_explained_variance' in col for col in results_summary.columns]) else 'test_f1_score'
             if eval_metric + '_std' in results_summary.columns:
                 for row in results_summary.iterrows():
-                    overview_sheet.at[exp, row[1]['model']] = "{:.3f} +- {:.3f}".format(
+                    overview_sheet.at[phenotype, row[1]['model']] = "{:.3f} +- {:.3f}".format(
                         row[1][eval_metric + '_mean'], row[1][eval_metric + '_std'])
             else:
                 for row in results_summary.iterrows():
-                    overview_sheet.at[exp, row[1]['model']] = "{:.3f}".format(row[1][eval_metric + '_mean'])
-    overview_sheet.to_excel(writer, sheet_name='Overview')
-    writer.sheets['Overview'].activate()
-    writer.save()
+                    overview_sheet.at[phenotype, row[1]['model']] = "{:.3f}".format(row[1][eval_metric + '_mean'])
+        overview_sheet.dropna(axis=1, inplace=True, how='all')  # drop model column if all results are missing
+        overview_sheet.to_excel(writer, sheet_name='Overview')
+        overview_sheet.to_csv(
+            results_directory_genotype_level.joinpath('Results_summary_all_phenotypes_' + pattern + '.csv')
+        )
+        writer.sheets['Overview'].activate()
+        writer.save()
 
 
 def result_string_to_dictionary(result_string: str) -> dict:
@@ -159,10 +164,13 @@ def result_string_to_dictionary(result_string: str) -> dict:
 
 
 if __name__ == "__main__":
+    """
+    Run file to gather some overview files on the optimization results for the specified results directory
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("-rd", "--results_dir", type=str,
-                        help="Provide the full path of the directory where your results are stored and for which "
-                             "you want to post-generate feature importances")
+                        help="Provide the full path of the directory where your results are stored "
+                             "(name of the genotype matrix level)")
     args = vars(parser.parse_args())
     results_directory_genotype_level = args['results_dir']
 
