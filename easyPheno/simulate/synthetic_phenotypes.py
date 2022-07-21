@@ -4,7 +4,7 @@ import pandas as pd
 import pathlib
 import random
 
-from ..preprocess import raw_data_functions
+from ..preprocess import raw_data_functions, encoding_functions
 from ..utils import check_functions
 
 
@@ -96,6 +96,8 @@ def get_simulation(X: np.array, sample_ids: np.array, snp_ids: np.array, number_
         sd = (mean / c) * 10
         explained_variance = np.random.normal(mean, sd, number_causal_snps)
         explained_variance.sort()
+    else:
+        explained_variance = np.array([explained_variance])
     explained_variance = explained_variance / 100
 
     # add causative markers with effect sizes
@@ -112,9 +114,14 @@ def get_simulation(X: np.array, sample_ids: np.array, snp_ids: np.array, number_
 
 def check_sim_id(sim_dir: pathlib.Path) -> (int):
     sim_ids = []
-    for sim_id in list(sim_dir.glob('simulation_*').parts[-1].split('_')[-1]):
-        sim_ids.append(int(sim_id.split('-')[-1]))
-    return max(sim_ids) + 1
+    for sim in sim_dir.iterdir():
+        if sim.is_file() and 'Simulation' in sim.as_posix():
+            sim_numbers = sim.with_suffix('').name.split('_')[-1]
+            sim_ids.append(int(sim_numbers.split('-')[-1]))
+    if len(sim_ids) == 0:
+        return 1
+    else:
+        return max(sim_ids) + 1
 
 
 def save_simulation(save_dir: pathlib.Path, number_of_sim: int, X: np.array, sample_ids: np.array, snp_ids: np.array,
@@ -202,13 +209,13 @@ if __name__ == "__main__":
                         help="")
     parser.add_argument("-nsamp", "--number_of_samples", type=int, default=1000,
                         help="")
-    parser.add_argument("-ncaus", "--number_of_causal_snps", type=int, default=1,
+    parser.add_argument("-ncaus", "--number_causal_snps", type=int, default=1,
                         help="")
-    parser.add_argument("-nback", "--number_of_background_snps", type=int, default=1000,
+    parser.add_argument("-nback", "--number_background_snps", type=int, default=1000,
                         help="")
     parser.add_argument("-ev", "--explained_variance", type=int, default=30,
                         help="")
-    parser.add_argument("-maf", "--maf_frequency", type=int, default=0,
+    parser.add_argument("-maf", type=int, default=0,
                         help="")
     parser.add_argument("-her", "--heritability", type=int, default=70,
                         help="")
@@ -222,7 +229,10 @@ if __name__ == "__main__":
                         help="Define save directory for the synthetic phenotypes. Default is the data directory.")
     args = vars(parser.parse_args())
     data_dir = pathlib.Path(args['data_dir'])
-    save_dir = pathlib.Path(args['save_dir'])
+    if args['save_dir'] is None:
+        save_dir = args['data_dir']
+    else:
+        save_dir = pathlib.Path(args['save_dir'])
     geno_dir = save_dir.joinpath(args['genotype_matrix']).with_suffix('')
     sim_dir = geno_dir.joinpath('simulations_h_' + str(args['heritability']) + '_b_' +
                                 str(args['number_of_background_snps']) + '_c_' + str(args['number_of_causal_snps']))
@@ -232,7 +242,10 @@ if __name__ == "__main__":
     check_functions.check_exist_files([save_dir.joinpath(args['genotype_matrix'])])
     X, sample_ids, snp_ids = raw_data_functions.check_transform_format_genotype_matrix(data_dir=data_dir,
                             genotype_matrix_name=args['genotype_matrix'], models=None, user_encoding='012')
-    save_simulation(save_dir=sim_dir, number_of_sim=args['nsim'], X=X, sample_ids=sample_ids, snp_ids=snp_ids,
-                    number_of_samples=args['nsamp'], number_causal_snps=args['ncaus'], explained_variance=args['ev'],
-                    maf=args['maf'], heritability=args['her'], seed=args['seed'], number_background_snps=args['nback'],
-                    distribution=args['dist'], shape=args['shape'])
+    X = encoding_functions.get_additive_encoding(X)
+    save_simulation(save_dir=sim_dir, number_of_sim=args['number_of_simulations'], X=X, sample_ids=sample_ids,
+                    snp_ids=snp_ids, number_of_samples=args['number_of_samples'],
+                    number_causal_snps=args['number_causal_snps'], explained_variance=args['explained_variance'],
+                    maf=args['maf'], heritability=args['heritability'], seed=args['seed'],
+                    number_background_snps=args['number_background_snps'], distribution=args['distribution'],
+                    shape=args['shape'])
