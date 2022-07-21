@@ -8,7 +8,7 @@ import pathlib
 
 from ..preprocess import base_dataset, raw_data_functions
 from ..utils import helper_functions, check_functions
-from ..model import _base_model, _param_free_base_model
+from ..model import _base_model, _param_free_base_model, _model_functions
 from ..evaluation import eval_metrics
 from . import results_analysis
 
@@ -25,18 +25,23 @@ def apply_final_model(results_directory_model: str, old_data_dir: str, new_data_
 
     CAUTION: the SNPs of the old and the new dataset have to be the same!
 
-    :param results_directory_genotype_level:
-    :param data_dir:
-    :return:
+    :param results_directory_model: directory that contains the model results that you want to use
+    :param old_data_dir: directory that contains the data that the model was trained on if it was not saved
+    :param new_data_dir: directory that contains the new genotype and phenotype matrix
+    :param new_genotype_matrix: new genotype matrix (incl. file suffix)
+    :param new_phenotype_matrix: new phenotype matrix (incl. file suffix)
+    :param new_phenotype: new phenotype to predict on
+    :param save_dir: directory to store the results
     """
-
     results_directory_model = pathlib.Path(results_directory_model)
     old_data_dir = pathlib.Path(old_data_dir) if old_data_dir is not None else None
     new_data_dir = pathlib.Path(new_data_dir)
     save_dir = pathlib.Path(save_dir)
 
     # Check user inputs
-    if not results_directory_model.joinpath("final_retrained_model").is_file() and old_data_dir is None:
+    print("Checking user inputs")
+    full_model_path = results_directory_model.joinpath("final_retrained_model")
+    if not full_model_path.is_file() and old_data_dir is None:
         raise Exception("Final model was not saved. "
                         "Please provide directory containing the data that the model was initially trained on.")
     dirs_to_check = [results_directory_model, new_data_dir, save_dir]
@@ -49,6 +54,7 @@ def apply_final_model(results_directory_model: str, old_data_dir: str, new_data_
         raise Exception("See output above. Problems with specified files.")
 
     # Prepare the new data
+    print("Preparing the new dataset")
     datasplit_maf_pattern = results_directory_model.parts[-3] if 'nested' in str(results_directory_model) \
         else results_directory_model.parts[-2]
     model_name = results_directory_model.parts[-1]
@@ -65,10 +71,10 @@ def apply_final_model(results_directory_model: str, old_data_dir: str, new_data_
         data_dir=new_data_dir, genotype_matrix_name=new_genotype_matrix, phenotype_matrix_name=new_phenotype_matrix,
         phenotype=new_phenotype, datasplit=datasplit, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
         test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage,
-        encoding=encoding, maf_percentage=maf_perc
+        encoding=encoding, maf_percentage=maf_perc, do_snp_filters=False
     )
 
-    # Check SNPids in comparison with old dataset
+    # Check and filter SNPids in comparison with old dataset
     nested_offset = -1 if 'nested' in datasplit_maf_pattern else 0
     old_genotype_matrix = results_directory_model.parts[-5 + nested_offset]
     old_phenotype_matrix = results_directory_model.parts[-4 + nested_offset]
@@ -81,137 +87,52 @@ def apply_final_model(results_directory_model: str, old_data_dir: str, new_data_
     if not check_functions.compare_snp_id_vectors(snp_id_vector_big_equal=new_dataset.snp_ids,
                                                   snp_id_vector_small_equal=old_dataset_snp_ids):
         raise Exception('SNPids of initial dataset and new dataset do not match.')
+    old_dataset_snp_ids = np.asarray(old_dataset_snp_ids.index, dtype=new_dataset.snp_ids.dtype).flatten()
+    _, ids_to_keep = \
+        (np.reshape(old_dataset_snp_ids, (old_dataset_snp_ids.shape[0], 1)) == new_dataset.snp_ids).nonzero()
+    new_dataset.X_full = new_dataset.X_full[:, ids_to_keep]
 
     # Prepare the model
+    if full_model_path.is_file():
+        print("Loading saved model")
+        model = _model_functions.load_model(path=results_directory_model, filename=full_model_path.parts[-1])
+    else:
+        print("Retraining model")
+        print("Loading old dataset")
+        old_dataset = base_dataset.Dataset(
+            data_dir=old_data_dir, genotype_matrix_name=old_genotype_matrix, phenotype_matrix_name=old_phenotype_matrix,
+            phenotype=old_phenotype,
+            datasplit=datasplit, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
+            test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage,
+            encoding=encoding, maf_percentage=maf_perc
+        )
+        outerfold_number = int(results_directory_model.parent.split('_')[1]) if 'nested' in datasplit_maf_pattern else 0
+        results_file_path = list(results_directory_model.parents[0 - nested_offset].glob('Results*.csv'))[0]
+        if not results_file_path.is_file():
+            raise Exception("Results Overview file not existing. Please check: " + str(results_file_path))
+        model = _model_functions.retrain_model_with_results_file(
+            results_file_path=results_file_path, model_name=model_name, datasplit=datasplit,
+            outerfold_number=outerfold_number, dataset=old_dataset
+        )
 
     # Do inference and save results
-
-    genotype_name = results_directory_genotype_level.parts[-1] + '.h5'
-    for phenotype_matrix in helper_functions.get_all_subdirectories_non_recursive(results_directory_genotype_level):
-        study_name = phenotype_matrix.parts[-1] + '.csv'
-        results_directory_phenotype_matrix_level = results_directory_genotype_level.joinpath(phenotype_matrix)
-        for phenotype_folder in \
-                helper_functions.get_all_subdirectories_non_recursive(results_directory_phenotype_matrix_level):
-            print('++++++++++++++ PHENOTYPE ' + phenotype_folder.parts[-1] + ' ++++++++++++++')
-            subdirs = [fullpath.parts[-1]
-                       for fullpath in helper_functions.get_all_subdirectories_non_recursive(phenotype_folder)]
-            datasplit_maf_patterns = \
-                set(['_'.join(path.split('/')[-1].split('_')[:3]) for path in subdirs])
-            for pattern in list(datasplit_maf_patterns):
-                datasplit, n_outerfolds, n_innerfolds, val_set_size_percentage, test_set_size_percentage, maf_perc = \
-                    helper_functions.get_datasplit_config_info_for_resultfolder(resultfolder=pattern)
-                dataset = base_dataset.Dataset(
-                    data_dir=data_dir, genotype_matrix_name=genotype_name, phenotype_matrix_name=study_name,
-                    phenotype=phenotype_folder.parts[-1],
-                    datasplit=datasplit, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
-                    test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage,
-                    encoding='012', maf_percentage=maf_perc
-                )
-                # CAUTION: currently the '012' encoding works for all algos with featimps, may need reimplementation
-                snp_ids_df = pd.DataFrame(dataset.snp_ids)
-                print('Saving SNP ids')
-                print(snp_ids_df.shape)
-                snp_ids_df.to_csv(
-                    phenotype_folder.joinpath('snp_ids.csv'),
-                    sep=',', decimal='.', float_format='%.10f',
-                    index=False
-                )
-                for outerfold in range(n_outerfolds):
-                    print('Working on outerfold ' + str(outerfold))
-                    # Retrain on full train + val data with best hyperparams and apply on test
-                    print("## Retrain best model and test ##")
-                    outerfold_info = dataset.datasplit_indices['outerfold_' + str(outerfold)]
-                    X_test, y_test, sample_ids_test = \
-                        dataset.X_full[outerfold_info['test']], dataset.y_full[outerfold_info['test']], \
-                        dataset.sample_ids_full[outerfold_info['test']]
-                    X_retrain, y_retrain, sample_ids_retrain = \
-                        dataset.X_full[~np.isin(np.arange(len(dataset.X_full)), outerfold_info['test'])], \
-                        dataset.y_full[~np.isin(np.arange(len(dataset.y_full)), outerfold_info['test'])], \
-                        dataset.sample_ids_full[~np.isin(np.arange(len(dataset.sample_ids_full)),
-                                                         outerfold_info['test'])]
-                    for path in phenotype_folder.glob(pattern + '*'):
-                        models = path.parts[-1].split('_')[3].split('+')
-                        print('working on ' + str(path))
-                        for current_model in models:
-                            print('Model: ' + current_model)
-                            if current_model in ['randomforest', 'xgboost', 'linearregression', 'elasticnet',
-                                                 'bayesB', 'blup']:
-                                current_directory = path.joinpath(current_model) if datasplit != 'nested-cv' \
-                                    else path.joinpath('outerfold_' + str(outerfold), current_model)
-                                if os.path.exists(current_directory.joinpath('final_model_feature_importances.csv')):
-                                    print('Already existing')
-                                    continue
-                                try:
-                                    results_file = path.glob('/Results_over' + '*.csv')[0]
-                                    results = pd.read_csv(results_file)
-                                    results = results[results[results.columns[0]] == 'outerfold_' + str(outerfold)] \
-                                        if datasplit == 'nested-cv' else results
-                                    results = results.loc[:, [current_model in col for col in results.columns]]
-                                    eval_dict_saved = results_analysis.result_string_to_dictionary(
-                                        result_string=results[current_model + '___eval_metrics'][outerfold]
-                                    )
-                                except:
-                                    print('No results file')
-                                    continue
-
-                                task = 'regression' if 'test_rmse' in eval_dict_saved.keys() else 'classification'
-                                helper_functions.set_all_seeds()
-                                if current_model in ['bayesB', 'blup']:
-                                    model: _param_free_base_model.ParamFreeBaseModel = \
-                                        helper_functions.get_mapping_name_to_class()[current_model](
-                                            task=task,
-                                        )
-                                    _ = model.fit(X=X_retrain, y=y_retrain)
-                                else:
-                                    best_params = results_analysis.result_string_to_dictionary(
-                                        result_string=results[current_model + '___best_params'][outerfold]
-                                    )
-                                    trial = optuna.trial.FixedTrial(params=best_params)
-                                    model: _base_model.BaseModel = helper_functions.get_mapping_name_to_class()[
-                                        current_model](
-                                        task=task, optuna_trial=trial,
-                                        n_outputs=len(np.unique(dataset.y_full)) if task == 'classification' else 1,
-                                        **{}
-                                    )
-                                    model.retrain(X_retrain=X_retrain, y_retrain=y_retrain)
-                                y_pred_test = model.predict(X_in=X_test)
-                                eval_scores = \
-                                    eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test,
-                                                                       task=model.task,
-                                                                       prefix='test_')
-                                print('Compare Results from initial testing to refitting')
-                                print('New fitting: ')
-                                print(eval_scores)
-                                print('Old fitting: ')
-                                print(eval_dict_saved)
-                                top_n = min(len(dataset.snp_ids), 1000)
-                                feat_import_df = pd.DataFrame()
-                                if current_model in ['randomforest', 'xgboost']:
-                                    feature_importances = model.model.feature_importances_
-                                    sorted_idx = feature_importances.argsort()[::-1][:top_n]
-                                    feat_import_df['snp_ids_standard'] = dataset.snp_ids[sorted_idx]
-                                    feat_import_df['feat_importance_standard'] = feature_importances[sorted_idx]
-                                elif current_model in ['linearregression', 'elasticnet']:
-                                    coefs = model.model.coef_
-                                    dims = coefs.shape[0] if len(coefs.shape) > 1 else 1
-                                    for dim in range(dims):
-                                        coef = coefs[dim] if len(coefs.shape) > 1 else coefs
-                                        sorted_idx = coef.argsort()[::-1][:top_n]
-                                        feat_import_df['snp_ids_' + str(dim)] = dataset.snp_ids[sorted_idx]
-                                        feat_import_df['coefficients_' + str(dim)] = coef[sorted_idx]
-                                else:
-                                    feat_imps = model.u if current_model == 'blup' else model.beta
-                                    dims = 1
-                                    for dim in range(dims):
-                                        coef = feat_imps.flatten()
-                                        sorted_idx = coef.argsort()[::-1][:top_n]
-                                        feat_import_df['snp_ids_' + str(dim)] = dataset.snp_ids[sorted_idx]
-                                        feat_import_df['coefficients_' + str(dim)] = coef[sorted_idx]
-                                feat_import_df.to_csv(
-                                    current_directory.joinpath('final_model_feature_importances.csv'),
-                                    sep=',', decimal='.', float_format='%.10f',
-                                    index=False
-                                )
+    print("Inference on new data")
+    y_pred_new_dataset = model.predict(X_in=new_dataset.X_full)
+    eval_scores = \
+        eval_metrics.get_evaluation_report(y_pred=y_pred_new_dataset, y_true=new_dataset.y_full, task=model.task,
+                                           prefix='test_')
+    print(eval_scores)
+    final_results = pd.DataFrame(index=range(0, new_dataset.y_full.shape[0]))
+    final_results.at[0:len(new_dataset.sample_ids_full) - 1, 'sample_ids'] = new_dataset.sample_ids_full.flatten()
+    final_results.at[0:len(y_pred_new_dataset) - 1, 'y_pred_test'] = y_pred_new_dataset.flatten()
+    final_results.at[0:len(new_dataset.y_full) - 1, 'y_true_test'] = new_dataset.y_full.flatten()
+    for metric, value in eval_scores.items():
+        final_results.at[0, metric] = value
+    final_results.at[0, 'base_model_path'] = results_directory_model
+    final_results.to_csv(
+        save_dir.joinpath('predict_results_on_' + new_dataset.index_file_name.split('.')[0] + '.csv'),
+        sep=',', decimal='.', float_format='%.10f', index=False
+    )
 
 
 if __name__ == "__main__":

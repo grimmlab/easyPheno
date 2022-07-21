@@ -45,9 +45,9 @@ def check_all_specified_arguments(arguments: dict):
     if not (3 <= arguments["n_innerfolds"] <= 10):
         raise Exception('Specified number of innerfolds/folds ' + str(arguments["n_innerfolds"]) +
                         ' is invalid, has to be between 3 and 10.')
-    if any([not issubclass(helper_functions.get_mapping_name_to_class()[model],
-                           _param_free_base_model.ParamFreeBaseModel) for model in arguments["models"]]) and \
-            arguments["n_trials"] < 10:
+    if "n_trials" in arguments and any([not issubclass(helper_functions.get_mapping_name_to_class()[model],
+                                                       _param_free_base_model.ParamFreeBaseModel)
+                                        for model in arguments["models"]]) and arguments["n_trials"] < 10:
         raise Exception('Specified number of trials with ' + str(arguments["n_trials"]) + ' is invalid, at least 10.')
 
     # Check spelling of datasplit and model
