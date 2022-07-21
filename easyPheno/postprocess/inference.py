@@ -13,8 +13,8 @@ from ..evaluation import eval_metrics
 from . import results_analysis
 
 
-def apply_final_model(path_to_model_results_folder: str, initial_data_dir: str, new_data_dir: str,
-                      genotype_matrix: str, phenotype_matrix: str, phenotype: str, save_dir: str = None):
+def apply_final_model(results_directory_model: str, old_data_dir: str, new_data_dir: str,
+                      new_genotype_matrix: str, new_phenotype_matrix: str, new_phenotype: str, save_dir: str = None):
     """
     Apply a final model on a new dataset. It will be applied to the whole dataset.
     So the main purpose of this function is, if you get new samples you want to predict on.
@@ -23,15 +23,17 @@ def apply_final_model(path_to_model_results_folder: str, initial_data_dir: str, 
 
     The new dataset will be filtered for the SNP ids that the model was initially trained on.
 
-    CAUTION: the number of SNPs of the old and the new dataset has to be the same!
+    CAUTION: the SNPs of the old and the new dataset have to be the same!
 
     :param results_directory_genotype_level:
     :param data_dir:
     :return:
     """
 
-    results_directory_genotype_level = pathlib.Path(results_directory_genotype_level)
-    data_dir = pathlib.Path(data_dir)
+    results_directory_model = pathlib.Path(results_directory_model)
+    old_data_dir = pathlib.Path(old_data_dir)
+    new_data_dir = pathlib.Path(new_data_dir)
+    save_dir = pathlib.Path(save_dir)
 
     genotype_name = results_directory_genotype_level.parts[-1] + '.h5'
     for phenotype_matrix in helper_functions.get_all_subdirectories_non_recursive(results_directory_genotype_level):
@@ -47,7 +49,6 @@ def apply_final_model(path_to_model_results_folder: str, initial_data_dir: str, 
             for pattern in list(datasplit_maf_patterns):
                 datasplit, n_outerfolds, n_innerfolds, val_set_size_percentage, test_set_size_percentage, maf_perc = \
                     helper_functions.get_datasplit_config_info_for_resultfolder(resultfolder=pattern)
-                data_dir = str(data_dir) # TODO: delete after reconstruct
                 dataset = base_dataset.Dataset(
                     data_dir=data_dir, genotype_matrix_name=genotype_name, phenotype_matrix_name=study_name,
                     phenotype=phenotype_folder.parts[-1],
@@ -164,16 +165,35 @@ def apply_final_model(path_to_model_results_folder: str, initial_data_dir: str, 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-dd", "--data_dir", type=str,
-                        help="Provide the full path of your data directory (that contains the geno- and phenotype "
-                             "files as well as the index file).")
-    parser.add_argument("-rd", "--results_dir", type=str,
-                        help="Provide the full path of the directory where your results are stored and for which "
-                             "you want to post-generate feature importances")
+    parser.add_argument("-odd", "--old_data_dir", type=str, default=None,
+                        help="Provide the full path of the old data directory (that contains the geno- and phenotype "
+                             "files as well as the index file the model was trained on). "
+                             "Only needed if the final model was not saved.")
+    parser.add_argument("-ndd", "--new_data_dir", type=str,
+                        help="Provide the full path of the new data directory that contains the geno- and phenotype "
+                             "files you want to predict on")
+    parser.add_argument("-ngm", "--new_genotype_matrix", type=str,
+                        help="Provide the name of the new genotype matrix you want to predict on")
+    parser.add_argument("-npm", "--new_phenotype_matrix", type=str,
+                        help="Provide the name of the new phenotype matrix you want to predict on")
+    parser.add_argument("-np", "--new_phenotype", type=str,
+                        help="Provide the name of the new phenotype you want to predict on")
+    parser.add_argument("-sd", "--save_dir", type=str,
+                        help="Define the save directory for the results.")
+    parser.add_argument("-rd", "--results_dir_model", type=str,
+                        help="Provide the full path of the directory where your results of the model "
+                             "you want to use are stored")
     args = vars(parser.parse_args())
-    data_dir = args['data_dir']
-    results_directory_genotype_level = args['results_dir']
+    old_data_dir = args['old_data_dir']
+    new_data_dir = args['new_data_dir']
+    new_genotype_matrix = args['new_genotype_matrix']
+    new_phenotype_matrix = args['new_phenotype_matrix']
+    new_phenotype = args["new_phenotype"]
+    save_dir = args["save_dir"]
+    results_directory_model = args['results_dir_model']
 
-    post_generate_feature_importances(
-        results_directory_genotype_level=results_directory_genotype_level, data_dir=data_dir
+    apply_final_model(
+        results_directory_model=results_directory_model, old_data_dir=old_data_dir, new_data_dir=new_data_dir,
+        new_genotype_matrix=new_genotype_matrix, new_phenotype_matrix=new_phenotype_matrix, new_phenotype=new_phenotype,
+        save_dir=save_dir
     )
