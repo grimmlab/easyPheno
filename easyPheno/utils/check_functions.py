@@ -86,3 +86,42 @@ def check_all_specified_arguments(arguments: dict):
             if not (50 <= arguments["n_epochs"] <= 1000000):
                 raise Exception('Specified number of epochs ' + str(arguments["n_epochs"]) +
                                 ' is invalid, has to be between 50 and 1.000.000.')
+
+
+def check_exist_directories(list_of_dirs: list, create_if_not_exist: bool = False) -> bool:
+    """
+    Check if each directory within a list exists
+
+    :param list_of_dirs: list with directories as pathlib.Path
+    :param create_if_not_exist: bool if non-existing directories should be created
+
+    :return: True if all exist, False otherwise
+    """
+    check = True
+    for dir_to_check in list_of_dirs:
+        if not dir_to_check.exists():
+            print("Directory " + str(dir_to_check) + " not existing.")
+            if create_if_not_exist:
+                print("Will create it.")
+                dir_to_check.mkdir(parents=True)
+            else:
+                print("Please correct it.")
+                check = False
+    return check
+
+
+def check_exist_files(list_of_files: list) -> bool:
+    """
+    Check if each file within a list exists
+
+    :param list_of_files: list with files as pathlib.Path
+
+    :return: True if all exist, False otherwise
+    """
+    check = True
+    for file_to_check in list_of_files:
+        if not file_to_check.is_file():
+            print("File " + str(file_to_check) + " not existing.")
+            print("Please correct it.")
+            check = False
+    return check
