@@ -138,6 +138,11 @@ def save_simulation(save_dir: pathlib.Path, number_of_sim: int, X: np.array, sam
     else:
         raise Exception('number of simulations has to be at least 1')
 
+    print('Now create %d simulations with %d samples, %d causal SNPs, %d background SNPs, '
+          'heritability of %d, %d explained variance, %d maf and %s distribution'
+          %(number_of_sim, number_of_samples, number_causal_snps, number_background_snps, heritability,
+            explained_variance, maf, distribution))
+    print('Save simulations with sim_id ' + sim_id)
     # create simulations
     causal_markers = []
     seeds = []
@@ -243,11 +248,7 @@ if __name__ == "__main__":
     X, sample_ids, snp_ids = raw_data_functions.check_transform_format_genotype_matrix(data_dir=data_dir,
                             genotype_matrix_name=args['genotype_matrix'], models=None, user_encoding='012')
     X = encoding_functions.get_additive_encoding(X)
-    print('Have genotype matrix %s. Now create %d simulations with %d samples, %d causal SNPs, %d background SNPs, '
-          'heritability of %d, %d explained variance, %d maf and %s distribution'
-          %(args['genotype_matrix'], args['number_of_simulations'], args['number_of_samples'],
-            args['number_causal_snps'], args['number_background_snps'], args['heritability'],
-            args['explained_variance'], args['maf'], args['distribution']))
+    print('Have genotype matrix %s.', args['genotype_matrix'])
     save_simulation(save_dir=sim_dir, number_of_sim=args['number_of_simulations'], X=X, sample_ids=sample_ids,
                     snp_ids=snp_ids, number_of_samples=args['number_of_samples'],
                     number_causal_snps=args['number_causal_snps'], explained_variance=args['explained_variance'],
