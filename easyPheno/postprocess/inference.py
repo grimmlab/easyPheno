@@ -1,13 +1,13 @@
 import numpy as np
 import os
 import argparse
-
+import h5py
 import optuna.trial
 import pandas as pd
 import pathlib
 
-from ..preprocess import base_dataset
-from ..utils import helper_functions
+from ..preprocess import base_dataset, raw_data_functions
+from ..utils import helper_functions, check_functions
 from ..model import _base_model, _param_free_base_model
 from ..evaluation import eval_metrics
 from . import results_analysis
@@ -31,9 +31,60 @@ def apply_final_model(results_directory_model: str, old_data_dir: str, new_data_
     """
 
     results_directory_model = pathlib.Path(results_directory_model)
-    old_data_dir = pathlib.Path(old_data_dir)
+    old_data_dir = pathlib.Path(old_data_dir) if old_data_dir is not None else None
     new_data_dir = pathlib.Path(new_data_dir)
     save_dir = pathlib.Path(save_dir)
+
+    # Check user inputs
+    if not results_directory_model.joinpath("final_retrained_model").is_file() and old_data_dir is None:
+        raise Exception("Final model was not saved. "
+                        "Please provide directory containing the data that the model was initially trained on.")
+    dirs_to_check = [results_directory_model, new_data_dir, save_dir]
+    if old_data_dir is not None:
+        dirs_to_check.append(old_data_dir)
+    if not check_functions.check_exist_directories(list_of_dirs=dirs_to_check):
+        raise Exception("See output above. Problems with specified directories")
+    if not check_functions.check_exist_files(
+            list_of_files=[new_data_dir.joinpath(new_phenotype_matrix), new_data_dir.joinpath(new_genotype_matrix)]):
+        raise Exception("See output above. Problems with specified files.")
+
+    # Prepare the new data
+    datasplit_maf_pattern = results_directory_model.parts[-3] if 'nested' in str(results_directory_model) \
+        else results_directory_model.parts[-2]
+    model_name = results_directory_model.parts[-1]
+    datasplit, n_outerfolds, n_innerfolds, val_set_size_percentage, test_set_size_percentage, maf_perc = \
+        helper_functions.get_datasplit_config_info_for_resultfolder(resultfolder=datasplit_maf_pattern)
+    raw_data_functions.prepare_data_files(
+        data_dir=new_data_dir, genotype_matrix_name=new_genotype_matrix, phenotype_matrix_name=new_phenotype_matrix,
+        phenotype=new_phenotype, datasplit=datasplit, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
+        test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage,
+        models=[model_name], user_encoding=None, maf_percentage=maf_perc
+    )
+    encoding = helper_functions.get_mapping_name_to_class()[model_name].standard_encoding
+    new_dataset = base_dataset.Dataset(
+        data_dir=new_data_dir, genotype_matrix_name=new_genotype_matrix, phenotype_matrix_name=new_phenotype_matrix,
+        phenotype=new_phenotype, datasplit=datasplit, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
+        test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage,
+        encoding=encoding, maf_percentage=maf_perc
+    )
+
+    # Check SNPids in comparison with old dataset
+    nested_offset = -1 if 'nested' in datasplit_maf_pattern else 0
+    old_genotype_matrix = results_directory_model.parts[-5 + nested_offset]
+    old_phenotype_matrix = results_directory_model.parts[-4 + nested_offset]
+    old_phenotype = results_directory_model.parts[-3 + nested_offset]
+    with h5py.File(new_data_dir.joinpath(
+            base_dataset.Dataset.get_index_file_name(genotype_matrix_name=old_genotype_matrix,
+                                                     phenotype_matrix_name=old_phenotype_matrix,
+                                                     phenotype=old_phenotype)), "r") as f:
+        old_dataset_snp_ids = f[f'matched_data/final_snp_ids/{encoding}/maf_{maf_perc}_snp_ids'][:]
+    if not check_functions.compare_snp_id_vectors(snp_id_vector_big_equal=new_dataset.snp_ids,
+                                                  snp_id_vector_small_equal=old_dataset_snp_ids):
+        raise Exception('SNPids of initial dataset and new dataset do not match.')
+
+    # Prepare the model
+
+    # Do inference and save results
 
     genotype_name = results_directory_genotype_level.parts[-1] + '.h5'
     for phenotype_matrix in helper_functions.get_all_subdirectories_non_recursive(results_directory_genotype_level):
