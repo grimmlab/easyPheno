@@ -49,6 +49,7 @@ class Dataset:
         if do_snp_filters:
             self.maf_filter_raw_data(data_dir=data_dir, maf_percentage=maf_percentage)
             self.filter_duplicate_snps()
+        self.check_and_save_filtered_snp_ids(data_dir=data_dir, maf_percentage=maf_percentage)
         self.datasplit_indices = self.load_datasplit_indices(
             data_dir=data_dir, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
             test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage
