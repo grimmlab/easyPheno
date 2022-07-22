@@ -206,7 +206,7 @@ def get_datasplit_config_info_for_resultfolder(resultfolder: str) -> tuple:
 
     :return: datasplit info with datasplit, n_outerfolds, n_innerfolds, val_set_size_percentage, test_set_size_percentage, maf_percentage
     """
-    maf_perc = int(resultfolder.split('_')[-1][3:])
+    maf_perc = int(resultfolder.split('_')[2][3:])
     datasplit = resultfolder.split('_')[0]
     n_outerfolds = 1
     n_innerfolds = 5

@@ -1,16 +1,11 @@
-import numpy as np
 import os
-import argparse
 
-import optuna.trial
 import pandas as pd
 import pathlib
 
 from ..preprocess import base_dataset
-from ..utils import helper_functions
-from ..model import _base_model, _param_free_base_model
-from ..evaluation import eval_metrics
-from . import results_analysis
+from ..utils import helper_functions, check_functions
+from ..model import _model_functions
 
 
 def post_generate_feature_importances(results_directory_genotype_level: str, data_dir: str):
@@ -18,18 +13,25 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
     Post-generate the feature importances for several models for all sub-folders of the specified directory of already optimized models.
     Only needed in case you e.g. forgot to implement the saving of the feature importances.
 
-    :param results_directory_genotype_level: Results directory at the level of the name of the genotype matrix
+    :param results_directory_genotype_level: results directory at the level of the name of the genotype matrix
     :param data_dir: data directory where the phenotype and genotype matrix as well as index file are stored
     """
     results_directory_genotype_level = pathlib.Path(results_directory_genotype_level)
     data_dir = pathlib.Path(data_dir)
 
+    # Check user inputs
+    print("Checking user inputs")
+    if not check_functions.check_exist_directories(list_of_dirs=[results_directory_genotype_level, data_dir]):
+        raise Exception("See output above. Problems with specified directories")
+    if not data_dir.joinpath(results_directory_genotype_level.parts[-1] + '.h5').is_file():
+        raise Exception("Genotype matrix specified does not exist: " + str(results_directory_genotype_level) +
+                        "\n Make sure the results directory is at the level fo the genotype matrix name.")
+
     genotype_name = results_directory_genotype_level.parts[-1] + '.h5'
     for phenotype_matrix in helper_functions.get_all_subdirectories_non_recursive(results_directory_genotype_level):
         study_name = phenotype_matrix.parts[-1] + '.csv'
-        results_directory_phenotype_matrix_level = results_directory_genotype_level.joinpath(phenotype_matrix)
         for phenotype_folder in \
-                helper_functions.get_all_subdirectories_non_recursive(results_directory_phenotype_matrix_level):
+                helper_functions.get_all_subdirectories_non_recursive(phenotype_matrix):
             print('++++++++++++++ PHENOTYPE ' + phenotype_folder.parts[-1] + ' ++++++++++++++')
             subdirs = [fullpath.parts[-1]
                        for fullpath in helper_functions.get_all_subdirectories_non_recursive(phenotype_folder)]
@@ -52,19 +54,11 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                     sep=',', decimal='.', float_format='%.10f',
                     index=False
                 )
+
                 for outerfold in range(n_outerfolds):
                     print('Working on outerfold ' + str(outerfold))
                     # Retrain on full train + val data with best hyperparams and apply on test
                     print("## Retrain best model and test ##")
-                    outerfold_info = dataset.datasplit_indices['outerfold_' + str(outerfold)]
-                    X_test, y_test, sample_ids_test = \
-                        dataset.X_full[outerfold_info['test']], dataset.y_full[outerfold_info['test']], \
-                        dataset.sample_ids_full[outerfold_info['test']]
-                    X_retrain, y_retrain, sample_ids_retrain = \
-                        dataset.X_full[~np.isin(np.arange(len(dataset.X_full)), outerfold_info['test'])], \
-                        dataset.y_full[~np.isin(np.arange(len(dataset.y_full)), outerfold_info['test'])], \
-                        dataset.sample_ids_full[~np.isin(np.arange(len(dataset.sample_ids_full)),
-                                                         outerfold_info['test'])]
                     for path in phenotype_folder.glob(pattern + '*'):
                         models = path.parts[-1].split('_')[3].split('+')
                         print('working on ' + str(path))
@@ -77,49 +71,14 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                                 if os.path.exists(current_directory.joinpath('final_model_feature_importances.csv')):
                                     print('Already existing')
                                     continue
-                                try:
-                                    results_file = list(path.glob('Results*.csv'))[0]
-                                    results = pd.read_csv(results_file)
-                                    results = results[results[results.columns[0]] == 'outerfold_' + str(outerfold)] \
-                                        if datasplit == 'nested-cv' else results
-                                    results = results.loc[:, [current_model in col for col in results.columns]]
-                                    eval_dict_saved = results_analysis.result_string_to_dictionary(
-                                        result_string=results[current_model + '___eval_metrics'][outerfold]
-                                    )
-                                except:
+                                results_file_path = path.joinpath('Results_overview_' + '_'.join(models) + '.csv')
+                                if not results_file_path.is_file():
                                     print('No results file')
                                     continue
-
-                                task = 'regression' if 'test_rmse' in eval_dict_saved.keys() else 'classification'
-                                helper_functions.set_all_seeds()
-                                if current_model in ['bayesB', 'blup']:
-                                    model: _param_free_base_model.ParamFreeBaseModel = \
-                                        helper_functions.get_mapping_name_to_class()[current_model](
-                                            task=task,
-                                        )
-                                    _ = model.fit(X=X_retrain, y=y_retrain)
-                                else:
-                                    best_params = results_analysis.result_string_to_dictionary(
-                                        result_string=results[current_model + '___best_params'][outerfold]
-                                    )
-                                    trial = optuna.trial.FixedTrial(params=best_params)
-                                    model: _base_model.BaseModel = helper_functions.get_mapping_name_to_class()[
-                                        current_model](
-                                        task=task, optuna_trial=trial,
-                                        n_outputs=len(np.unique(dataset.y_full)) if task == 'classification' else 1,
-                                        **{}
-                                    )
-                                    model.retrain(X_retrain=X_retrain, y_retrain=y_retrain)
-                                y_pred_test = model.predict(X_in=X_test)
-                                eval_scores = \
-                                    eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test,
-                                                                       task=model.task,
-                                                                       prefix='test_')
-                                print('Compare Results from initial testing to refitting')
-                                print('New fitting: ')
-                                print(eval_scores)
-                                print('Old fitting: ')
-                                print(eval_dict_saved)
+                                model = _model_functions.retrain_model_with_results_file(
+                                    results_file_path=results_file_path, model_name=current_model, datasplit=datasplit,
+                                    outerfold_number=outerfold, dataset=dataset
+                                )
                                 top_n = min(len(dataset.snp_ids), 1000)
                                 feat_import_df = pd.DataFrame()
                                 if current_model in ['randomforest', 'xgboost']:
@@ -148,20 +107,3 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                                     sep=',', decimal='.', float_format='%.10f',
                                     index=False
                                 )
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-dd", "--data_dir", type=str,
-                        help="Provide the full path of your data directory (that contains the geno- and phenotype "
-                             "files as well as the index file).")
-    parser.add_argument("-rd", "--results_dir", type=str,
-                        help="Provide the full path of the directory where your results are stored and for which "
-                             "you want to post-generate feature importances")
-    args = vars(parser.parse_args())
-    data_dir = args['data_dir']
-    results_directory_genotype_level = args['results_dir']
-
-    post_generate_feature_importances(
-        results_directory_genotype_level=results_directory_genotype_level, data_dir=data_dir
-    )

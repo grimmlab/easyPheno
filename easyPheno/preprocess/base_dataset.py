@@ -32,11 +32,12 @@ class Dataset:
     :param val_set_size_percentage: size of the validation set relevant for train-val-test
     :param maf_percentage: threshold for MAF filter as percentage value
     :param encoding: the encoding to use (standard encoding or user-defined)
+    :param do_snp_filters: specify if SNP filters (e.g. duplicates, maf etc.) should be applied
     """
 
     def __init__(self, data_dir: pathlib.Path, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
                  datasplit: str, n_outerfolds: int, n_innerfolds: int, test_set_size_percentage: int,
-                 val_set_size_percentage: int, encoding: str, maf_percentage: int):
+                 val_set_size_percentage: int, encoding: str, maf_percentage: int, do_snp_filters: bool = True):
         self.encoding = encoding
         self.datasplit = datasplit
         self.index_file_name = self.get_index_file_name(
@@ -44,20 +45,23 @@ class Dataset:
                 phenotype=phenotype
         )
         self.X_full, self.y_full, self.sample_ids_full, self.snp_ids = self.load_match_raw_data(
-            data_dir=data_dir, genotype_matrix_name=genotype_matrix_name)
-        self.maf_filter_raw_data(data_dir=data_dir, maf_percentage=maf_percentage)
-        self.filter_duplicate_snps()
+            data_dir=data_dir, genotype_matrix_name=genotype_matrix_name, do_snp_filters=do_snp_filters)
+        if do_snp_filters:
+            self.maf_filter_raw_data(data_dir=data_dir, maf_percentage=maf_percentage)
+            self.filter_duplicate_snps()
         self.datasplit_indices = self.load_datasplit_indices(
             data_dir=data_dir, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
             test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage
         )
 
-    def load_match_raw_data(self, data_dir: pathlib.Path, genotype_matrix_name: str) -> (np.ndarray, np.ndarray, np.ndarray):
+    def load_match_raw_data(self, data_dir: pathlib.Path, genotype_matrix_name: str, do_snp_filters: bool = True) \
+            -> (np.ndarray, np.ndarray, np.ndarray):
         """
         Load the full genotype and phenotype matrices specified and match them
 
         :param data_dir: data directory where the phenotype and genotype matrix are stored
         :param genotype_matrix_name: name of the genotype matrix including datatype ending
+        :param do_snp_filters: specify if SNP filters (e.g. duplicates, maf etc.) should be applied
 
         :return: matched genotype, phenotype and sample ids
         """
@@ -75,12 +79,14 @@ class Dataset:
 
         with h5py.File(data_dir.joinpath(genotype_matrix_name).with_suffix('.h5'), "r") as f:
             # Load genotype data
-            snp_ids = f['snp_ids'][non_informative_filter].astype(str)
+            snp_ids = f['snp_ids'][non_informative_filter].astype(str) if do_snp_filters \
+                else f['snp_ids'][:].astype(str)
             if f'X_{self.encoding}' in f:
-                X = f[f'X_{self.encoding}'][:, non_informative_filter]
+                X = f[f'X_{self.encoding}'][:, non_informative_filter] if do_snp_filters else f[f'X_{self.encoding}'][:]
             elif f'X_{encoding_functions.get_base_encoding(encoding=self.encoding)}' in f:
                 X_base = \
-                    f[f'X_{encoding_functions.get_base_encoding(encoding=self.encoding)}'][:, non_informative_filter]
+                    f[f'X_{encoding_functions.get_base_encoding(encoding=self.encoding)}'][:, non_informative_filter] \
+                        if do_snp_filters else f[f'X_{encoding_functions.get_base_encoding(encoding=self.encoding)}'][:]
                 X = encoding_functions.encode_genotype(X=X_base, required_encoding=self.encoding)
             else:
                 raise Exception('Genotype in ' + self.encoding + ' encoding missing. Can not create required encoding. '
