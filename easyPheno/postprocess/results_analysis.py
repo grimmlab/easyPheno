@@ -1,8 +1,10 @@
 import pandas as pd
-import argparse
 import pathlib
+import matplotlib.pyplot as plt
+import seaborn as sns
+from matplotlib.patches import Rectangle
 
-from ..utils import helper_functions
+from ..utils import helper_functions, check_functions
 
 
 def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_level: str):
@@ -24,6 +26,15 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
     :param results_directory_genotype_level: results directory at the level of the name of the genotype matrix
     """
     results_directory_genotype_level = pathlib.Path(results_directory_genotype_level)
+
+    # Check user inputs
+    print("Checking user inputs")
+    if not check_functions.check_exist_directories(list_of_dirs=[results_directory_genotype_level]):
+        raise Exception("See output above. Problems with specified directories")
+    if not results_directory_genotype_level.parts[-2] == 'results':
+        raise Exception("Problems with specified directory: " + str(results_directory_genotype_level) +
+                        "\n Make sure the results directory is at the level fo the genotype matrix name.")
+
     for phenotype_matrix in helper_functions.get_all_subdirectories_non_recursive(results_directory_genotype_level):
         results_directory_phenotype_matrix_level = results_directory_genotype_level.joinpath(phenotype_matrix)
         for phenotype_folder in \
@@ -84,7 +95,6 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
                                 overview_df = pd.concat([overview_df, pd.DataFrame(new_row, index=[0])],
                                                         ignore_index=True)
                         except Exception as exc:
-                            print(exc)
                             print('No Results File')
                             continue
                         if 'nested' in pattern:
@@ -113,7 +123,8 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
             results_directory_genotype_level.joinpath('Results_summary_all_phenotypes_' + pattern + '.xlsx'),
             engine='xlsxwriter'
         )
-        paths = list(results_directory_genotype_level.rglob('Results_summary*' + pattern + '*.csv'))
+        paths = [path for path in list(results_directory_genotype_level.rglob('Results_summary*' + pattern + '*.csv'))
+                 if 'all_phenotypes' not in str(path)]
         overview_sheet['phenotype'] = [path.parts[-2] for path in paths]
         overview_sheet.set_index('phenotype', drop=True, inplace=True)
         for results_summary_path in paths:
@@ -125,7 +136,7 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
             phenotype = results_summary_path.parts[-2]
             eval_metric = 'test_explained_variance' \
                 if any(['test_explained_variance' in col for col in results_summary.columns]) else 'test_f1_score'
-            if eval_metric + '_std' in results_summary.columns:
+            if 'nested' in pattern:
                 for row in results_summary.iterrows():
                     overview_sheet.at[phenotype, row[1]['model']] = "{:.3f} +- {:.3f}".format(
                         row[1][eval_metric + '_mean'], row[1][eval_metric + '_std'])
@@ -163,15 +174,52 @@ def result_string_to_dictionary(result_string: str) -> dict:
     return dict_result
 
 
-if __name__ == "__main__":
+def plot_heatmap_results(path_to_results_summary_csv: str, save_dir: str):
     """
-    Run file to gather some overview files on the optimization results for the specified results directory
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-rd", "--results_dir", type=str,
-                        help="Provide the full path of the directory where your results are stored "
-                             "(name of the genotype matrix level)")
-    args = vars(parser.parse_args())
-    results_directory_genotype_level = args['results_dir']
+    Generate a heatmap based on the results summary .csv file
 
-    summarize_results_per_phenotype_and_datasplit(results_directory_genotype_level=results_directory_genotype_level)
+    :param path_to_results_summary_csv: path to the results summary .csv file
+    :param save_dir: directory to save the plots
+    """
+    path_to_results_summary_csv = pathlib.Path(path_to_results_summary_csv)
+    save_dir = pathlib.Path(save_dir) if save_dir is not None else path_to_results_summary_csv.parents[0]
+    fig, ax = plt.subplots(figsize=(12, 6))
+
+    results_overview = pd.read_csv(path_to_results_summary_csv)
+    results_overview.set_index("phenotype", inplace=True)
+    models = [mod for mod in results_overview.columns if mod != 'phenotype']
+
+    if 'nested' in path_to_results_summary_csv.parts[-1]:
+        types = ['mean', 'std']
+    else:
+        types = ['mean']
+    plot_data_full = pd.DataFrame(columns=[mod + '_' + type for mod in models for type in types] + ['phenotype'])
+    plot_data_full['phenotype'] = results_overview.index
+    plot_data_full.set_index("phenotype", inplace=True)
+    for row in results_overview.iterrows():
+        for model in models:
+            result = row[1][model]
+            if 'std' in types:
+                plot_data_full.at[row[0], model + '_std'] = float(result.split('+-')[1])
+                plot_data_full.at[row[0], model + '_mean'] = float(result.split('+-')[0])
+            else:
+                plot_data_full.at[row[0], model + '_mean'] = float(result)
+    plot_data_mean = plot_data_full.filter(regex='mean').astype(float)
+    row_max = plot_data_mean.idxmax(axis=1)
+    sns.heatmap(data=plot_data_mean, cmap="Spectral", cbar_kws={"shrink": .75},
+                annot=results_overview, fmt='', linewidths=1.5, linecolor='white', cbar=True, annot_kws={"size": 12})
+    ax.set_xticklabels(results_overview.columns, rotation=0)
+    ax.set_yticklabels(plot_data_full.index, rotation=0)
+    ax.tick_params(top=False,
+                   bottom=False,
+                   left=False,
+                   right=False,
+                   labelleft=True,
+                   labelbottom=True)
+    for row, index in enumerate(plot_data_mean.index):
+        position = results_overview.columns.get_loc(row_max[index].split('_')[0])
+        ax.add_patch(Rectangle((position, row), 1, 1, fill=False, edgecolor='0', lw=1.5))
+
+    fig.tight_layout()
+    plt.savefig(save_dir.joinpath('heatmap_' + path_to_results_summary_csv.parts[-1].split('.')[0] + '.pdf'),
+                bbox_inches='tight', dpi=600)

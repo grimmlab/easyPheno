@@ -105,9 +105,9 @@ def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: s
                 save_dir=save_dir, genotype_matrix_name=genotype_matrix, phenotype_matrix_name=phenotype_matrix,
                 phenotype=phenotype, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
                 val_set_size_percentage=val_set_size_percentage, test_set_size_percentage=test_set_size_percentage,
-                maf_percentage=maf_percentage, n_trials=n_trials, save_final_model=save_final_model, batch_size=batch_size,
-                n_epochs=n_epochs, task=task, models_start_time=models_start_time, current_model_name=current_model_name,
-                dataset=dataset)
+                maf_percentage=maf_percentage, n_trials=n_trials, save_final_model=save_final_model,
+                batch_size=batch_size, n_epochs=n_epochs, task=task, models_start_time=models_start_time,
+                current_model_name=current_model_name, dataset=dataset)
             print('### Starting Optuna Optimization for ' + current_model_name + ' ###')
             overall_results = optim_run.run_optuna_optimization()
             print('### Finished Optuna Optimization for ' + current_model_name + ' ###')

@@ -1,6 +1,6 @@
-import os
-import pandas as pd
 import pathlib
+import pandas as pd
+import numpy as np
 
 from . import helper_functions
 from ..model import _param_free_base_model, _torch_model, _tensorflow_model
@@ -45,9 +45,9 @@ def check_all_specified_arguments(arguments: dict):
     if not (3 <= arguments["n_innerfolds"] <= 10):
         raise Exception('Specified number of innerfolds/folds ' + str(arguments["n_innerfolds"]) +
                         ' is invalid, has to be between 3 and 10.')
-    if any([not issubclass(helper_functions.get_mapping_name_to_class()[model],
-                           _param_free_base_model.ParamFreeBaseModel) for model in arguments["models"]]) and \
-            arguments["n_trials"] < 10:
+    if "n_trials" in arguments and any([not issubclass(helper_functions.get_mapping_name_to_class()[model],
+                                                       _param_free_base_model.ParamFreeBaseModel)
+                                        for model in arguments["models"]]) and arguments["n_trials"] < 10:
         raise Exception('Specified number of trials with ' + str(arguments["n_trials"]) + ' is invalid, at least 10.')
 
     # Check spelling of datasplit and model
@@ -125,3 +125,15 @@ def check_exist_files(list_of_files: list) -> bool:
             print("Please correct it.")
             check = False
     return check
+
+
+def compare_snp_id_vectors(snp_id_vector_small_equal: np.array, snp_id_vector_big_equal: np.array) -> bool:
+    """
+    Compare two SNP id vectors if they contain the same ids
+
+    :param snp_id_vector_small_equal: vector 1 with SNP ids, can be a (smaller) subset of snp_id_vector_big_equal
+    :param snp_id_vector_big_equal: vector 2 with SNP ids, can contain more SNP ids than snp_id_vector_small_equal
+
+    :return: True if snp_id_vector_small_equal is a subset of the other vector
+    """
+    return set(snp_id_vector_small_equal).issubset(set(snp_id_vector_big_equal))
