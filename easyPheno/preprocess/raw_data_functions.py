@@ -164,7 +164,7 @@ def save_all_data_files(data_dir: pathlib.Path, genotype_matrix_name: str, pheno
     :param val_set_size_percentage: size of the validation set relevant for train-val-test
     """
     print('Load genotype file ' + str(data_dir.joinpath(genotype_matrix_name)))
-    X, X_ids = check_transform_format_genotype_matrix(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
+    X, X_ids,_ = check_transform_format_genotype_matrix(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
                                                       models=models, user_encoding=user_encoding)
     print('Have genotype matrix. Load phenotype ' + phenotype + ' from ' + str(data_dir.joinpath(phenotype_matrix_name)))
     y = check_and_load_phenotype_matrix(data_dir=data_dir,
@@ -218,6 +218,7 @@ def check_transform_format_genotype_matrix(data_dir: pathlib.Path, genotype_matr
     if suffix in ('.h5', '.hdf5', '.h5py'):
         with h5py.File(genotype_file, "r") as f:
             sample_ids = f['sample_ids'][:].astype(str)
+            snp_ids = f['snp_ids'][:].astype(str)
             if 'X_raw' in f:
                 X = f['X_raw'][:]
             elif 'X_012' in f:
@@ -240,7 +241,7 @@ def check_transform_format_genotype_matrix(data_dir: pathlib.Path, genotype_matr
                             'See documentation for help.')
         create_genotype_h5_file(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
                                 sample_ids=sample_ids, snp_ids=snp_ids, X=X)
-    return X, sample_ids
+    return X, sample_ids, snp_ids
 
 
 def check_genotype_csv_file(data_dir: pathlib.Path, genotype_matrix_name: str, encodings: list) \

@@ -118,6 +118,25 @@ class Dataset:
         self.X_full = self.X_full[:, np.sort(index)]
         self.snp_ids = self.snp_ids[np.sort(index)]
 
+    def check_and_save_filtered_snp_ids(self, data_dir: pathlib.Path, maf_percentage: int):
+        """
+        Check if snp_ids for specific maf percentage and encoding are saved in index_file.
+        If not, save them in 'matched_data/final_snp_ids/{encoding}/maf_{maf_percentage}_snp_ids'
+        """
+        print('Check if final snp_ids already exist in index_file for used encoding and maf percentage. '
+              'Save them if necessary.' )
+        with h5py.File(data_dir.joinpath(self.index_file_name), "a") as f:
+            if 'final_snp_ids' not in f['matched_data']:
+                final = f.create_group('matched_data/final_snp_ids')
+                enc = final.create_group(f'{self.encoding}')
+                enc.create_dataset(f'maf_{maf_percentage}_snp_ids', data=self.snp_ids, chunks=True, compression="gzip")
+            elif f'{self.encoding}' not in f['matched_data/final_snp_ids']:
+                enc = f.create_group(f'matched_data/final_snp_ids/{self.encoding}')
+                enc.create_dataset(f'maf_{maf_percentage}_snp_ids', data=self.snp_ids, chunks=True, compression="gzip")
+            elif f'maf_{maf_percentage}_snp_ids' not in f[f'matched_data/final_snp_ids/{self.encoding}']:
+                f.create_dataset(f'matched_data/final_snp_ids/{self.encoding}/maf_{maf_percentage}_snp_ids',
+                                 data=self.snp_ids, chunks=True, compression="gzip")
+
     def load_datasplit_indices(self, data_dir: pathlib.Path, n_outerfolds: int, n_innerfolds: int,
                                test_set_size_percentage: int, val_set_size_percentage: int) -> dict:
         """
