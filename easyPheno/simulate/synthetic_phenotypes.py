@@ -203,6 +203,13 @@ def save_simulation(save_dir: pathlib.Path, number_of_sim: int, X: np.array, sam
                               index=sample_ids_sampled)
         df_final = df_final.join(df_sim)
 
+    # save overview
+    save_sim_overview(save_dir=save_dir, sim_names=sim_names, number_of_samples=[number_of_samples] * number_of_sim,
+                      number_causal_snps=[number_causal_snps] * number_of_sim,
+                      explained_variance=[explained_variance] * number_of_sim, maf=[maf] * number_of_sim,
+                      heritability=[heritability] * number_of_sim, seeds=seeds,
+                      number_background_snps=[number_background_snps] * number_of_sim,
+                      distribution=[distribution] * number_of_sim, shape=[shape] * number_of_sim)
     # save simulations
     df_final.to_csv(save_dir.joinpath(f'Simulation_{sim_id}.csv'))
     # save configs
@@ -229,10 +236,3 @@ def save_simulation(save_dir: pathlib.Path, number_of_sim: int, X: np.array, sam
     bb = np.array(background_betas).T
     df_bb = pd.DataFrame(bb, columns=col)
     df_bb.to_csv(save_dir.joinpath('sim_configs', f'betas_background_{sim_id}.csv'), index=False)
-
-    save_sim_overview(save_dir=save_dir, sim_names=sim_names, number_of_samples=[number_of_samples]*number_of_sim,
-                      number_causal_snps=[number_causal_snps]*number_of_sim,
-                      explained_variance=[explained_variance]*number_of_sim, maf=[maf]*number_of_sim,
-                      heritability=[heritability]*number_of_sim, seeds=seeds,
-                      number_background_snps=[number_background_snps]*number_of_sim,
-                      distribution=[distribution]*number_of_sim, shape=[shape]*number_of_sim)
