@@ -505,6 +505,7 @@ class OptunaOptim:
                     best_params['n_epochs'] = self.user_input_params["n_epochs"]
                 if 'batch_size' not in best_params.keys():
                     best_params['batch_size'] = self.user_input_params["batch_size"]
+                best_params['early_stopping_point'] = self.early_stopping_point
 
             overall_results[key] = {'best_params': best_params, 'eval_metrics': eval_scores,
                                     'runtime_metrics': runtime_metrics}

@@ -3,6 +3,9 @@ import argparse
 from . import feat_importance
 
 if __name__ == "__main__":
+    """
+    Run to generate feature importance .csv files based on result files of already finished optimizations
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("-dd", "--data_dir", type=str,
                         help="Provide the full path of your data directory (that contains the geno- and phenotype "
