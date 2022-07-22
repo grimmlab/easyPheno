@@ -3,6 +3,9 @@ import argparse
 from . import model_reuse
 
 if __name__ == "__main__":
+    """
+    Run to apply the specified model on a dataset containing new samples.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("-odd", "--old_data_dir", type=str, default=None,
                         help="Provide the full path of the old data directory (that contains the geno- and phenotype "

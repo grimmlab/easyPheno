@@ -4,6 +4,9 @@ from . import model_reuse
 from ..preprocess import encoding_functions
 
 if __name__ == "__main__":
+    """
+    Run to train a model on a new dataset using the hyperparameters that worked best for the specified model results.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("-dd", "--data_dir", type=str,
                         help="Provide the full path of the data directory that contains the geno- and phenotype "
@@ -16,7 +19,7 @@ if __name__ == "__main__":
                         help="Provide the name of the phenotype you want to predict on")
     parser.add_argument("-sd", "--save_dir", type=str,
                         help="Define the save directory for the results.")
-    parser.add_argument("-rd", "--results_dir_model", type=str,
+    parser.add_argument("-rd", "--results_directory_model", type=str,
                         help="Provide the full path of the directory where your results of the model "
                              "you want to use are stored")
 
@@ -44,17 +47,11 @@ if __name__ == "__main__":
                              "Standard is 5, only relevant for 'nested_cv' and 'cv-test'")
 
     # Model and Optimization Params #
-    parser.add_argument("-sf", "--save_final_model", type=bool, default=False,
+    parser.add_argument("-sf", "--save_final_model", default=True,
+                        type=lambda x: (str(x).lower() in ['true', '1', 'yes']),
                         help="save the final model to hard drive "
                              "(caution: some models may use a lot of disk space, "
                              "unfitted models that can be retrained are already saved by default)")
-
-    # Only relevant for Neural Networks #
-    parser.add_argument("-bs", "--batch_size", type=int, default=None,
-                        help="Only relevant for neural networks: define the batch size.")
-    parser.add_argument("-ep", "--n_epochs", type=int, default=None,
-                        help="Only relevant for neural networks: define the number of epochs. If nothing is specified,"
-                             "it will be considered as a hyperparameter for optimization")
 
     args = vars(parser.parse_args())
 

@@ -5,7 +5,7 @@ import pathlib
 import pandas as pd
 import optuna
 
-from . import _base_model, _tensorflow_model, _param_free_base_model
+from . import _base_model, _tensorflow_model, _param_free_base_model, _torch_model
 from ..evaluation import eval_metrics
 from ..utils import helper_functions
 from ..postprocess import results_analysis
@@ -33,8 +33,25 @@ def load_retrain_model(path: pathlib.Path, filename: str, X_retrain: np.array, y
 
 
 def retrain_model_with_results_file(results_file_path: pathlib.Path, model_name: str, datasplit: str,
-                                    outerfold_number: int, dataset: base_dataset.Dataset):
+                                    outerfold_number: int, dataset: base_dataset.Dataset,
+                                    saved_outerfold_number: int = None, saved_datasplit: str = None) \
+        -> _base_model.BaseModel:
+    """
+    Retrain a model based on information saved in a results overview file.
 
+    :param results_file_path: path to the results overview file containing the information for retraining
+    :param model_name: name of the model to retrain
+    :param datasplit: datasplit to use
+    :param outerfold_number: outerfold number to use
+    :param dataset: dataset for training
+    :param saved_outerfold_number: outerfold number of the results file in case the model is retrained with fixed hyperparameters of one outerfold
+    :param saved_datasplit: outerfold number of the results file in case the model is retrained on another datasplit
+
+    :return: retrained model
+    """
+
+    saved_outerfold_number = outerfold_number if saved_outerfold_number is None else saved_outerfold_number
+    saved_datasplit = datasplit if saved_datasplit is None else saved_datasplit
     outerfold_info = dataset.datasplit_indices['outerfold_' + str(outerfold_number)]
     X_test, y_test, sample_ids_test = \
         dataset.X_full[outerfold_info['test']], dataset.y_full[outerfold_info['test']], \
@@ -45,11 +62,11 @@ def retrain_model_with_results_file(results_file_path: pathlib.Path, model_name:
         dataset.sample_ids_full[~np.isin(np.arange(len(dataset.sample_ids_full)), outerfold_info['test'])]
 
     results = pd.read_csv(results_file_path)
-    results = results[results[results.columns[0]] == 'outerfold_' + str(outerfold_number)] \
-        if datasplit == 'nested-cv' else results
+    results = results[results[results.columns[0]] == 'outerfold_' + str(saved_outerfold_number)] \
+        if saved_datasplit == 'nested-cv' else results
     results = results.loc[:, [model_name in col for col in results.columns]]
     eval_dict_saved = results_analysis.result_string_to_dictionary(
-        result_string=results[model_name + '___eval_metrics'][outerfold_number]
+        result_string=results[model_name + '___eval_metrics'][saved_outerfold_number]
     )
     task = 'regression' if 'test_rmse' in eval_dict_saved.keys() else 'classification'
     helper_functions.set_all_seeds()
@@ -62,13 +79,20 @@ def retrain_model_with_results_file(results_file_path: pathlib.Path, model_name:
         _ = model.fit(X=X_retrain, y=y_retrain)
     else:
         best_params = results_analysis.result_string_to_dictionary(
-            result_string=results[model_name + '___best_params'][outerfold_number]
+            result_string=results[model_name + '___best_params'][saved_outerfold_number]
         )
         trial = optuna.trial.FixedTrial(params=best_params)
+        additional_attributes_dict = {}
+        if issubclass(helper_functions.get_mapping_name_to_class()[model_name], _torch_model.TorchModel) or \
+                issubclass(helper_functions.get_mapping_name_to_class()[model_name], _tensorflow_model.TensorflowModel):
+            # additional attributes for torch and tensorflow models
+            additional_attributes_dict['n_features'] = dataset.X_full.shape[1]
+            additional_attributes_dict['width_onehot'] = dataset.X_full.shape[-1]
+            additional_attributes_dict['early_stopping_point'] = best_params['early_stopping_point']
         model: _base_model.BaseModel = helper_functions.get_mapping_name_to_class()[model_name](
             task=task, optuna_trial=trial,
             n_outputs=len(np.unique(dataset.y_full)) if task == 'classification' else 1,
-            **{}
+            **additional_attributes_dict
         )
         model.retrain(X_retrain=X_retrain, y_retrain=y_retrain)
     y_pred_test = model.predict(X_in=X_test)

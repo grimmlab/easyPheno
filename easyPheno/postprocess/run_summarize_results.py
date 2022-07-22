@@ -4,7 +4,7 @@ from . import results_analysis
 
 if __name__ == "__main__":
     """
-    Run file to gather some overview files on the optimization results for the specified results directory
+    Run to gather some overview files on the optimization results for the specified results directory
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("-rd", "--results_dir", type=str,

@@ -38,11 +38,12 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
     :param width_onehot: Number of input channels in case of onehot encoding
     :param batch_size: Batch size for batch-based training
     :param n_epochs: Number of epochs for optimization
-
+    :param early_stopping_point: Stop training at defined epoch
     """
 
     def __init__(self, task: str, optuna_trial: optuna.trial.Trial, encoding: str = None, n_outputs: int = 1,
-                 n_features: int = None, width_onehot: int = None, batch_size: int = None, n_epochs: int = None):
+                 n_features: int = None, width_onehot: int = None, batch_size: int = None, n_epochs: int = None,
+                 early_stopping_point: int = None):
         self.all_hyperparams = self.common_hyperparams()  # add hyperparameters commonly optimized for all torch models
         self.n_features = n_features
         self.width_onehot = width_onehot  # relevant for models using onehot encoding e.g. CNNs
@@ -55,7 +56,7 @@ class TensorflowModel(_base_model.BaseModel, abc.ABC):
             else tf.keras.losses.MeanSquaredError()
         # early stopping if there is no improvement on validation loss for a certain number of epochs
         self.early_stopping_patience = self.suggest_hyperparam_to_optuna('early_stopping_patience')
-        self.early_stopping_point = None
+        self.early_stopping_point = early_stopping_point
         self.early_stopping_callback = tf.keras.callbacks.EarlyStopping(
             monitor='val_loss', patience=self.early_stopping_patience, mode='min', restore_best_weights=True,
             min_delta=0.1
