@@ -51,10 +51,10 @@ def get_simulation(X: np.array, sample_ids: np.array, snp_ids: np.array, number_
         raise Exception('After filtering only %d SNPs remain. Not enough SNPs available to simulate %d causal SNPs.'
                         % (len(snp_ids_sampled), number_causal_snps))
     if number_causal_snps + number_background_snps > len(snp_ids_sampled):
-        print('Only %d SNPs are available. Cannot choose %d causal SNPs and %d background SNPs for simulations. Will '
-              'use %d SNPs as causal and remaining SNPs for background instead.'
-              % (len(snp_ids_sampled), number_causal_snps, number_background_snps, number_causal_snps))
-        number_background_snps = len(snp_ids_sampled) - number_causal_snps
+        raise Exception('Only %d SNPs are available after filtering. Cannot choose %d causal SNPs and %d background SNPs'
+                        ' for simulations. Please check again'
+                        % (len(snp_ids_sampled), number_causal_snps, number_background_snps))
+
 
     # compute simulations
     # choose random causal SNPs
@@ -186,13 +186,13 @@ def save_simulation(save_dir: pathlib.Path, number_of_sim: int, X: np.array, sam
     ev = []
     df_final = pd.DataFrame(index=sample_ids)
     for i in range(number_of_sim):
-        seed = seed + sim_names[i]
+        new_seed = seed + sim_names[i]
         simulated_phenotype, sample_ids_sampled, causal_snps_ids, background_snp_ids, betas_background, beta, c = \
             get_simulation(X, sample_ids, snp_ids, number_of_samples, number_causal_snps, explained_variance, maf,
                            heritability, seed, number_background_snps, distribution, shape)
 
         causal_markers.append(causal_snps_ids)
-        seeds.append(seed)
+        seeds.append(new_seed)
         background_markers.append(background_snp_ids)
         background_betas.append(betas_background)
         causative_beta.append(beta)
@@ -269,7 +269,7 @@ if __name__ == "__main__":
                         help="")
     parser.add_argument("-dist", "--distribution", type=str, default="normal",
                         help="")
-    parser.add_argument("-shape", type=float, default=1.0,
+    parser.add_argument("-shape", type=float, default=None,
                         help="")
     parser.add_argument("-sd", "--save_dir", type=str, default=None,
                         help="Define save directory for the synthetic phenotypes. Default is the data directory.")
