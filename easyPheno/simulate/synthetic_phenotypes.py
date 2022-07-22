@@ -115,7 +115,7 @@ def get_simulation(X: np.array, sample_ids: np.array, snp_ids: np.array, number_
 def check_sim_id(sim_dir: pathlib.Path) -> (int):
     sim_ids = []
     for sim in sim_dir.iterdir():
-        if sim.is_file() and 'Simulation' in sim.as_posix():
+        if sim.is_file() and 'Simulation_' in sim.as_posix():
             sim_numbers = sim.with_suffix('').name.split('_')[-1]
             sim_ids.append(int(sim_numbers.split('-')[-1]))
     if len(sim_ids) == 0:
@@ -130,6 +130,7 @@ def save_sim_overview(save_dir: pathlib.Path, sim_names: list, number_of_samples
 
     overview_file = save_dir.joinpath('Simulations_Overview.csv')
     if not check_functions.check_exist_files([overview_file]):
+        print('Create new overview file for simulations.')
         df_sim = pd.DataFrame({'simulation': sim_names,
                                'seed': seeds,
                                'heritability': heritability,
@@ -141,6 +142,7 @@ def save_sim_overview(save_dir: pathlib.Path, sim_names: list, number_of_samples
                                'distribution': distribution,
                                'shape': shape})
     else:
+        print('Overview file already exists. Will append new simulations to file.')
         df_old = pd.read_csv(overview_file)
         df_new = pd.DataFrame({'simulation': sim_names,
                                'seed': seeds,
@@ -285,7 +287,7 @@ if __name__ == "__main__":
     X, sample_ids, snp_ids = raw_data_functions.check_transform_format_genotype_matrix(data_dir=data_dir,
                             genotype_matrix_name=args['genotype_matrix'], models=None, user_encoding='012')
     X = encoding_functions.get_additive_encoding(X)
-    print('Have genotype matrix %s.', args['genotype_matrix'])
+    print('Have genotype matrix ', args['genotype_matrix'])
     save_simulation(save_dir=geno_dir, number_of_sim=args['number_of_simulations'], X=X, sample_ids=sample_ids,
                     snp_ids=snp_ids, number_of_samples=args['number_of_samples'],
                     number_causal_snps=args['number_causal_snps'], explained_variance=args['explained_variance'],
