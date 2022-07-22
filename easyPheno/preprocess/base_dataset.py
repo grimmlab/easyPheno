@@ -130,13 +130,15 @@ class Dataset:
             if 'final_snp_ids' not in f['matched_data']:
                 final = f.create_group('matched_data/final_snp_ids')
                 enc = final.create_group(f'{self.encoding}')
-                enc.create_dataset(f'maf_{maf_percentage}_snp_ids', data=self.snp_ids, chunks=True, compression="gzip")
+                enc.create_dataset(f'maf_{maf_percentage}_snp_ids',
+                                   data=self.snp_ids.astype(bytes), chunks=True, compression="gzip")
             elif f'{self.encoding}' not in f['matched_data/final_snp_ids']:
                 enc = f.create_group(f'matched_data/final_snp_ids/{self.encoding}')
-                enc.create_dataset(f'maf_{maf_percentage}_snp_ids', data=self.snp_ids, chunks=True, compression="gzip")
+                enc.create_dataset(f'maf_{maf_percentage}_snp_ids',
+                                   data=self.snp_ids.astype(bytes), chunks=True, compression="gzip")
             elif f'maf_{maf_percentage}_snp_ids' not in f[f'matched_data/final_snp_ids/{self.encoding}']:
                 f.create_dataset(f'matched_data/final_snp_ids/{self.encoding}/maf_{maf_percentage}_snp_ids',
-                                 data=self.snp_ids, chunks=True, compression="gzip")
+                                 data=self.snp_ids.astype(bytes), chunks=True, compression="gzip")
 
     def load_datasplit_indices(self, data_dir: pathlib.Path, n_outerfolds: int, n_innerfolds: int,
                                test_set_size_percentage: int, val_set_size_percentage: int) -> dict:
