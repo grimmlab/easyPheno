@@ -1,3 +1,3 @@
-__all__ = ["results_analysis", "generate_feat_impo", "inference", "plot_results", "retrain_on_new_dataset"]
+__all__ = ["results_analysis", "feat_importance", "model_reuse"]
 
 from . import *

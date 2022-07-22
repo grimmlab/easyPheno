@@ -116,7 +116,7 @@ class ParamFreeFitting:
 
             feat_import_df = None
             if self.current_model_name in ['blup', 'bayesA', 'bayesB', 'bayesC']:
-                feat_import_df = self.get_feature_importance(model=model, X=X_test, y=y_test)
+                feat_import_df = self.get_feature_importance(model=model)
             # Evaluate and save results
             eval_scores = \
                 eval_metrics.get_evaluation_report(y_pred=y_pred_test, y_true=y_test, task=self.task, prefix='test_')
