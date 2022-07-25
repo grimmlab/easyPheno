@@ -1,10 +1,9 @@
-import argparse
 import numpy as np
 import pandas as pd
 import pathlib
 import random
 
-from ..preprocess import raw_data_functions, encoding_functions
+from ..preprocess import raw_data_functions
 from ..utils import check_functions
 
 
@@ -51,10 +50,10 @@ def get_simulation(X: np.array, sample_ids: np.array, snp_ids: np.array, number_
         raise Exception('After filtering only %d SNPs remain. Not enough SNPs available to simulate %d causal SNPs.'
                         % (len(snp_ids_sampled), number_causal_snps))
     if number_causal_snps + number_background_snps > len(snp_ids_sampled):
-        print('Only %d SNPs are available. Cannot choose %d causal SNPs and %d background SNPs for simulations. Will '
-              'use %d SNPs as causal and remaining SNPs for background instead.'
-              % (len(snp_ids_sampled), number_causal_snps, number_background_snps, number_causal_snps))
-        number_background_snps = len(snp_ids_sampled) - number_causal_snps
+        raise Exception('Only %d SNPs are available after filtering. Cannot choose %d causal SNPs and %d background SNPs'
+                        ' for simulations. Please check again'
+                        % (len(snp_ids_sampled), number_causal_snps, number_background_snps))
+
 
     # compute simulations
     # choose random causal SNPs
@@ -115,13 +114,47 @@ def get_simulation(X: np.array, sample_ids: np.array, snp_ids: np.array, number_
 def check_sim_id(sim_dir: pathlib.Path) -> (int):
     sim_ids = []
     for sim in sim_dir.iterdir():
-        if sim.is_file() and 'Simulation' in sim.as_posix():
+        if sim.is_file() and 'Simulation_' in sim.as_posix():
             sim_numbers = sim.with_suffix('').name.split('_')[-1]
             sim_ids.append(int(sim_numbers.split('-')[-1]))
     if len(sim_ids) == 0:
         return 1
     else:
         return max(sim_ids) + 1
+
+
+def save_sim_overview(save_dir: pathlib.Path, sim_names: list, number_of_samples: list, number_causal_snps: list,
+                      explained_variance: list, maf: list, heritability: list, seeds: list,
+                      number_background_snps: list, distribution: list, shape: list):
+
+    overview_file = save_dir.joinpath('Simulations_Overview.csv')
+    if not check_functions.check_exist_files([overview_file]):
+        print('Create new overview file for simulations.')
+        df_sim = pd.DataFrame({'simulation': sim_names,
+                               'seed': seeds,
+                               'heritability': heritability,
+                               'MAF': maf,
+                               'samples': number_of_samples,
+                               'causal_SNPs': number_causal_snps,
+                               'background_SNPs': number_background_snps,
+                               'explained_var': explained_variance,
+                               'distribution': distribution,
+                               'shape': shape})
+    else:
+        print('Overview file already exists. Will append new simulations to file.')
+        df_old = pd.read_csv(overview_file)
+        df_new = pd.DataFrame({'simulation': sim_names,
+                               'seed': seeds,
+                               'heritability': heritability,
+                               'MAF': maf,
+                               'samples': number_of_samples,
+                               'causal_SNPs': number_causal_snps,
+                               'background_SNPs': number_background_snps,
+                               'explained_var': explained_variance,
+                               'distribution': distribution,
+                               'shape': shape})
+        df_sim = pd.concat([df_old, df_new])
+    df_sim.to_csv(overview_file, index=False)
 
 
 def save_simulation(save_dir: pathlib.Path, number_of_sim: int, X: np.array, sample_ids: np.array, snp_ids: np.array,
@@ -152,13 +185,13 @@ def save_simulation(save_dir: pathlib.Path, number_of_sim: int, X: np.array, sam
     ev = []
     df_final = pd.DataFrame(index=sample_ids)
     for i in range(number_of_sim):
-        seed = seed + sim_names[i]
+        new_seed = seed + sim_names[i]
         simulated_phenotype, sample_ids_sampled, causal_snps_ids, background_snp_ids, betas_background, beta, c = \
             get_simulation(X, sample_ids, snp_ids, number_of_samples, number_causal_snps, explained_variance, maf,
                            heritability, seed, number_background_snps, distribution, shape)
 
         causal_markers.append(causal_snps_ids)
-        seeds.append(seed)
+        seeds.append(new_seed)
         background_markers.append(background_snp_ids)
         background_betas.append(betas_background)
         causative_beta.append(beta)
@@ -170,6 +203,13 @@ def save_simulation(save_dir: pathlib.Path, number_of_sim: int, X: np.array, sam
                               index=sample_ids_sampled)
         df_final = df_final.join(df_sim)
 
+    # save overview
+    save_sim_overview(save_dir=save_dir, sim_names=sim_names, number_of_samples=[number_of_samples] * number_of_sim,
+                      number_causal_snps=[number_causal_snps] * number_of_sim,
+                      explained_variance=[explained_variance] * number_of_sim, maf=[maf] * number_of_sim,
+                      heritability=[heritability] * number_of_sim, seeds=seeds,
+                      number_background_snps=[number_background_snps] * number_of_sim,
+                      distribution=[distribution] * number_of_sim, shape=[shape] * number_of_sim)
     # save simulations
     df_final.to_csv(save_dir.joinpath(f'Simulation_{sim_id}.csv'))
     # save configs
@@ -196,62 +236,3 @@ def save_simulation(save_dir: pathlib.Path, number_of_sim: int, X: np.array, sam
     bb = np.array(background_betas).T
     df_bb = pd.DataFrame(bb, columns=col)
     df_bb.to_csv(save_dir.joinpath('sim_configs', f'betas_background_{sim_id}.csv'), index=False)
-
-
-if __name__ == "__main__":
-    """
-    Run file to generate synthetic phenotypes
-    """
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-dd", "--data_dir", type=str,
-                        help="Provide the full path of the directory where your genotype data is stored")
-    parser.add_argument("-gm", "--genotype_matrix", type=str,
-                        help="specify the name (including data type suffix) of the genotype matrix to be used. "
-                             "Needs to be located in the specified data_dir."
-                             "For more info regarding the required format see our documentation.")
-    parser.add_argument("-nsim", "--number_of_simulations", type=int, default=1,
-                        help="")
-    parser.add_argument("-nsamp", "--number_of_samples", type=int, default=1000,
-                        help="")
-    parser.add_argument("-ncaus", "--number_causal_snps", type=int, default=1,
-                        help="")
-    parser.add_argument("-nback", "--number_background_snps", type=int, default=1000,
-                        help="")
-    parser.add_argument("-ev", "--explained_variance", type=int, default=30,
-                        help="")
-    parser.add_argument("-maf", type=int, default=0,
-                        help="")
-    parser.add_argument("-her", "--heritability", type=int, default=70,
-                        help="")
-    parser.add_argument("-seed", type=int, default=42,
-                        help="")
-    parser.add_argument("-dist", "--distribution", type=str, default="normal",
-                        help="")
-    parser.add_argument("-shape", type=float, default=1.0,
-                        help="")
-    parser.add_argument("-sd", "--save_dir", type=str, default=None,
-                        help="Define save directory for the synthetic phenotypes. Default is the data directory.")
-    args = vars(parser.parse_args())
-    data_dir = pathlib.Path(args['data_dir'])
-    if args['save_dir'] is None:
-        save_dir = args['data_dir']
-    else:
-        save_dir = pathlib.Path(args['save_dir'])
-    geno_dir = save_dir.joinpath(args['genotype_matrix']).with_suffix('')
-    sim_dir = geno_dir.joinpath('simulations_h_' + str(args['heritability']) + '_b_' +
-                                str(args['number_background_snps']) + '_c_' + str(args['number_causal_snps']))
-    sim_config_dir = sim_dir.joinpath('sim_configs')
-    check_functions.check_exist_directories(list_of_dirs=[data_dir, save_dir, geno_dir, sim_dir, sim_config_dir],
-                                            create_if_not_exist=True)
-    check_functions.check_exist_files([save_dir.joinpath(args['genotype_matrix'])])
-    X, sample_ids, snp_ids = raw_data_functions.check_transform_format_genotype_matrix(data_dir=data_dir,
-                            genotype_matrix_name=args['genotype_matrix'], models=None, user_encoding='012')
-    X = encoding_functions.get_additive_encoding(X)
-    print('Have genotype matrix %s.', args['genotype_matrix'])
-    save_simulation(save_dir=sim_dir, number_of_sim=args['number_of_simulations'], X=X, sample_ids=sample_ids,
-                    snp_ids=snp_ids, number_of_samples=args['number_of_samples'],
-                    number_causal_snps=args['number_causal_snps'], explained_variance=args['explained_variance'],
-                    maf=args['maf'], heritability=args['heritability'], seed=args['seed'],
-                    number_background_snps=args['number_background_snps'], distribution=args['distribution'],
-                    shape=args['shape'])

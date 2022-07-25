@@ -1,4 +1,3 @@
-import argparse
 import pandas as pd
 import numpy as np
 import pathlib
@@ -15,25 +14,33 @@ def gather_sim_configs(sim_config_dir: pathlib.Path, save_dir: pathlib.Path):
     :param save_dir: directory to save the collected sim config info
     """
     all_sim_configs = pd.DataFrame(columns=['sim_id', 'type', 'snp_id', 'beta'])
-    for sim_id in list(sim_config_dir.glob('simulation_config*').parts[-1].split('_')[-1]):
-        background_file = pd.read_csv(sim_config_dir.glob('background*' + sim_id + '.csv')[0])
-        betas_background_file = pd.read_csv(sim_config_dir.glob('betas_background*' + sim_id + '.csv')[0])
-        sim_config_file = pd.read_csv(sim_config_dir.glob('simulation_config*' + sim_id + '.csv')[0])
+    config_files = sim_config_dir.expanduser().glob('simulation_config_*')
+    for file in config_files:
+        sim_id = file.with_suffix('').name.split('_')[-1]
+        background_file = pd.read_csv(sim_config_dir.joinpath('background_' + sim_id + '.csv'))
+        betas_background_file = pd.read_csv(sim_config_dir.joinpath('betas_background_' + sim_id + '.csv'))
+        sim_config_file = pd.read_csv(sim_config_dir.joinpath('simulation_config_' + sim_id + '.csv'))
         df_to_append = pd.DataFrame(columns=['sim_id', 'type', 'snp_id', 'beta'])
-        column = 'sim' + str(sim_id)
-        df_to_append['snp_id'] = background_file[column]
-        df_to_append['type'] = 'background'
-        df_to_append['sim_id'] = column
-        df_to_append['beta'] = betas_background_file[column]
-        sim_conf = sim_config_file[sim_config_file['simulation'] == sim_id]
-        for index, causal_marker in enumerate(
-                sim_conf['causal_marker'][sim_conf.index[0]][2:-2].replace('\n', '').split('\' \'')):
-            row_id = df_to_append.shape[0]
-            df_to_append.at[row_id, 'sim_id'] = column
-            df_to_append.at[row_id, 'snp_id'] = causal_marker
-            df_to_append.at[row_id, 'type'] = 'causal'
-            df_to_append.at[row_id, 'beta'] = float(sim_conf['causal_beta'][sim_conf.index[0]][1:-1].split(',')[index])
-        all_sim_configs = all_sim_configs.append(df_to_append, ignore_index=True)
+        if '-' in sim_id:
+            sim_id_parts = sim_id.split('-')
+            sim_ids = np.arange(int(sim_id_parts[0]), int(sim_id_parts[-1]) + 1)
+        else:
+            sim_ids = [int(sim_id)]
+        for number in sim_ids:
+            column = 'sim' + str(number)
+            df_to_append['snp_id'] = background_file[column]
+            df_to_append['type'] = 'background'
+            df_to_append['sim_id'] = column
+            df_to_append['beta'] = betas_background_file[column]
+            sim_conf = sim_config_file[sim_config_file['simulation'] == number]
+            for index, causal_marker in enumerate(
+                    sim_conf['causal_marker'][sim_conf.index[0]][2:-2].replace('\n', '').split('\' \'')):
+                row_id = df_to_append.shape[0]
+                df_to_append.at[row_id, 'sim_id'] = column
+                df_to_append.at[row_id, 'snp_id'] = causal_marker
+                df_to_append.at[row_id, 'type'] = 'causal'
+                df_to_append.at[row_id, 'beta'] = float(sim_conf['causal_beta'][sim_conf.index[0]][1:-1].split(',')[index])
+            all_sim_configs = all_sim_configs.append(df_to_append, ignore_index=True)
     all_sim_configs.to_csv(save_dir.joinpath('Sim_configs_gathered_' + sim_config_dir.parts[-2] + '.csv'),
                            index=False)
 
@@ -263,27 +270,3 @@ def featimps_vs_simulation(results_directory_genotype_level: str, sim_config_dir
         print('Generate and save plots')
         generate_scatterplots_featimps_vs_simulation(all_sim_configs=all_sim_configs, all_feat_imps=all_feat_imps,
                                                      save_dir=save_dir, datasplit_maf_pattern=datasplit_maf_pattern)
-
-
-if __name__ == "__main__":
-    """
-    Run file to generate statistics and plots of feature importances versus effect sizes on synthetic data
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-rd", "--results_dir", type=str,
-                        help="Provide the full path of the directory where your results are stored "
-                             "(name of the genotype matrix level)")
-    parser.add_argument("-simd", "--sim_config_dir", type=str,
-                        help="Provide the full path of the directory where the simulation configs are stored")
-    parser.add_argument("-sd", "--save_dir", type=str, default=None,
-                        help="Define save directory for the plots. Default is the same as results directory.")
-
-    args = vars(parser.parse_args())
-    results_directory_genotype_level = args['results_dir']
-    sim_config_dir = args['sim_config_dir']
-    save_dir = args['save_dir']
-
-    featimps_vs_simulation(
-        results_directory_genotype_level=results_directory_genotype_level,
-        sim_config_dir=sim_config_dir, save_dir=save_dir
-    )
