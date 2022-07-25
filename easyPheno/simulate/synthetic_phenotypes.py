@@ -3,7 +3,7 @@ import pandas as pd
 import pathlib
 import random
 
-from ..preprocess import raw_data_functions
+from ..preprocess import raw_data_functions, encoding_functions
 from ..utils import check_functions
 
 
@@ -27,10 +27,10 @@ def get_simulation(X: np.array, sample_ids: np.array, snp_ids: np.array, number_
                    number_background_snps: int, distribution: str, shape: float) \
                     -> (np.array, np.array, np.array, np.array, np.array, np.array, np.array):
     """
-    Simulate phenotypes based on (real) genotypes in an additive setting with normally distributed noise and normally or
-    gamma distributed effect sized of causal SNPs.
+    Simulate phenotypes based on (real) genotypes in an additive setting with normally or gamma distributed noise and
+    normally distributed effect sizes of causal SNPs.
 
-    :param X: genotype matrix
+    :param X: genotype matrix in additive encoding
     :param sample_ids: sample ids of genotype matrix
     :param snp_ids: SNP ids of genotype matrix
     :param number_of_samples: number of samples of synthetic phenotype
@@ -40,7 +40,7 @@ def get_simulation(X: np.array, sample_ids: np.array, snp_ids: np.array, number_
     :param heritability: percentage value of how much of the variance should be explained by polygenic background
     :param seed: seed for random sampling
     :param number_background_snps: number of randomly selected SNPs to simulate the polygenic background
-    :param distribution: probability distribution used to draw coefficients of causal SNPs can be 'normal' or 'gamma'
+    :param distribution: probability distribution used to draw random noise can be 'normal' or 'gamma'
     :param shape: only needed if distribution is 'gamma'
 
     :return: simulated phenotype with corresponding sample ids, SNP ids of causal SNPs, SNP ids of background SNPs,
@@ -48,6 +48,14 @@ def get_simulation(X: np.array, sample_ids: np.array, snp_ids: np.array, number_
     """
 
     # sanity checks
+    if encoding_functions.check_encoding_of_genotype(X=X) != '012':
+        raise Exception('Encoding of genotype must be additive!')
+    if distribution == 'gamma' and shape is None:
+        raise Exception('Need shape value to use gamma distribution!')
+    if number_background_snps < 1:
+        raise Exception('Need at least one background SNP.')
+    if number_of_samples < 1:
+        raise Exception('Need at least one sample.')
     if number_of_samples > len(sample_ids):
         print('Only %d samples are available. Cannot choose %d samples for simulations. Will use all available samples '
               'instead.' % (len(sample_ids), number_of_samples))
@@ -85,9 +93,13 @@ def get_simulation(X: np.array, sample_ids: np.array, snp_ids: np.array, number_
 
     # compute simulations
     # choose random causal SNPs
-    causal_snps = random.sample(list(enumerate(snp_ids_sampled)), number_causal_snps)
-    causal_snps_indices = np.array(causal_snps)[:, 0].astype(int)
-    causal_snps_ids = np.array(causal_snps)[:, 1]
+    if number_causal_snps >= 1:
+        causal_snps = random.sample(list(enumerate(snp_ids_sampled)), number_causal_snps)
+        causal_snps_indices = np.array(causal_snps)[:, 0].astype(int)
+        causal_snps_ids = np.array(causal_snps)[:, 1]
+    else:
+        causal_snps_indices = []
+        causal_snps_ids = []
 
     # choose background SNPs
     X_non_causal = np.delete(X_sampled, causal_snps_indices, axis=1)
@@ -117,6 +129,8 @@ def get_simulation(X: np.array, sample_ids: np.array, snp_ids: np.array, number_
     simulated_phenotype = simulated_phenotype + random_noise
 
     # compute explained variances for more than 1 snp
+    if number_causal_snps < 1:
+        return simulated_phenotype, sample_ids_sampled, causal_snps_ids, background_snp_ids, betas_background, [], []
     if number_causal_snps > 1:
         c = explained_variance
         mean = c / number_causal_snps
@@ -173,7 +187,7 @@ def save_sim_overview(save_dir: pathlib.Path, sim_names: list, number_of_samples
     :param heritability: list containing used heritability for each simulation
     :param seeds: list containing used seed for each simulation
     :param number_background_snps: list containing number of background SNPs for each simulation
-    :param distribution: list containing used distribution of causal effect sizes for each simulation
+    :param distribution: list containing used distribution of random noise for each simulation
     :param shape: list containing shape of gamma distribution, resp. None for normal distribution for each simulation
     """
     overview_file = save_dir.joinpath('Simulations_Overview.csv')
@@ -206,20 +220,25 @@ def save_sim_overview(save_dir: pathlib.Path, sim_names: list, number_of_samples
     df_sim.to_csv(overview_file, index=False)
 
 
-def save_simulation(save_dir: pathlib.Path, number_of_sim: int, X: np.array, sample_ids: np.array, snp_ids: np.array,
-                    number_of_samples: int, number_causal_snps: int, explained_variance: int, maf: int, heritability: int,
-                    seed: int, number_background_snps: int, distribution: str, shape: float):
+def save_simulation(save_dir: str, genotype_matrix_name: str, number_of_sim: int, X: np.array, sample_ids: np.array,
+                    snp_ids: np.array, number_of_samples: int, number_causal_snps: int, explained_variance: int,
+                    maf: int, heritability: int, seed: int, number_background_snps: int, distribution: str,
+                    shape: float):
     """
-    Set all variables, generate required simulations and save overview file and simulated phenotypes to save_dir and
-    background SNPs, effect sizes/betas of background SNPs and config infos containing SNP ids and betas of causal SNPs
-    to subfolder sim_configs, all with matching simulation ids as NAME_OF_FILE_sim_id.csv.
-    If only one phenoype is simulated, the sim_id consists of a single number, if several phenotypes are simulated with
+    Set all variables and generate one or more simulations with same configurations.
+    Save overview file and simulated phenotypes to subfolder 'genotype_matrix_name' in save_dir as
+    'Simulations_Overview.csv' and Simulation_{sim_id}.csv.
+    Save SNP ids of background SNPs, effect sizes/betas of background SNPs and configuration infos containing SNP ids
+    and betas of causal SNPs to subfolder sim_configs in 'genotype_matrix_name' as 'background_{sim_id}.csv',
+    'betas_background_{sim_id}.csv' and 'simulation_config_{sim_id}.csv'.
+    If only one phenoype is simulated, the sim_id consists of a single number. If several phenotypes are simulated with
     the same configurations, then the sim_id is the number of the first simulation '-' number of last simulation,
     e.g. '10-15'
 
     :param save_dir: directory to save simulations to
+    :param genotype_matrix_name: name of genotype matrix to be used for simulations, needed to create subfolder in save_dir
     :param number_of_sim: number of simulations to create with same configurations
-    :param X: genotype matrix
+    :param X: genotype matrix in additive encoding
     :param sample_ids: sample ids of genotype matrix
     :param snp_ids: SNP ids of genotype matrix
     :param number_of_samples: number of samples of synthetic phenotype
@@ -229,9 +248,14 @@ def save_simulation(save_dir: pathlib.Path, number_of_sim: int, X: np.array, sam
     :param heritability: percentage value of how much of the variance should be explained by polygenic background
     :param seed: seed for random sampling
     :param number_background_snps: number of randomly selected SNPs to simulate the polygenic background
-    :param distribution: probability distribution used to draw coefficients of causal SNPs can be 'normal' or 'gamma'
+    :param distribution: probability distribution used to draw random noise can be 'normal' or 'gamma'
     :param shape: only needed if distribution is 'gamma'
     """
+
+    # check directories
+    save_dir = pathlib.Path(save_dir).joinpath(genotype_matrix_name).with_suffix('')
+    check_functions.check_exist_directories(list_of_dirs=[save_dir, save_dir.joinpath('sim_configs')],
+                                            create_if_not_exist=True)
 
     # fix numbers / names of simulations
     sim_number = int(check_sim_id(sim_dir=save_dir))
