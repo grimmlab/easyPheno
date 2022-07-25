@@ -111,7 +111,7 @@ def get_simulation(X: np.array, sample_ids: np.array, snp_ids: np.array, number_
            explained_variance
 
 
-def check_sim_id(sim_dir: pathlib.Path) -> (int):
+def check_sim_id(sim_dir: pathlib.Path) -> int:
     sim_ids = []
     for sim in sim_dir.iterdir():
         if sim.is_file() and 'Simulation_' in sim.as_posix():
