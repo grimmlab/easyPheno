@@ -38,7 +38,7 @@ if __name__ == "__main__":
                         help="Specify the heritability of the phenotype, i.e. how much of the variance of "
                              "polygenic background + noise should be explained by the polygenic background.")
     parser.add_argument("-seed", type=int, default=42,
-                        help="")
+                        help="Specify the seed for random sampling.")
     parser.add_argument("-dist", "--distribution", type=str, default="normal",
                         help="Specify the distribution of the noise. Can be 'gamma' or 'normal'")
     parser.add_argument("-shape", type=float, default=None,
