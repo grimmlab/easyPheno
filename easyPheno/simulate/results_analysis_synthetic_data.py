@@ -102,7 +102,7 @@ def gather_feature_importances(results_dir: pathlib.Path, save_dir: pathlib.Path
     )
 
 
-def get_statistics_featimps_vs_simulation(all_sim_configs: pd.DataFrame, all_feat_imps: pd. Dataframe,
+def get_statistics_featimps_vs_simulation(all_sim_configs: pd.DataFrame, all_feat_imps: pd. DataFrame,
                                           min_perc_threshold: float = 0.01) -> pd.DataFrame:
     """
     Get statistics on feature importances compared to effect sizes on synthetic data, e.g. on how many background SNPs were detected
