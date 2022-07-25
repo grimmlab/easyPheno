@@ -52,7 +52,8 @@ if __name__ == "__main__":
                                             create_if_not_exist=True)
     check_functions.check_exist_files([save_dir.joinpath(args['genotype_matrix'])])
     X, sample_ids, snp_ids = raw_data_functions.check_transform_format_genotype_matrix(data_dir=data_dir,
-                            genotype_matrix_name=args['genotype_matrix'], models=None, user_encoding='012')
+                                        genotype_matrix_name=args['genotype_matrix'], models=None, user_encoding='012',
+                                        save_h5=False)
     X = encoding_functions.get_additive_encoding(X)
     print('Have genotype matrix ', args['genotype_matrix'])
     save_simulation(save_dir=geno_dir, number_of_sim=args['number_of_simulations'], X=X, sample_ids=sample_ids,
