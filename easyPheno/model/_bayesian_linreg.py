@@ -8,7 +8,7 @@ from . import _param_free_base_model
 
 class Bayes(_param_free_base_model.ParamFreeBaseModel):
     """
-    Implementation of a class for Bayesian alphabet.
+    Implementation of a class for Bayesian linear regression.
 
     *Attributes*
 
@@ -21,25 +21,30 @@ class Bayes(_param_free_base_model.ParamFreeBaseModel):
         - mu (*np.array*): intercept
         - beta (*np.array*): effect size
         - iterations (*int*): MCMC sampler iterations
-        - warumup (*int*): number of discarded MCMC warmup iterations
+        - warmup (*int*): number of discarded MCMC warmup iterations
     """
     standard_encoding = '012'
     possible_encodings = ['101']
 
-    def __init__(self, task: str, encoding: str = None, iterations: int = 6000, warmup: int = 1000):
+    def __init__(self, task: str, encoding: str = None, iterations: int = 100, warmup: int = 10):
         super().__init__(task=task, encoding=encoding)
         self.mu = None
         self.beta = None
         self.iterations = iterations
         self.warmup = warmup
 
-    def probability_model(self, X, y):
-        """probability model with priors for each model"""
+    def probability_model(self, X: torch.Tensor, y: torch.Tensor):
+        """
+        Probability model that needs to be implemented by each child model.
+
+        :param X: feature matrix
+        :param y: target vector
+        """
         raise NotImplementedError
 
     def fit(self, X: np.array, y: np.array) -> np.array:
         """
-        Implementation of fit function for Bayesian alphabet.
+        Implementation of fit function for Bayesian linear regression.
 
         See :obj:`~easyPheno.model._param_free_base_model.ParamFreeBaseModel` for more information.
         """
@@ -69,7 +74,7 @@ class Bayes(_param_free_base_model.ParamFreeBaseModel):
 
     def predict(self, X_in: np.array) -> np.array:
         """
-        Implementation of predict function for Bayesisan alphabet model.
+        Implementation of predict function for Bayesian linear regression.
 
         See :obj:`~easyPheno.model._param_free_base_model.ParamFreeBaseModel` for more information.
         """

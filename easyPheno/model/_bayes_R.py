@@ -7,7 +7,7 @@ from rpy2.robjects.packages import importr
 from . import _param_free_base_model
 
 
-class Bayes(_param_free_base_model.ParamFreeBaseModel):
+class Bayes_R(_param_free_base_model.ParamFreeBaseModel):
     """
     Implementation of a class for Bayesian alphabet.
 
@@ -21,18 +21,24 @@ class Bayes(_param_free_base_model.ParamFreeBaseModel):
 
         - mu (*np.array*): intercept
         - beta (*np.array*): effect size
+        - model_name (*str*): model to use (BayesA, BayesB or BayesC)
+        - n_iter (*int*): iterations for sampling
+        - burn_in (*int*): warmup/burnin for sampling
     """
     standard_encoding = '012'
     possible_encodings = ['101']
 
-    def __init__(self, task: str, encoding: str = None):
+    def __init__(self, task: str, model_name: str, encoding: str = None, n_iter: int = 6000, burn_in: int = 1000):
         super().__init__(task=task, encoding=encoding)
+        self.model_name = model_name
+        self.n_iter = n_iter
+        self.burn_in = burn_in
         self.mu = None
         self.beta = None
 
     def fit(self, X: np.array, y: np.array) -> np.array:
         """
-        Implementation of fit function for Bayesian alphabet.
+        Implementation of fit function for Bayesian alphabet imported from R.
 
         See :obj:`~easyPheno.model._param_free_base_model.ParamFreeBaseModel` for more information.
         """
@@ -45,8 +51,8 @@ class Bayes(_param_free_base_model.ParamFreeBaseModel):
         R_y = robjects.FloatVector(y)
 
         # run BGLR for BayesB
-        ETA = base.list(base.list(X=R_X, model='BayesA'))
-        fmBB = BGLR.BGLR(y=R_y, ETA=ETA, verbose=True, nIter=6000, burnIn=1000)
+        ETA = base.list(base.list(X=R_X, model=self.model_name))
+        fmBB = BGLR.BGLR(y=R_y, ETA=ETA, verbose=True, nIter=self.n_iter, burnIn=self.burn_in)
 
         # save results as numpy arrays
         self.beta = np.asarray(fmBB.rx2('ETA').rx2(1).rx2('b'))
@@ -55,7 +61,7 @@ class Bayes(_param_free_base_model.ParamFreeBaseModel):
 
     def predict(self, X_in: np.array) -> np.array:
         """
-        Implementation of predict function for BLUP.
+        Implementation of predict function for Bayesian alphabet model imported from R.
 
         See :obj:`~easyPheno.model._param_free_base_model.ParamFreeBaseModel` for more information.
         """
