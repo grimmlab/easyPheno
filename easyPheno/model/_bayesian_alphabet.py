@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pyro
 import torch
 
@@ -36,12 +37,13 @@ class Bayes(_param_free_base_model.ParamFreeBaseModel):
         """probability model with priors for each model"""
         raise NotImplementedError
 
-    def fit(self, X: np.array, y: np.array, iterations: int = 6000, warmup: int = 1000) -> np.array:
+    def fit(self, X: np.array, y: np.array) -> np.array:
         """
         Implementation of fit function for Bayesian alphabet.
 
         See :obj:`~easyPheno.model._param_free_base_model.ParamFreeBaseModel` for more information.
         """
+        torch.autograd.set_detect_anomaly(True)
         X = torch.tensor(X)
         y = torch.tensor(y)
 
@@ -54,14 +56,14 @@ class Bayes(_param_free_base_model.ParamFreeBaseModel):
         # Employ the sampler in an MCMC sampling
         # algorithm, and sample 3100 samples.
         # Then discard the first 100
-        my_mcmc1 = pyro.MCMC(my_kernel, num_samples=iterations, warmup_steps=warmup)
+        mcmc = pyro.infer.MCMC(my_kernel, num_samples=self.iterations, warmup_steps=self.warmup)
         # Run the sampler
-        my_mcmc1.run(X, y)
+        mcmc.run(X, y)
 
         # save results as numpy arrays
-        coefficients = np.mean(my_mcmc1.get_samples()[:, :-1])
+        coefficients = pd.DataFrame(mcmc.get_samples()).iloc[:, :-1].mean()
         self.beta = coefficients[1:]
-        self.mu = coefficients[0]
+        self.mu = coefficients.iloc[0]
 
         return self.predict(X_in=X)
 
