@@ -40,7 +40,7 @@ def gather_sim_configs(sim_config_dir: pathlib.Path, save_dir: pathlib.Path):
                 df_to_append.at[row_id, 'snp_id'] = causal_marker
                 df_to_append.at[row_id, 'type'] = 'causal'
                 df_to_append.at[row_id, 'beta'] = float(sim_conf['causal_beta'][sim_conf.index[0]][1:-1].split(',')[index])
-            all_sim_configs = all_sim_configs.append(df_to_append, ignore_index=True)
+            all_sim_configs = pd.concat([all_sim_configs, df_to_append], ignore_index=True)
     all_sim_configs.to_csv(save_dir.joinpath('Sim_configs_gathered_' + sim_config_dir.parts[-2] + '.csv'),
                            index=False)
 
@@ -56,16 +56,15 @@ def gather_feature_importances(results_dir: pathlib.Path, save_dir: pathlib.Path
 
     all_feat_imps = pd.DataFrame(columns=['sim_id', 'model', 'snp_id', 'feat_imp'])
     for phenotype_matrix in helper_functions.get_all_subdirectories_non_recursive(results_dir):
-        results_directory_phenotype_matrix_level = results_dir.joinpath(phenotype_matrix)
         for phenotype_folder in \
-                helper_functions.get_all_subdirectories_non_recursive(results_directory_phenotype_matrix_level):
+                helper_functions.get_all_subdirectories_non_recursive(phenotype_matrix):
             phenotype = phenotype_folder.parts[-1]
             print('++++++++++++++ PHENOTYPE ' + phenotype + ' ++++++++++++++')
             for path in phenotype_folder.glob(datasplit_maf_pattern + '*'):
                 if len(list(path.glob('Results_over*.csv'))) == 0:
                     continue
                 models = path.parts[-1].split('_')[3].split('+')
-                print('working on ' + path)
+                print('working on ' + str(path))
                 for current_model in models:
                     if path.joinpath('outerfold_0', current_model, 'final_model_feature_importances.csv').is_file() or \
                             path.joinpath(current_model, 'final_model_feature_importances.csv').is_file():
@@ -77,7 +76,8 @@ def gather_feature_importances(results_dir: pathlib.Path, save_dir: pathlib.Path
                             current_directory = path.joinpath('outerfold_' + str(outerfold_nr), current_model) \
                                 if 'nested' in datasplit_maf_pattern else path.joinpath(current_model)
                             try:
-                                feat_imp = pd.read_csv(current_directory + 'final_model_feature_importances.csv')
+                                feat_imp = \
+                                    pd.read_csv(current_directory.joinpath('final_model_feature_importances.csv'))
                                 feat_imp.rename(columns={'snp_ids_0': 'snp_id'}, inplace=True)
                                 feat_imp.rename(columns={'snp_ids_standard': 'snp_id'}, inplace=True)
                                 if feat_imps_to_append is None:
@@ -95,7 +95,7 @@ def gather_feature_importances(results_dir: pathlib.Path, save_dir: pathlib.Path
                             feat_imps_to_append['sim_id'] = phenotype
                             feat_imps_to_append['model'] = current_model
                             feat_imps_to_append.drop(cols_to_drop, axis=1, inplace=True)
-                            all_feat_imps = all_feat_imps.append(feat_imps_to_append, ignore_index=True)
+                            all_feat_imps = pd.concat([all_feat_imps, feat_imps_to_append], ignore_index=True)
     all_feat_imps.to_csv(
         save_dir.joinpath('Feature_importances_gathered_' + results_dir.parts[-1] + datasplit_maf_pattern + '.csv'),
         index=False
@@ -113,15 +113,7 @@ def get_statistics_featimps_vs_simulation(all_sim_configs: pd.DataFrame, all_fea
 
     :return: statistics for a comparison between feature importances and effect sizes in a DataFrame
     """
-    stats = pd.DataFrame(
-        columns=['sim_id', 'model', '#features_with_imp', '#features_with_imp_minpercmax_' + str(min_perc_threshold),
-                 '#detected_background_snps', '#detected_background_snps_minpercmax_' + str(min_perc_threshold),
-                 '#background_snps',
-                 'ratio_background_detected', 'ratio_background_detected_minpercmax_' + str(min_perc_threshold),
-                 'ratio_background_detected_by_feat_imp',
-                 'ratio_background_detected_by_feat_imp_minpercmax_' + str(min_perc_threshold),
-                 '#detected_causal_snps', '#causal_snps', 'ratio_causal_detected', 'causal_snps_detected',
-                 'featimp_rank_causal_snps'])
+    stats = None
     for sim_id in set(all_sim_configs.sim_id):
         config_simid = all_sim_configs[all_sim_configs.sim_id == sim_id]
         feat_imp_simid = all_feat_imps[all_feat_imps.sim_id == sim_id]
@@ -161,9 +153,13 @@ def get_statistics_featimps_vs_simulation(all_sim_configs: pd.DataFrame, all_fea
             new_row['ratio_causal_detected'] = round(new_row['#detected_causal_snps'] / new_row['#causal_snps'], 2)
             new_row['causal_snps_detected'] = 'Yes' if new_row['ratio_causal_detected'] == 1 else 'No'
             featimp_sorted = non_zero_featimps.sort_values(by='feat_imp', ascending=False).reset_index(drop=True)
-            new_row['featimp_rank_causal_snps'] = list(
-                featimp_sorted[featimp_sorted.snp_id.isin(set(causal.snp_id))].index + 1)
-            stats = stats.append(new_row, ignore_index=True)
+            new_row['featimp_rank_causal_snps'] = str(list(
+                featimp_sorted[featimp_sorted.snp_id.isin(set(causal.snp_id))].index + 1)) \
+                if new_row['#detected_causal_snps'] != 0 else None
+            if stats is None:
+                stats = pd.DataFrame(new_row, index=[0])
+            else:
+                stats = pd.concat([stats, pd.DataFrame(new_row, index=[0])], ignore_index=True)
     stats = stats.sort_values(by=['sim_id', 'model'])
     return stats
 
@@ -178,15 +174,21 @@ def generate_scatterplots_featimps_vs_simulation(all_feat_imps: pd.DataFrame, al
     :param save_dir: directory to save the plots
     :param datasplit_maf_pattern: datasplit maf pattern to search on
     """
-    sim_ids = list(all_feat_imps['sim_id'])
+    pd.options.mode.chained_assignment = None
+    sim_ids = set(all_feat_imps['sim_id'])
     sim_infos = all_sim_configs[all_sim_configs['sim_id'].isin(sim_ids)]
     beta_max = sim_infos[sim_infos['beta'] != 0]['beta'].astype(float).abs().max()
-    models_total = list(all_sim_configs['model'])
-    for models in [models_total, [single_model for single_model in models_total]]:
-        rows = np.ceil(sim_ids / 3)
-        fig = plt.figure(figsize=(rows * 3, 16))
+    models_total = set(all_feat_imps['model'])
+    iter_models = []
+    for single_model in models_total:
+        iter_models.append([single_model])
+    iter_models.append([single_model for single_model in models_total])
+    for models in iter_models:
+        print(models)
+        rows = int(np.ceil(len(set(sim_ids)) / 3))
+        fig = plt.figure(figsize=(16, rows*3))
         for plot_nr, sim_id in enumerate(sim_ids):
-            ax = fig.add_subplot(rows, 3, plot_nr + 1)
+            ax = fig.add_subplot(rows, min(3, len(set(sim_ids))), plot_nr + 1)
             sim_info_for_id = sim_infos[sim_infos['sim_id'] == sim_id]
             feat_info_for_id = all_feat_imps[all_feat_imps['sim_id'] == sim_id]
             for model in models:
@@ -219,7 +221,7 @@ def generate_scatterplots_featimps_vs_simulation(all_feat_imps: pd.DataFrame, al
         plt.subplots_adjust(hspace=0.1)
         suptitle = 'Feature importances of all models versus effect sizes' if len(models) > 1 \
             else 'Feature importances of ' + model + ' versus effect sizes'
-        fig.suptitle(suptitle, fontsize=13)
+        fig.suptitle(suptitle, fontsize=13, horizontalalignment='center')
         fig.tight_layout()
         model_string = models[0] if len(models) == 1 else 'all'
         plt.savefig(
@@ -244,14 +246,14 @@ def featimps_vs_simulation(results_directory_genotype_level: str, sim_config_dir
         print('Prepare sim config info')
         gather_sim_configs(sim_config_dir=sim_config_dir, save_dir=save_dir)
 
+    datasplit_maf_patterns = []
     for phenotype_matrix in helper_functions.get_all_subdirectories_non_recursive(results_directory_genotype_level):
-        results_directory_phenotype_matrix_level = results_directory_genotype_level.joinpath(phenotype_matrix)
         for phenotype_folder in \
-                helper_functions.get_all_subdirectories_non_recursive(results_directory_phenotype_matrix_level):
+                helper_functions.get_all_subdirectories_non_recursive(phenotype_matrix):
             subdirs = [fullpath.parts[-1]
                        for fullpath in helper_functions.get_all_subdirectories_non_recursive(phenotype_folder)]
-            datasplit_maf_patterns = set(['_'.join(path.split('_')[:3]) for path in subdirs])
-
+            datasplit_maf_patterns.extend(['_'.join(path.split('_')[:3]) for path in subdirs])
+    datasplit_maf_patterns = set(datasplit_maf_patterns)
     for datasplit_maf_pattern in datasplit_maf_patterns:
         print('Simulation vs Feature Importances for ' + datasplit_maf_pattern)
         feat_imps_gathered_path = save_dir.joinpath('Feature_importances_gathered_' +
@@ -266,7 +268,7 @@ def featimps_vs_simulation(results_directory_genotype_level: str, sim_config_dir
         print('Generate and save statistics')
         stats = get_statistics_featimps_vs_simulation(all_sim_configs=all_sim_configs, all_feat_imps=all_feat_imps)
         stats.to_csv(save_dir.joinpath('Simulated_effect_sizes_vs_featimps_statistics_' +
-                                       datasplit_maf_pattern + '.csv'))
+                                       datasplit_maf_pattern + '.csv'), index=False)
         print('Generate and save plots')
         generate_scatterplots_featimps_vs_simulation(all_sim_configs=all_sim_configs, all_feat_imps=all_feat_imps,
                                                      save_dir=save_dir, datasplit_maf_pattern=datasplit_maf_pattern)
