@@ -6,5 +6,5 @@ RUN apt-get install -y git
 RUN mkdir /configfiles
 COPY requirements.txt /configfiles
 RUN pip3 install -r /configfiles/requirements.txt
-RUN pip3 install torch==1.10.2+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+RUN pip3 install torch==1.11.0+cu113 -f https://download.pytorch.org/whl/torch_stable.html
 RUN Rscript -e "install.packages('BGLR')"
