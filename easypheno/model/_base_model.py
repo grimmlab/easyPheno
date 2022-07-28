@@ -9,8 +9,8 @@ class BaseModel(abc.ABC):
     """
     BaseModel parent class for all models that can be used within the framework.
 
-    Every model must be based on :obj:`~easyPheno.model._base_model.BaseModel` directly or BaseModel's child classes,
-    e.g. :obj:`~easyPheno.model._sklearn_model.SklearnModel` or :obj:`~easyPheno.model._torch_model.TorchModel`
+    Every model must be based on :obj:`~easypheno.model._base_model.BaseModel` directly or BaseModel's child classes,
+    e.g. :obj:`~easypheno.model._sklearn_model.SklearnModel` or :obj:`~easypheno.model._torch_model.TorchModel`
 
     Please add ``super().__init__(PARAMS)`` to the constructor in case you override it in a child class
 
@@ -27,7 +27,7 @@ class BaseModel(abc.ABC):
         - optuna_trial (*optuna.trial.Trial*): trial of optuna for optimization
         - encoding (*str*): the encoding to use (standard encoding or user-defined)
         - n_outputs (*int*): number of outputs of the prediction model
-        - all_hyperparams (*dict*): dictionary with all hyperparameters with related info that can be tuned (structure see :obj:`~easyPheno.model._base_model.BaseModel.define_hyperparams_to_tune`)
+        - all_hyperparams (*dict*): dictionary with all hyperparameters with related info that can be tuned (structure see :obj:`~easypheno.model._base_model.BaseModel.define_hyperparams_to_tune`)
         - model: model object
 
 
@@ -163,7 +163,7 @@ class BaseModel(abc.ABC):
 
         If you want to add a parameter to your model / in your pipeline to be optimized, you need to call this method
 
-        :param hyperparam_name: name of the hyperparameter to be tuned (see :obj:`~easyPheno.model._base_model.BaseModel.define_hyperparams_to_tune`)
+        :param hyperparam_name: name of the hyperparameter to be tuned (see :obj:`~easypheno.model._base_model.BaseModel.define_hyperparams_to_tune`)
 
         :return: suggested value
         """
@@ -234,7 +234,7 @@ class BaseModel(abc.ABC):
     def save_model(self, path: pathlib.Path, filename: str):
         """
         Persist the whole model object on a hard drive
-        (can be loaded with :obj:`~easyPheno.model._model_functions.load_model`)
+        (can be loaded with :obj:`~easypheno.model._model_functions.load_model`)
 
         :param path: path where the model will be saved
         :param filename: filename of the model

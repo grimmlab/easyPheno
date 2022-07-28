@@ -9,7 +9,7 @@ class BayesA(_bayes_R.Bayes_R):
 
         *Inherited attributes*
 
-        See :obj:`~easyPheno.model._bayes_R.Bayes_R` for more information on the attributes.
+        See :obj:`~easypheno.model._bayes_R.Bayes_R` for more information on the attributes.
     """
 
     def __init__(self, task: str, encoding: str = None):

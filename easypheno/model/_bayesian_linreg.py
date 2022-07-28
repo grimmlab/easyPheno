@@ -14,7 +14,7 @@ class Bayes(_param_free_base_model.ParamFreeBaseModel):
 
         *Inherited attributes*
 
-        See :obj:`~easyPheno.model._param_free_base_model.ParamFreeBaseModel` for more information on the attributes.
+        See :obj:`~easypheno.model._param_free_base_model.ParamFreeBaseModel` for more information on the attributes.
 
         *Additional attributes*
 
@@ -46,7 +46,7 @@ class Bayes(_param_free_base_model.ParamFreeBaseModel):
         """
         Implementation of fit function for Bayesian linear regression.
 
-        See :obj:`~easyPheno.model._param_free_base_model.ParamFreeBaseModel` for more information.
+        See :obj:`~easypheno.model._param_free_base_model.ParamFreeBaseModel` for more information.
         """
         torch.autograd.set_detect_anomaly(True)
         X = torch.tensor(X)
@@ -76,6 +76,6 @@ class Bayes(_param_free_base_model.ParamFreeBaseModel):
         """
         Implementation of predict function for Bayesian linear regression.
 
-        See :obj:`~easyPheno.model._param_free_base_model.ParamFreeBaseModel` for more information.
+        See :obj:`~easypheno.model._param_free_base_model.ParamFreeBaseModel` for more information.
         """
         return self.mu + np.matmul(X_in, self.beta)

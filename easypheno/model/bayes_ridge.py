@@ -13,14 +13,14 @@ class BayesRidge(_bayesian_linreg.Bayes):
 
         *Inherited attributes*
 
-        See :obj:`~easyPheno.model._bayesian_linreg.Bayes` for more information on the attributes.
+        See :obj:`~easypheno.model._bayesian_linreg.Bayes` for more information on the attributes.
     """
 
     def probability_model(self, X: torch.tensor, y: torch.Tensor):
         """
         Implementation of probability model for Bayesian ridge regression
 
-        See :obj:`~easyPheno.model._bayesian_linreg.Bayes` for more information on the attributes.
+        See :obj:`~easypheno.model._bayesian_linreg.Bayes` for more information on the attributes.
         """
         # Define our intercept prior
         intercept_prior = dist.Normal(0.0, 1.0)

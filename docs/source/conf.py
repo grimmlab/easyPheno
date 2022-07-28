@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.abspath('../../'))
 
 # -- Project information
 
-project = 'easyPheno'
+project = 'easypheno'
 copyright = '2022, GrimmLab @ TUM Campus Straubing (https://bit.cs.tum.de/)'
 author = 'Florian Haselbeck, Maura John, Dominik G. Grimm'
 

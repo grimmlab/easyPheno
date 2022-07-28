@@ -3,11 +3,11 @@ import sklearn
 from . import _sklearn_model
 
 
-class ElasticNet(_sklearn_model.SklearnModel):
+class LinearRegression(_sklearn_model.SklearnModel):
     """
-    Implementation of a class for Linear respective Logistic Regression using ElasticNet penalty.
+    Implementation of a class for Linear respective Logistic Regression.
 
-    See :obj:`~easyPheno.model._base_model.BaseModel` for more information on the attributes.
+    See :obj:`~easypheno.model._base_model.BaseModel` for more information on the attributes.
     """
     standard_encoding = '012'
     possible_encodings = ['012']
@@ -16,10 +16,10 @@ class ElasticNet(_sklearn_model.SklearnModel):
         """
         Definition of the actual prediction model.
 
-        See :obj:`~easyPheno.model._base_model.BaseModel` for more information.
+        See :obj:`~easypheno.model._base_model.BaseModel` for more information.
         """
         # Penalty term is fixed to l1, but might also be optimized
-        penalty = 'elasticnet'  # self.suggest_hyperparam_to_optuna('penalty')
+        penalty = 'l1'  # self.suggest_hyperparam_to_optuna('penalty')
         if penalty == 'l1':
             l1_ratio = 1
         elif penalty == 'l2':
@@ -37,7 +37,7 @@ class ElasticNet(_sklearn_model.SklearnModel):
 
     def define_hyperparams_to_tune(self) -> dict:
         """
-        See :obj:`~easyPheno.model._base_model.BaseModel` for more information on the format.
+        See :obj:`~easypheno.model._base_model.BaseModel` for more information on the format.
         """
         return {
             'penalty': {

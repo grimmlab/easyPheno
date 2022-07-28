@@ -8,7 +8,7 @@ import pandas as pd
 import tensorflow as tf
 import pathlib
 
-import easyPheno.model
+import easypheno.model
 
 
 def get_list_of_implemented_models() -> list:
@@ -20,10 +20,10 @@ def get_list_of_implemented_models() -> list:
         model_src_files = os.listdir('../model')
     elif os.path.exists('model'):
         model_src_files = os.listdir('model')
-    elif os.path.exists('easyPheno/model'):
-        model_src_files = os.listdir('easyPheno/model')
+    elif os.path.exists('easypheno/model'):
+        model_src_files = os.listdir('easypheno/model')
     else:
-        model_src_files = [model_file + '.py' for model_file in easyPheno.model.__all__]
+        model_src_files = [model_file + '.py' for model_file in easypheno.model.__all__]
     model_src_files = [file for file in model_src_files if file[0] != '_']
     return [model[:-3] for model in model_src_files]
 
@@ -52,10 +52,10 @@ def get_mapping_name_to_class() -> dict:
         files = os.listdir('../model')
     elif os.path.exists('model'):
         files = os.listdir('model')
-    elif os.path.exists('easyPheno/model'):
-        files = os.listdir('easyPheno/model')
+    elif os.path.exists('easypheno/model'):
+        files = os.listdir('easypheno/model')
     else:
-        files = [model_file + '.py' for model_file in easyPheno.model.__all__]
+        files = [model_file + '.py' for model_file in easypheno.model.__all__]
     modules_mapped = {}
     for file in files:
         if file not in ['__init__.py', '__pycache__']:
@@ -63,7 +63,7 @@ def get_mapping_name_to_class() -> dict:
                 continue
 
             file_name = file[:-3]
-            module_name = 'easyPheno.model.' + file_name
+            module_name = 'easypheno.model.' + file_name
             for name, cls in inspect.getmembers(importlib.import_module(module_name), inspect.isclass):
                 if cls.__module__ == module_name:
                     modules_mapped[file_name] = cls

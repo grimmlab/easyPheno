@@ -8,7 +8,7 @@ class ParamFreeBaseModel(abc.ABC):
     """
     BaseModel parent class for all models that do not have hyperparameters, e.g. BLUP.
 
-    Every model must be based on :obj:`~easyPheno.model.param_free_base_model.ParamFreeBaseModel` directly or ParamFreeBaseModel's child classes.
+    Every model must be based on :obj:`~easypheno.model.param_free_base_model.ParamFreeBaseModel` directly or ParamFreeBaseModel's child classes.
 
     Please add ``super().__init__(PARAMS)`` to the constructor in case you override it in a child class
 
@@ -76,7 +76,7 @@ class ParamFreeBaseModel(abc.ABC):
     def save_model(self, path: pathlib.Path, filename: str):
         """
         Persist the whole model object on a hard drive
-        (can be loaded with :obj:`~easyPheno.model._model_functions.load_model`)
+        (can be loaded with :obj:`~easypheno.model._model_functions.load_model`)
 
         :param path: path where the model will be saved
         :param filename: filename of the model

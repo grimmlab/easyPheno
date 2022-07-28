@@ -11,7 +11,7 @@ class Blup(_param_free_base_model.ParamFreeBaseModel):
 
         *Inherited attributes*
 
-        See :obj:`~easyPheno.model._param_free_base_model.ParamFreeBaseModel` for more information on the attributes.
+        See :obj:`~easypheno.model._param_free_base_model.ParamFreeBaseModel` for more information on the attributes.
 
         *Additional attributes*
 
@@ -43,7 +43,7 @@ class Blup(_param_free_base_model.ParamFreeBaseModel):
         """
         Implementation of fit function for BLUP.
 
-        See :obj:`~easyPheno.model._param_free_base_model.ParamFreeBaseModel` for more information.
+        See :obj:`~easypheno.model._param_free_base_model.ParamFreeBaseModel` for more information.
         """
         n = y.shape[0]
         Z = np.ones((n, 1))
@@ -77,6 +77,6 @@ class Blup(_param_free_base_model.ParamFreeBaseModel):
         """
         Implementation of predict function for BLUP.
 
-        See :obj:`~easyPheno.model._param_free_base_model.ParamFreeBaseModel` for more information.
+        See :obj:`~easypheno.model._param_free_base_model.ParamFreeBaseModel` for more information.
         """
         return self.beta + np.matmul(X_in, self.u)

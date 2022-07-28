@@ -2,10 +2,11 @@ import datetime
 import pprint
 import pathlib
 
-from easyPheno.utils import check_functions, print_functions, helper_functions
-from easyPheno.preprocess import raw_data_functions, base_dataset
-from easyPheno.optimization import optuna_optim, paramfree_fitting
-from easyPheno.model import _param_free_base_model
+from easypheno.utils import check_functions, print_functions, helper_functions
+from easypheno.preprocess import raw_data_functions, base_dataset
+from easypheno.optimization import optuna_optim, paramfree_fitting
+from easypheno.model import _param_free_base_model
+import easypheno.model
 
 
 def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: str,
@@ -37,6 +38,8 @@ def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: s
     """
     if models is None:
         models = ['xgboost']
+    if any(['_R' in model for model in models]):
+        easypheno.model.__all__.extend(['_bayes_R', 'bayesA_R', 'bayesB_R', 'bayesC_R'])
     # create Path
     data_dir = pathlib.Path(data_dir)
     # set save directory

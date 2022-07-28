@@ -2,8 +2,8 @@ import argparse
 import warnings
 from optuna.exceptions import ExperimentalWarning
 
-from easyPheno.utils import helper_functions
-from easyPheno.preprocess import encoding_functions
+from easypheno.utils import helper_functions
+from easypheno.preprocess import encoding_functions
 from . import optim_pipeline
 
 if __name__ == '__main__':

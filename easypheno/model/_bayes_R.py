@@ -15,7 +15,7 @@ class Bayes_R(_param_free_base_model.ParamFreeBaseModel):
 
         *Inherited attributes*
 
-        See :obj:`~easyPheno.model._param_free_base_model.ParamFreeBaseModel` for more information on the attributes.
+        See :obj:`~easypheno.model._param_free_base_model.ParamFreeBaseModel` for more information on the attributes.
 
         *Additional attributes*
 
@@ -40,7 +40,7 @@ class Bayes_R(_param_free_base_model.ParamFreeBaseModel):
         """
         Implementation of fit function for Bayesian alphabet imported from R.
 
-        See :obj:`~easyPheno.model._param_free_base_model.ParamFreeBaseModel` for more information.
+        See :obj:`~easypheno.model._param_free_base_model.ParamFreeBaseModel` for more information.
         """
         # import necessary R packages
         base = importr('base')
@@ -63,6 +63,6 @@ class Bayes_R(_param_free_base_model.ParamFreeBaseModel):
         """
         Implementation of predict function for Bayesian alphabet model imported from R.
 
-        See :obj:`~easyPheno.model._param_free_base_model.ParamFreeBaseModel` for more information.
+        See :obj:`~easypheno.model._param_free_base_model.ParamFreeBaseModel` for more information.
         """
         return self.mu + np.matmul(X_in, self.beta)
