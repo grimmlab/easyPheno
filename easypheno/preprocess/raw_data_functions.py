@@ -164,7 +164,7 @@ def save_all_data_files(data_dir: pathlib.Path, genotype_matrix_name: str, pheno
     :param val_set_size_percentage: size of the validation set relevant for train-val-test
     """
     print('Load genotype file ' + str(data_dir.joinpath(genotype_matrix_name)))
-    X, X_ids,_ = check_transform_format_genotype_matrix(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
+    X, X_ids, _ = check_transform_format_genotype_matrix(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
                                                       models=models, user_encoding=user_encoding)
     print('Have genotype matrix. Load phenotype ' + phenotype + ' from ' + str(data_dir.joinpath(phenotype_matrix_name)))
     y = check_and_load_phenotype_matrix(data_dir=data_dir,
@@ -181,8 +181,8 @@ def save_all_data_files(data_dir: pathlib.Path, genotype_matrix_name: str, pheno
                       )
 
 
-def check_transform_format_genotype_matrix(data_dir: pathlib.Path, genotype_matrix_name: str, models, user_encoding: str) \
-        -> (np.array, np.array):
+def check_transform_format_genotype_matrix(data_dir: pathlib.Path, genotype_matrix_name: str, models,
+                                           user_encoding: str, save_h5: bool = True) -> (np.array, np.array, np.array):
     """
     Check the format of the specified genotype matrix.
 
@@ -209,6 +209,7 @@ def check_transform_format_genotype_matrix(data_dir: pathlib.Path, genotype_matr
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
     :param models: models to consider
     :param user_encoding: encoding specified by the user
+    :param save_h5: save genotype in unified h5 format if True, default is True
 
     :return: genotype matrix (raw encoded if present, 012 encoded otherwise) and sample ids
     """
@@ -239,8 +240,9 @@ def check_transform_format_genotype_matrix(data_dir: pathlib.Path, genotype_matr
         else:
             raise Exception('Only accept .h5, .hdf5, .h5py, .csv, binary PLINK and PLINK genotype files. '
                             'See documentation for help.')
-        create_genotype_h5_file(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
-                                sample_ids=sample_ids, snp_ids=snp_ids, X=X)
+        if save_h5:
+            create_genotype_h5_file(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
+                                    sample_ids=sample_ids, snp_ids=snp_ids, X=X)
     return X, sample_ids, snp_ids
 
 

@@ -1,4 +1,4 @@
-<div align="left"><img src="https://raw.githubusercontent.com/grimmlab/easyPheno/main/docs/image/Logo_easyPheno_Text.png" width="600"/></div>
+<div align="left"><img src="https://raw.githubusercontent.com/grimmlab/easyPheno/main/docs/image/Logo_easyPheno_Text.png" height="80"/></div>
 
 # easyPheno: A state-of-the-art and easy-to-use Python framework for plant phenotype prediction
 
