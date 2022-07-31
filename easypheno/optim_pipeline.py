@@ -38,8 +38,8 @@ def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: s
     """
     if models is None:
         models = ['xgboost']
-    if any(['_R' in model for model in models]):
-        easypheno.model.__all__.extend(['_bayes_R', 'bayesA_R', 'bayesB_R', 'bayesC_R'])
+    if any(['fromR' in model for model in models]):
+        easypheno.model.__all__.extend(['_bayesfromR', 'bayesAfromR', 'bayesBfromR', 'bayesCfromR'])
     # create Path
     data_dir = pathlib.Path(data_dir)
     # set save directory

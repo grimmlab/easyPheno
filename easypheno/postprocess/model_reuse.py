@@ -44,6 +44,9 @@ def apply_final_model(results_directory_model: str, old_data_dir: str, new_data_
     result_folder_name = results_directory_model.parts[-3] if 'nested' in str(results_directory_model) \
         else results_directory_model.parts[-2]
     model_name = results_directory_model.parts[-1]
+    if 'fromR' in model_name:
+        import easypheno.model
+        easypheno.model.__all__.extend(['_bayesfromR', 'bayesAfromR', 'bayesBfromR', 'bayesCfromR'])
     datasplit, n_outerfolds, n_innerfolds, val_set_size_percentage, test_set_size_percentage, maf_perc = \
         helper_functions.get_datasplit_config_info_for_resultfolder(resultfolder=result_folder_name)
     nested_offset = -1 if 'nested' in datasplit else 0
@@ -174,6 +177,9 @@ def retrain_on_new_data(results_directory_model: str, data_dir: str, genotype_ma
     if not check_functions.check_exist_directories(list_of_dirs=[results_directory_model]):
         raise Exception("See output above. Problems with specified directories")
     model_name = results_directory_model.parts[-1]
+    if 'fromR' in model_name:
+        import easypheno.model
+        easypheno.model.__all__.extend(['_bayesfromR', 'bayesAfromR', 'bayesBfromR', 'bayesCfromR'])
     models = [model_name]
     data_dir = pathlib.Path(data_dir)
     # set save directory

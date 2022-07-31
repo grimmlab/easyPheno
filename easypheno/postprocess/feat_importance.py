@@ -64,8 +64,7 @@ def post_generate_feature_importances(results_directory_genotype_level: str, dat
                         print('working on ' + str(path))
                         for current_model in models:
                             print('Model: ' + current_model)
-                            if current_model in ['randomforest', 'xgboost', 'linearregression', 'elasticnet',
-                                                 'bayesB', 'blup']:
+                            if current_model in ['randomforest', 'xgboost', 'linearregression', 'elasticnet', 'blup']:
                                 current_directory = path.joinpath(current_model) if datasplit != 'nested-cv' \
                                     else path.joinpath('outerfold_' + str(outerfold), current_model)
                                 if os.path.exists(current_directory.joinpath('final_model_feature_importances.csv')):
