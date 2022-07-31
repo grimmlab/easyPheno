@@ -54,7 +54,7 @@ class Dataset:
             data_dir=data_dir, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
             test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage
         )
-        self.check_datasplit(n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds)
+        # self.check_datasplit(n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds)
 
     def load_match_raw_data(self, data_dir: pathlib.Path, genotype_matrix_name: str, do_snp_filters: bool = True) \
             -> (np.ndarray, np.ndarray, np.ndarray):
