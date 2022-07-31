@@ -211,7 +211,7 @@ def check_transform_format_genotype_matrix(data_dir: pathlib.Path, genotype_matr
     :param user_encoding: encoding specified by the user
     :param save_h5: save genotype in unified h5 format if True, default is True
 
-    :return: genotype matrix (raw encoded if present, 012 encoded otherwise) and sample ids
+    :return: genotype matrix (raw encoded if present, 012 encoded otherwise), sample ids and SNP ids
     """
     genotype_file = data_dir.joinpath(genotype_matrix_name)
     suffix = genotype_file.suffix
@@ -413,7 +413,7 @@ def check_and_load_phenotype_matrix(data_dir: pathlib.Path, phenotype_matrix_nam
 
 def genotype_phenotype_matching(X: np.array, X_ids: np.array, y: pd.DataFrame) -> tuple:
     """
-    Match the handed over genotype and phenotype matrix for the phenotype specified by the user
+    Match the handed over genotype and phenotype matrix for the phenotype specified by the user, i.e. compare sample ids
 
     :param X: genotype matrix in additive encoding
     :param X_ids: sample ids of genotype matrix
@@ -913,8 +913,8 @@ def make_stratified_cv(x: np.array, y: np.array, split_number: int) -> dict:
     for train_index, test_index in cv.split(x, y):
         np.random.shuffle(train_index)
         np.random.shuffle(test_index)
-        index_dict[f'fold_{fold}_train'] = train_index
-        index_dict[f'fold_{fold}_test'] = test_index
+        index_dict[f'fold_{fold}_train'] = x[train_index]
+        index_dict[f'fold_{fold}_test'] = x[test_index]
         fold += 1
     return index_dict
 
