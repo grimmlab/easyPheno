@@ -54,6 +54,7 @@ class Dataset:
             data_dir=data_dir, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
             test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage
         )
+        self.check_datasplit(n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds)
 
     def load_match_raw_data(self, data_dir: pathlib.Path, genotype_matrix_name: str, do_snp_filters: bool = True) \
             -> (np.ndarray, np.ndarray, np.ndarray):
@@ -123,9 +124,12 @@ class Dataset:
         """
         Check if snp_ids for specific maf percentage and encoding are saved in index_file.
         If not, save them in 'matched_data/final_snp_ids/{encoding}/maf_{maf_percentage}_snp_ids'
+
+        :param data_dir: data directory where the phenotype and genotype matrix are stored
+        :param maf_percentage: threshold for MAF filter as percentage value
         """
         print('Check if final snp_ids already exist in index_file for used encoding and maf percentage. '
-              'Save them if necessary.' )
+              'Save them if necessary.')
         with h5py.File(data_dir.joinpath(self.index_file_name), "a") as f:
             if 'final_snp_ids' not in f['matched_data']:
                 final = f.create_group('matched_data/final_snp_ids')
@@ -209,6 +213,35 @@ class Dataset:
                             'val': f[f'{outerfold_path}innerfold_{n}/val'][:]
                         }
         return datasplit_indices
+
+    def check_datasplit(self, n_outerfolds: int, n_innerfolds: int):
+        """
+        Check if the datasplit is valid. Raise Exceptions if train, val or test sets contain same samples.
+
+        :param n_outerfolds: number of outerfolds in datasplit_indices dictionary
+        :param n_innerfolds: number of folds in datasplit_indices dictionary
+        """
+
+        for j in range(n_outerfolds):
+            sample_test = set(self.sample_ids_full[self.datasplit_indices[f'outerfold_{j}']['test']])
+            for i in range(n_innerfolds):
+                sample_train = set(self.sample_ids_full[
+                                       self.datasplit_indices[f'outerfold_{j}'][f'innerfold_{i}']['train']])
+                sample_val = set(self.sample_ids_full[
+                                     self.datasplit_indices[f'outerfold_{j}'][f'innerfold_{i}']['val']])
+                if len(sample_train.intersection(sample_val)) != 0:
+                    raise Exception(
+                        'Something with the datasplit went wrong - the intersection of train and val samples is not '
+                        'empty. Please check again.')
+                if len(sample_train.intersection(sample_test)) != 0:
+                    raise Exception(
+                        'Something with the datasplit went wrong - the intersection of train and test samples is not '
+                        'empty. Please check again.')
+                if len(sample_val.intersection(sample_test)) != 0:
+                    raise Exception(
+                        'Something with the datasplit went wrong - the intersection of val and test samples is not '
+                        'empty. Please check again.')
+        print('Checked datasplit for all folds.')
 
     @staticmethod
     def get_index_file_name(genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str) -> str:
