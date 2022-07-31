@@ -89,6 +89,8 @@ def retrain_model_with_results_file(results_file_path: pathlib.Path, model_name:
             additional_attributes_dict['n_features'] = dataset.X_full.shape[1]
             additional_attributes_dict['width_onehot'] = dataset.X_full.shape[-1]
             additional_attributes_dict['early_stopping_point'] = best_params['early_stopping_point']
+            additional_attributes_dict['n_epochs'] = best_params['n_epochs']
+            additional_attributes_dict['batch_size'] = best_params['batch_size']
         model: _base_model.BaseModel = helper_functions.get_mapping_name_to_class()[model_name](
             task=task, optuna_trial=trial,
             n_outputs=len(np.unique(dataset.y_full)) if task == 'classification' else 1,
