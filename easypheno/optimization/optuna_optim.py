@@ -60,7 +60,7 @@ class OptunaOptim:
                  n_outerfolds: int, n_innerfolds: int, val_set_size_percentage: int, test_set_size_percentage: int,
                  maf_percentage: int, n_trials: int, save_final_model: bool, batch_size: int, n_epochs: int,
                  task: str, current_model_name: str, dataset: base_dataset.Dataset, models_start_time: str,
-                 intermediate_results_interval: int = 50):
+                 intermediate_results_interval: int = 10):
         self.current_model_name = current_model_name
         self.task = task
         self.dataset = dataset
@@ -248,8 +248,10 @@ class OptunaOptim:
                 # take mean of early stopping points of all innerfolds for refitting of final model
                 self.early_stopping_point = int(np.mean(early_stopping_points))
             # persist results
-            validation_results.to_csv(self.save_path.joinpath('temp/validation_results_trial' + str(trial.number) +
-                                                    '.csv'), sep=',', decimal='.', float_format='%.10f', index=False)
+            validation_results.to_csv(
+                self.save_path.joinpath('temp', 'validation_results_trial' + str(trial.number) + '.csv'),
+                sep=',', decimal='.', float_format='%.10f', index=False
+            )
             # delete previous results
             for file in self.save_path.joinpath('temp').iterdir():
                 if 'trial' + str(trial.number) not in str(file):
@@ -347,9 +349,9 @@ class OptunaOptim:
                                                   outerfold_info['test'])]
         start_process_time = time.process_time()
         start_realclock_time = time.time()
-        prefix = '' if len(self.study.trials) == self.user_input_params["n_trials"] else '/temp/'
+        postfix = '' if len(self.study.trials) == self.user_input_params["n_trials"] else 'temp'
         final_model = _model_functions.load_retrain_model(
-            path=self.save_path, filename=prefix + 'unfitted_model_trial' + str(self.study.best_trial.number),
+            path=self.save_path.joinpath(postfix), filename='unfitted_model_trial' + str(self.study.best_trial.number),
             X_retrain=X_retrain, y_retrain=y_retrain, early_stopping_point=self.early_stopping_point)
         y_pred_retrain = final_model.predict(X_in=X_retrain)
         no_trials = len(self.study.trials) - 1 if len(self.study.trials) % self.intermediate_results_interval != 0 \
@@ -385,18 +387,21 @@ class OptunaOptim:
             if self.user_input_params["save_final_model"]:
                 final_model.save_model(path=self.save_path, filename='final_retrained_model')
         else:
-            results_filename = '/temp/intermediate_after_' + str(len(self.study.trials) - 1) + '_test_results.csv'
+            results_filename = 'intermediate_after_' + str(len(self.study.trials) - 1) + '_test_results.csv'
             feat_import_filename = \
-                '/temp/intermediate_after_' + str(len(self.study.trials) - 1) + '_feat_importances.csv'
+                'intermediate_after_' + str(len(self.study.trials) - 1) + '_feat_importances.csv'
             shutil.copyfile(self.save_path.joinpath(self.current_model_name + '_runtime_overview.csv'),
-                            self.save_path.joinpath('/temp/intermediate_after_' + str(len(self.study.trials) - 1) + '_' +
-                            self.current_model_name + '_runtime_overview.csv'), )
+                            self.save_path.joinpath('temp',
+                                                    'intermediate_after_' + str(len(self.study.trials) - 1) + '_' +
+                                                    self.current_model_name + '_runtime_overview.csv'), )
         final_results.to_csv(
-            self.save_path.joinpath(results_filename), sep=',', decimal='.', float_format='%.10f', index=False
+            self.save_path.joinpath(postfix, results_filename),
+            sep=',', decimal='.', float_format='%.10f', index=False
         )
         if feat_import_df is not None:
             feat_import_df.to_csv(
-                self.save_path.joinpath(feat_import_filename), sep=',', decimal='.', float_format='%.10f', index=False
+                self.save_path.joinpath(postfix, feat_import_filename),
+                sep=',', decimal='.', float_format='%.10f', index=False
             )
         return eval_scores
 

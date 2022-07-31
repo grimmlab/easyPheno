@@ -1,7 +1,7 @@
-from . import _bayes_R
+from . import _bayesfromR
 
 
-class BayesB(_bayes_R.Bayes_R):
+class BayesB(_bayesfromR.Bayes_R):
     """
     Implementation of a class for Bayes B.
 
@@ -9,7 +9,7 @@ class BayesB(_bayes_R.Bayes_R):
 
         *Inherited attributes*
 
-        See :obj:`~easypheno.model._bayes_R.Bayes_R` for more information on the attributes.
+        See :obj:`~easypheno.model._bayesfromR.Bayes_R` for more information on the attributes.
     """
 
     def __init__(self, task: str, encoding: str = None):
