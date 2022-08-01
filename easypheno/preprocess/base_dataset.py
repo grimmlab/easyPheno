@@ -97,6 +97,10 @@ class Dataset:
                 raise Exception('Genotype in ' + self.encoding + ' encoding missing. Can not create required encoding. '
                                                                  'See documentation for help')
         X = raw_data_functions.get_matched_data(data=X, index=X_index)
+        # sanity checks
+        raw_data_functions.check_genotype_shape(X=X, sample_ids=sample_ids, snp_ids=snp_ids)
+        if raw_data_functions.check_duplicate_samples(sample_ids=sample_ids):
+            raise Exception('The genotype matrix contains duplicate samples. Please check again.')
         return X, np.reshape(y, (-1, 1)), np.reshape(sample_ids, (-1, 1)), snp_ids
 
     def maf_filter_raw_data(self, data_dir: pathlib.Path, maf_percentage: int):
