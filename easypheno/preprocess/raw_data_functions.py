@@ -662,8 +662,8 @@ def create_index_file(data_dir: pathlib.Path, genotype_matrix_name: str, phenoty
         for elem in param_nested:
             n = nest.create_group(helper_functions.get_subpath_for_datasplit(datasplit='nested-cv',
                                                                              datasplit_params=elem))
+            index_dict = check_train_test_splits(y=y, datasplit='nested-cv', datasplit_params=elem)
             for outer in range(elem[0]):
-                index_dict = check_train_test_splits(y=y, datasplit='nested-cv', datasplit_params=elem)
                 o = n.create_group(f'outerfold_{outer}')
                 o.create_dataset('test', data=index_dict[f'outerfold_{outer}_test'], chunks=True, compression="gzip")
                 for inner in range(elem[1]):
