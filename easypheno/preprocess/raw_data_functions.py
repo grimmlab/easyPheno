@@ -875,7 +875,7 @@ def make_nested_cv(y: np.array, outerfolds: int, innerfolds: int) -> dict:
 
     :return: index dictionary
     """
-    outer_cv = StratifiedKFold(n_splits=outerfolds)
+    outer_cv = StratifiedKFold(n_splits=outerfolds, shuffle=True)
     index_dict = {}
     outer_fold = 0
     for train_index, test_index in outer_cv.split(np.zeros(len(y)), y):
@@ -907,7 +907,7 @@ def make_stratified_cv(x: np.array, y: np.array, split_number: int) -> dict:
 
     :return: dictionary containing train and validation indices for each fold
     """
-    cv = StratifiedKFold(n_splits=split_number)
+    cv = StratifiedKFold(n_splits=split_number, shuffle=True)
     index_dict = {}
     fold = 0
     for train_index, test_index in cv.split(x, y):
