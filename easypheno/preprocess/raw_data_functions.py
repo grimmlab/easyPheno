@@ -243,6 +243,10 @@ def check_transform_format_genotype_matrix(data_dir: pathlib.Path, genotype_matr
         if save_h5:
             create_genotype_h5_file(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
                                     sample_ids=sample_ids, snp_ids=snp_ids, X=X)
+    # perform sanity checks
+    check_genotype_shape(X=X, sample_ids=sample_ids, snp_ids=snp_ids)
+    if check_duplicate_samples(sample_ids=sample_ids):
+        raise Exception('The genotype matrix contains duplicate samples. Please check again.')
     return X, sample_ids, snp_ids
 
 
@@ -349,6 +353,32 @@ def check_genotype_plink_file(data_dir: pathlib.Path, genotype_matrix_name: str)
     sample_ids = np.array(sample_ids)
     X_raw = np.array(X_raw)
     return sample_ids, snp_ids, X_raw
+
+
+def check_duplicate_samples(sample_ids: np.array) -> bool:
+    """
+    check if genotype matrix contain duplicate samples
+
+    :param sample_ids: sample ids of genotype matrix
+
+    :return: True if duplicates are present, False if not
+    """
+    return len(np.unique(sample_ids.flatten())) != len(sample_ids.flatten())
+
+
+def check_genotype_shape(X: np.array, sample_ids: np.array, snp_ids: np.array):
+    """
+    Check if number of samples in sample_ids and genotype matrix match
+    and if number of markers in snp_ids and genotype matrix match.
+
+    :param X: genotype matrix
+    :param sample_ids: vector containing sample ids of genotype
+    :param snp_ids:  vector containing SNP ids of genotype
+    """
+    if X.shape[0] != sample_ids.shape[0]:
+        raise Exception('Number of samples in genotype matrix and sample_ids do not match. Please check again.')
+    if X.shape[1] != snp_ids.shape[0]:
+        raise Exception('Number of markers in genotype matrix and snp_ids do not match. Please check again.')
 
 
 def create_genotype_h5_file(data_dir: pathlib.Path, genotype_matrix_name: str,
