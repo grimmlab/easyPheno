@@ -54,7 +54,10 @@ class Dataset:
             data_dir=data_dir, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
             test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage
         )
-        # self.check_datasplit(n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds)
+        self.check_datasplit(
+            n_outerfolds=1 if datasplit != 'nested-cv' else n_outerfolds,
+            n_innerfolds=1 if datasplit == 'train-val-test' else n_innerfolds
+        )
 
     def load_match_raw_data(self, data_dir: pathlib.Path, genotype_matrix_name: str, do_snp_filters: bool = True) \
             -> (np.ndarray, np.ndarray, np.ndarray):
@@ -221,26 +224,36 @@ class Dataset:
         :param n_outerfolds: number of outerfolds in datasplit_indices dictionary
         :param n_innerfolds: number of folds in datasplit_indices dictionary
         """
-
+        all_sample_ids_test = []
         for j in range(n_outerfolds):
-            sample_test = set(self.sample_ids_full[self.datasplit_indices[f'outerfold_{j}']['test']])
+            sample_ids_test = set(self.sample_ids_full[self.datasplit_indices[f'outerfold_{j}']['test']].flatten())
+            all_sample_ids_test.extend(sample_ids_test)
             for i in range(n_innerfolds):
-                sample_train = set(self.sample_ids_full[
-                                       self.datasplit_indices[f'outerfold_{j}'][f'innerfold_{i}']['train']])
-                sample_val = set(self.sample_ids_full[
-                                     self.datasplit_indices[f'outerfold_{j}'][f'innerfold_{i}']['val']])
-                if len(sample_train.intersection(sample_val)) != 0:
+                sample_ids_train = set(
+                    self.sample_ids_full[self.datasplit_indices[f'outerfold_{j}'][f'innerfold_{i}']['train']].flatten()
+                )
+                sample_ids_val = set(
+                    self.sample_ids_full[self.datasplit_indices[f'outerfold_{j}'][f'innerfold_{i}']['val']].flatten())
+                if len(sample_ids_train.intersection(sample_ids_val)) != 0:
                     raise Exception(
                         'Something with the datasplit went wrong - the intersection of train and val samples is not '
-                        'empty. Please check again.')
-                if len(sample_train.intersection(sample_test)) != 0:
+                        'empty. Please check again.'
+                    )
+                if len(sample_ids_train.intersection(sample_ids_test)) != 0:
                     raise Exception(
                         'Something with the datasplit went wrong - the intersection of train and test samples is not '
-                        'empty. Please check again.')
-                if len(sample_val.intersection(sample_test)) != 0:
+                        'empty. Please check again.'
+                    )
+                if len(sample_ids_val.intersection(sample_ids_test)) != 0:
                     raise Exception(
                         'Something with the datasplit went wrong - the intersection of val and test samples is not '
-                        'empty. Please check again.')
+                        'empty. Please check again.'
+                    )
+        if self.datasplit == 'nested-cv':
+            if len(set(all_sample_ids_test).intersection(set(self.sample_ids_full.flatten()))) \
+                    != len(set(self.sample_ids_full.flatten())):
+                raise Exception('Something with the datasplit went wrong - '
+                                'not all sample ids are in one of the outerfold test sets')
         print('Checked datasplit for all folds.')
 
     @staticmethod
