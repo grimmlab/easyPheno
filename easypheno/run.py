@@ -86,7 +86,6 @@ if __name__ == '__main__':
 
     for phenotype in phenotypes:
         args["phenotype"] = phenotype
-        optim_pipeline.run(**args)
         try:
             optim_pipeline.run(**args)
         except Exception as exc:
