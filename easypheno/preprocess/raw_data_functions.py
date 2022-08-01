@@ -511,9 +511,9 @@ def append_index_file(data_dir: pathlib.Path, genotype_matrix_name: str, phenoty
                     ('datasplits' in f and 'nested-cv' in f['datasplits'] and
                      f'{subpath}' not in f['datasplits/nested-cv']):
                 nest = f.create_group(f'datasplits/nested-cv/{subpath}')
+                index_dict = check_train_test_splits(y=f['matched_data/y'], datasplit='nested-cv',
+                                                     datasplit_params=[n_outerfolds, n_innerfolds])
                 for outer in range(n_outerfolds):
-                    index_dict = check_train_test_splits(y=f['matched_data/y'], datasplit='nested-cv',
-                                                         datasplit_params=[n_outerfolds, n_innerfolds])
                     o = nest.create_group(f'outerfold_{outer}')
                     o.create_dataset('test', data=index_dict[f'outerfold_{outer}_test'], chunks=True,
                                      compression="gzip")
