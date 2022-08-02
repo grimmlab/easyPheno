@@ -454,6 +454,13 @@ class OptunaOptim:
         # Iterate over outerfolds
         # (according to structure described in base_dataset.Dataset, only for nested-cv multiple outerfolds exist)
         helper_functions.set_all_seeds()
+        devices = tf.config.list_physical_devices('GPU')
+        if devices:
+            try:
+                for gpu in devices:
+                    tf.config.experimental.set_memory_growth(gpu, True)
+            except RuntimeError as e:
+                print(e)
         overall_results = {}
         for outerfold_name, outerfold_info in self.dataset.datasplit_indices.items():
             if self.dataset.datasplit == 'nested-cv':
