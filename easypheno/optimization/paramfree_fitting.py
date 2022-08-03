@@ -115,7 +115,7 @@ class ParamFreeFitting:
             y_pred_test = model.predict(X_in=X_test)
 
             feat_import_df = None
-            if self.current_model_name in ['blup', 'bayesA', 'bayesB', 'bayesC']:
+            if self.current_model_name in ['blup', 'bayesAfromR', 'bayesBfromR', 'bayesCfromR']:
                 feat_import_df = self.get_feature_importance(model=model)
             # Evaluate and save results
             eval_scores = \
