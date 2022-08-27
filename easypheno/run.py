@@ -81,6 +81,9 @@ if __name__ == '__main__':
     parser.add_argument("-ep", "--n_epochs", type=int, default=None,
                         help="Only relevant for neural networks: define the number of epochs. If nothing is specified,"
                              "it will be considered as a hyperparameter for optimization")
+
+    parser.add_argument("-ofn", "--outerfold_number_to_run", type=int, default=None)
+
     args = vars(parser.parse_args())
     phenotypes = args["phenotype"]
 

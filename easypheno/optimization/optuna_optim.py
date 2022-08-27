@@ -60,7 +60,7 @@ class OptunaOptim:
                  n_outerfolds: int, n_innerfolds: int, val_set_size_percentage: int, test_set_size_percentage: int,
                  maf_percentage: int, n_trials: int, save_final_model: bool, batch_size: int, n_epochs: int,
                  task: str, current_model_name: str, dataset: base_dataset.Dataset, models_start_time: str,
-                 intermediate_results_interval: int = 50):
+                 intermediate_results_interval: int = 50, outerfold_number_to_run: int = None):
         self.current_model_name = current_model_name
         self.task = task
         self.dataset = dataset
@@ -464,6 +464,9 @@ class OptunaOptim:
         overall_results = {}
         for outerfold_name, outerfold_info in self.dataset.datasplit_indices.items():
             if self.dataset.datasplit == 'nested-cv':
+                if self.user_input_params["outerfold_number_to_run"] is not None and \
+                        outerfold_name != 'outerfold_' + str(self.user_input_params["outerfold_number_to_run"]):
+                    continue
                 # Only print outerfold info for nested-cv as it does not apply for the other splits
                 print("## Starting Optimization for " + outerfold_name + " ##")
                 #end_ind = [m.end(0) for m in re.finditer(pattern='/', string=self.base_path)][-2]
