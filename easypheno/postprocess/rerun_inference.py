@@ -133,8 +133,14 @@ if __name__ == "__main__":
         )
         key = 'outerfold_' + str(fold)
         best_params = model.optuna_trial.params
+        runtime_metrics = {
+            'process_time_mean': 0, 'process_time_std': 0,
+            'process_time_max': 0, 'process_time_min': 0,
+            'real_time_mean': 0, 'real_time_std': 0,
+            'real_time_max': 0, 'real_time_min': 0
+        }
         overall_results[key] = {'best_params': best_params, 'eval_metrics': eval_scores,
-                                'runtime_metrics': np.nan}
+                                'runtime_metrics': runtime_metrics}
     model_overview = {model_name: overall_results}
     path_overview_file = new_results_dir.parent.parent.joinpath(
         'Results_overview_' + '_'.join([model_name]) + '.csv')
