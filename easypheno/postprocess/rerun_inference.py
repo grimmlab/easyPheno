@@ -138,3 +138,4 @@ if __name__ == "__main__":
     model_overview = {model_name: overall_results}
     path_overview_file = new_results_dir.parent.parent.joinpath(
         'Results_overview_' + '_'.join([model_name]) + '.csv')
+    helper_functions.save_model_overview_dict(model_overview=model_overview, save_path=path_overview_file)
