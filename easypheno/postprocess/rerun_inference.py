@@ -34,13 +34,14 @@ if __name__ == "__main__":
     phenotype_matrix = args['phenotype_matrix']
     save_dir = args["save_dir"]
     results_directory_model = args['results_dir_model']
+    str_results_dir_model = args['results_dir_model']
     overall_results = {}
     for fold in range(3):
         helper_functions.set_all_seeds(42)
         results_directory_model = \
-            pathlib.Path(results_directory_model[:results_directory_model.rindex('outerfold')] +
+            pathlib.Path(str_results_dir_model[:str_results_dir_model.rindex('outerfold')] +
                          'outerfold_' + str(fold) +
-                         results_directory_model[results_directory_model.rindex('outerfold') + 11:])
+                         str_results_dir_model[str_results_dir_model.rindex('outerfold') + 11:])
 
         data_dir = pathlib.Path(data_dir)
         save_dir = pathlib.Path(save_dir)
