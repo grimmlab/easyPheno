@@ -1,6 +1,6 @@
 Data Guide
 ===================
-To run easyPheno on your data, you need to provide a genotype file and a corresponding phenotype file both stored in the same data directory.
+To run easyPheno on your data, you need to provide a fully-imputed genotype file and a corresponding phenotype file both stored in the same data directory.
 easyPheno is designed to work with several genotype and phenotype file types.
 
 Genotype files
