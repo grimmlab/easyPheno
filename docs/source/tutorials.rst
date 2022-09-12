@@ -1,29 +1,6 @@
 Tutorials
 =====================================
 
-..
-    Basics
-    - Workflow mit Docker anhand Beispieldaten
-    - Workflow als Modul mit Jupyter Notebook und Beispieldaten
-    - Data structure
-
-    Advanced
-    - Code Walktrough
-    - How to adjust hyperparameter ranges and hyperparameters for your optimization
-    - How to integrate your own model (-> Template model bauen)
-    - Results Analyse
-    - Simulation
-
-    Videos:
-    - Instlalation über Docker
-    - Workflow docker
-    - Workflow jupyter
-    - Code Walkthrough
-    - How to adjust hyperparmas
-    - How to integrate your own model
-    - Data structure
-..
-
 HowTo: Run easyPheno using Docker
 ------------------------------------------
 We assume that you succesfully did all steps described in :ref:`Docker Workflow`: to setup easyPheno using Docker.

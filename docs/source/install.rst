@@ -8,6 +8,7 @@ easyPheno offers two ways of using it:
 The whole framework was developed and tested using `Ubuntu 20.04 <https://releases.ubuntu.com/20.04/>`_. Consequently,
 the subsequent guide is mainly written with regard to `Ubuntu 20.04 <https://releases.ubuntu.com/20.04/>`_.
 The framework should work with Windows and Mac as well, but we do not officially provide support for these platforms.
+If you do not work on Ubuntu, we highly recommend the :ref:`Docker Workflow`
 
 Besides the written guides, we also provide some tutorial videos which are embedded below.
 
@@ -58,6 +59,11 @@ Setup
     - You can restrict the number of cpus using the option ``cpuset-cpus CPU_INDEX_START-CPU_INDEX_STOP``.
     - Specify a gpu device using ``--gpus device=DEVICE_NUMBER`` if you want to use GPU support.
 
+    Let's have a look at an example. We assume hat you created a Docker image called `ep-image`, your repository and data is placed in (subfolders of) `/myhome/`, you want to save your results to `/myhome/` (so `/myhome/` is the only directory you need to mount in your container), you only want to use CPUs 0 to 9 and GPU 0 and you want to call your container `ep_container`. Then you have to run the following command:
+
+    .. code-block::
+
+        docker run -it -v /myhome/:/myhome_in_my_container/ --cpuset-cpus 0-9 --gpus device=0 --name ep_container ep_image
 
 Your setup is finished! Go to :ref:`HowTo: Run easyPheno using Docker` to see how you can now use easyPheno!
 
@@ -79,7 +85,7 @@ easyPheno can be installed via ``pip`` and used as a common Python library.
 
 The pipeline was developed and tested with `Python 3.8 <https://www.python.org/downloads/release/python-3813/>`_ and `Ubuntu 20.04 <https://releases.ubuntu.com/20.04/>`_.
 The framework should work with Windows and Mac as well, but we do not officially provide support for these platform.
-We neither officially support other Python versions, however easyPheno might run as well.
+We neither officially support other Python versions, however easyPheno might run as well. If these requirements are not fulfilled, we recommend the :ref:`Docker Workflow`.
 
 
 Just install easyPheno via ``pip``:
