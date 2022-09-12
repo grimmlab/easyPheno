@@ -1,31 +1,10 @@
 Tutorials
 =====================================
+On the following pages, we show several tutorials for the usage of easyPheno - often supported by videos.
 
-..
-    Basics
-    - Workflow mit Docker anhand Beispieldaten
-    - Workflow als Modul mit Jupyter Notebook und Beispieldaten
-    - Data structure
-
-    Advanced
-    - Code Walktrough
-    - How to adjust hyperparameter ranges and hyperparameters for your optimization
-    - How to integrate your own model (-> Template model bauen)
-    - Results Analyse
-    - Simulation
-
-    Videos:
-    - Instlalation über Docker
-    - Workflow docker
-    - Workflow jupyter
-    - Code Walkthrough
-    - How to adjust hyperparmas
-    - How to integrate your own model
-    - Data structure
-..
 
 HowTo: Run easyPheno using Docker
-------------------------------------------
+---------------------------
 We assume that you succesfully did all steps described in :ref:`Docker Workflow`: to setup easyPheno using Docker.
 
 You are at the **root directory within your Docker container**, i.e. after step 5 of the setup at :ref:`Docker Workflow`:.
@@ -54,11 +33,28 @@ to start it in interactive mode again. If you did not create a container yet, go
         python3 -m easyPheno.run --help
 
 Feel free to test easyPheno, e.g. with other prediction models.
-If you want to start using your own data, please carefully read our :ref:`Data Guide`: to make sure that your data fulfills all requirements.
+If you want to start using your own data, please carefully read our :ref:`Data Guide`: to ensure that your data fulfills all requirements.
 
 HowTo: Run easyPheno as a pip package
-------------------------------------------
+----------------------
+
+HowTo: Summarize prediction results with easyPheno
+-----------------------
 
 
+Advanced Topics
+--------------------
+
+Code Walkthrough Video
+^^^^^^^^^^^^^^^^^^^^^^^
+
+HowTo: Adjust existing prediction models and their hyperparameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+HowTo: Integrate your own prediction model
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+HowTo: Create synthetic phenotype data
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 
