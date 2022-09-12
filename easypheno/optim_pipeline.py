@@ -14,7 +14,7 @@ def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: s
         datasplit: str = 'nested-cv', n_outerfolds: int = 5, n_innerfolds: int = 5,
         test_set_size_percentage: int = 20, val_set_size_percentage: int = 20,
         models: list = None, n_trials: int = 100, save_final_model: bool = False,
-        batch_size: int = 32, n_epochs: int = 100000):
+        batch_size: int = 32, n_epochs: int = 100000, outerfold_number_to_run: int = None):
     """
     Run the whole optimization pipeline
 
@@ -35,6 +35,7 @@ def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: s
     :param save_final_model: specify if the final model should be saved
     :param batch_size: batch size for neural network models
     :param n_epochs: number of epochs for neural network models
+    :param outerfold_number_to_run: outerfold to run in case you do not want to run all
     """
     if models is None:
         models = ['xgboost']
@@ -67,7 +68,9 @@ def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: s
     if len(models_to_optimize) > 1:
         models_to_optimize = helper_functions.sort_models_by_encoding(models_list=models_to_optimize)
     model_overview = {}
-    models_start_time = '+'.join(models_to_optimize) + '_' + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    only_ofn_postfix = '' if outerfold_number_to_run is None else 'Outerfold' + str(outerfold_number_to_run)
+    models_start_time = \
+        '+'.join(models_to_optimize) + '_' + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + only_ofn_postfix
     user_encoding = encoding
     for optim_run, current_model_name in enumerate(models_to_optimize):
         encoding = user_encoding if user_encoding is not None \
@@ -110,7 +113,7 @@ def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: s
                 val_set_size_percentage=val_set_size_percentage, test_set_size_percentage=test_set_size_percentage,
                 maf_percentage=maf_percentage, n_trials=n_trials, save_final_model=save_final_model,
                 batch_size=batch_size, n_epochs=n_epochs, task=task, models_start_time=models_start_time,
-                current_model_name=current_model_name, dataset=dataset)
+                current_model_name=current_model_name, dataset=dataset, outerfold_number_to_run=outerfold_number_to_run)
             print('### Starting Optuna Optimization for ' + current_model_name + ' ###')
             overall_results = optim_run.run_optuna_optimization()
             print('### Finished Optuna Optimization for ' + current_model_name + ' ###')
@@ -118,5 +121,6 @@ def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: s
     print('# Optimization runs done for models ' + str(models_to_optimize))
     print('Results overview on the test set(s)')
     pprint.PrettyPrinter(depth=4).pprint(model_overview)
-    path_overview_file = optim_run.base_path.parent.joinpath('Results_overview_' + '_'.join(models) + '.csv')
+    path_overview_file = optim_run.base_path.parent.joinpath(
+        'Results_overview_' + '_'.join(models) + only_ofn_postfix + '.csv')
     helper_functions.save_model_overview_dict(model_overview=model_overview, save_path=path_overview_file)

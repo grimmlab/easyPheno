@@ -4,7 +4,7 @@ RUN apt-get install -y r-base
 RUN apt-get install -y vim
 RUN apt-get install -y git
 RUN mkdir /configfiles
-COPY requirements.txt /configfiles
-RUN pip3 install -r /configfiles/requirements.txt
+COPY docker_requirements.txt /configfiles
+RUN pip3 install -r /configfiles/docker_requirements.txt
 RUN pip3 install torch==1.11.0+cu113 -f https://download.pytorch.org/whl/torch_stable.html
 RUN Rscript -e "install.packages('BGLR')"
