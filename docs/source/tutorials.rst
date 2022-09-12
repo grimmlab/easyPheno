@@ -1,8 +1,10 @@
 Tutorials
 =====================================
+On the following pages, we show several tutorials for the usage of easyPheno - often supported by videos.
+
 
 HowTo: Run easyPheno using Docker
-------------------------------------------
+---------------------------
 We assume that you succesfully did all steps described in :ref:`Docker Workflow`: to setup easyPheno using Docker.
 
 You are at the **root directory within your Docker container**, i.e. after step 5 of the setup at :ref:`Docker Workflow`:.
@@ -34,8 +36,25 @@ Feel free to test easyPheno, e.g. with other prediction models.
 If you want to start using your own data, please carefully read our :ref:`Data Guide`: to ensure that your data fulfills all requirements.
 
 HowTo: Run easyPheno as a pip package
-------------------------------------------
+----------------------
+
+HowTo: Summarize prediction results with easyPheno
+-----------------------
 
 
+Advanced Topics
+--------------------
+
+Code Walkthrough Video
+^^^^^^^^^^^^^^^^^^^^^^^
+
+HowTo: Adjust existing prediction models and their hyperparameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+HowTo: Integrate your own prediction model
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+HowTo: Create synthetic phenotype data
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 
