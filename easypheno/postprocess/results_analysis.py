@@ -51,6 +51,9 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
                 )
                 overview_df = None
                 print('----- Datasplit pattern ' + pattern + ' -----')
+                print('Got results for ' + str(len([model for path in phenotype_folder.glob(pattern + '*')
+                                                    for model in path.parts[-1].split('_')[3].split('+')])) +
+                      ' models.')
                 for path in phenotype_folder.glob(pattern + '*'):
                     models = path.parts[-1].split('_')[3].split('+')
                     for current_model in models:
