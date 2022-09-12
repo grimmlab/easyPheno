@@ -59,6 +59,7 @@ Setup
     - You can restrict the number of cpus using the option ``cpuset-cpus CPU_INDEX_START-CPU_INDEX_STOP``.
     - Specify a gpu device using ``--gpus device=DEVICE_NUMBER`` if you want to use GPU support.
 
+
     Let's have a look at an example. We assume hat you created a Docker image called `ep-image`, your repository and data is placed in (subfolders of) `/myhome/`, you want to save your results to `/myhome/` (so `/myhome/` is the only directory you need to mount in your container), you only want to use CPUs 0 to 9 and GPU 0 and you want to call your container `ep_container`. Then you have to run the following command:
 
     .. code-block::
