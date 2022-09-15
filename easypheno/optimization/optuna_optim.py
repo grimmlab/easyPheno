@@ -54,6 +54,7 @@ class OptunaOptim:
     :param dataset: dataset to use for optimization run
     :param models_start_time: optimized models and starting time of the optimization run for saving purposes
     :param intermediate_results_interval: number of trials after which intermediate results will be saved
+    :param outerfold_number_to_run: outerfold to run in case you do not want to run all
     """
 
     def __init__(self, save_dir: pathlib.Path, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
