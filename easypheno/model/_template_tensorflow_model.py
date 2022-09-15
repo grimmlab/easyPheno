@@ -11,11 +11,10 @@ class TemplateTensorflowModel(_tensorflow_model.TensorflowModel):
 
     Steps you have to do to add your own model:
         1. Copy this template file and rename it according to your model (will be the name to call it later on on the command line)
-        2. Rename the class and add it to :obj:`~easypheno.model.__init__.py`
+        2. Rename the class and add it to *easypheno.model.__init__.py*
         3. Adjust the class attributes if necessary
         4. Define your model in the function *define_model()*
-        5. Define the hyperparameters and ranges you want to use for optimization in *define_hyperparams_to_tune()*.
-            CAUTION: some are already defined in :obj:`~easypheno.model._tensorflow_model.TensorflowModel.common_hyperparams()`
+        5. Define the hyperparameters and ranges you want to use for optimization in *define_hyperparams_to_tune()*. CAUTION: some are already defined in :obj:`~easypheno.model._tensorflow_model.TensorflowModel.common_hyperparams()`
             and suggested in :obj:`~easypheno.model._tensorflow_model.TensorflowModel.__init__.py`. You can directly use them here.
         6. Test your new prediction model using toy data
     """
