@@ -14,8 +14,9 @@ class TemplateTorchModel(_torch_model.TorchModel):
         2. Rename the class and add it to *easypheno.model.__init__.py*
         3. Adjust the class attributes if necessary
         4. Define your model in the function *define_model()*
-        5. Define the hyperparameters and ranges you want to use for optimization in *define_hyperparams_to_tune()*.
-        | CAUTION: some are already defined in :obj:`~easypheno.model._torch_model.TorchModel.common_hyperparams()`, which you can directly use here. Some of them are already suggested in :obj:`~easypheno.model._torch_model.TorchModel`.
+        5. | Define the hyperparameters and ranges you want to use for optimization in *define_hyperparams_to_tune()*.
+                | CAUTION: some are already defined in :obj:`~easypheno.model._torch_model.TorchModel.common_hyperparams()`, which you can directly use here.
+                | Some of them are already suggested in :obj:`~easypheno.model._torch_model.TorchModel`.
         6. Test your new prediction model using toy data
     """
     standard_encoding = ...
