@@ -41,7 +41,7 @@ templates_path = ['_templates']
 
 html_theme = 'sphinx_rtd_theme'
 
-html_theme_options = {"logo_only": True}
+html_theme_options = {"logo_only": True, 'navigation_depth': 5, 'titles_only': False}
 
 html_logo = "../image/Logo_easyPheno_Text.png"
 
@@ -54,3 +54,6 @@ autoapi_type = 'python'
 autoapi_dirs = ['../../']
 autodoc_typehints = 'description'
 autoapi_ignore = ['*conf*', '*setup*', '*run*']
+
+autoapi_add_toctree_entry = False
+autoapi_template_dir = '_autoapi_templates'
