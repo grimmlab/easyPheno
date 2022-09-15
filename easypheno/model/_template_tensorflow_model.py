@@ -15,7 +15,7 @@ class TemplateTensorflowModel(_tensorflow_model.TensorflowModel):
         3. Adjust the class attributes if necessary
         4. Define your model in the function *define_model()*
         5. Define the hyperparameters and ranges you want to use for optimization in *define_hyperparams_to_tune()*.
-            | CAUTION: some are already defined in :obj:`~easypheno.model._tensorflow_model.TensorflowModel.common_hyperparams()`, which you can directly use here. Some of them are already suggested in :obj:`~easypheno.model.tensorflow_model.TensorflowModel`.
+        | CAUTION: some are already defined in :obj:`~easypheno.model._tensorflow_model.TensorflowModel.common_hyperparams()`, which you can directly use here. Some of them are already suggested in :obj:`~easypheno.model.tensorflow_model.TensorflowModel`.
         6. Test your new prediction model using toy data
     """
     standard_encoding = ...
