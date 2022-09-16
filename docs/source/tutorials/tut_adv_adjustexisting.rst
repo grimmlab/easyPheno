@@ -1,7 +1,5 @@
 HowTo: Adjust existing prediction models and their hyperparameters
 ==========================================================================
-Besides this written information, we recorded the video tutorial below with similar content.
-
 Every easyPheno prediction model based on `BaseModel <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/_base_model.py>`_
 needs to implement several methods. Most of them are already implemented in `SklearnModel <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/_sklearn_model.py>`_,
 `TorchModel <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/_torch_model.py>`_ and `TensorflowModel <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/_tensorflow_model.py>`_.
@@ -14,6 +12,8 @@ We already integrated several predictions models,
 e.g. `LinearRegression <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/linearregression.py>`_
 and `Mlp <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/mlp.py>`_, which we will use
 for demonstration purposes in this HowTo.
+
+Besides the written documentation, we recorded the tutorial video shown below with similar content.
 
 Adjust prediction model
 """"""""""""""""""""""""""
