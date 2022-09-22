@@ -9,8 +9,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-odd", "--old_data_dir", type=str, default=None,
                         help="Provide the full path of the old data directory (that contains the geno- and phenotype "
-                             "files as well as the index file the model was trained on). "
-                             "Only needed if the final model was not saved.")
+                             "files as well as the index file the model was trained on).")
     parser.add_argument("-ndd", "--new_data_dir", type=str,
                         help="Provide the full path of the new data directory that contains the geno- and phenotype "
                              "files you want to predict on")

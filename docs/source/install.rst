@@ -10,7 +10,7 @@ the subsequent guide is mainly written with regard to `Ubuntu 20.04 <https://rel
 The framework should work with Windows and Mac as well, but we do not officially provide support for these platforms.
 If you do not work on Ubuntu, we highly recommend the :ref:`Docker Workflow`.
 
-Besides the written guides, we also provide some tutorial videos which are embedded below.
+Besides the written guides, we also provide some tutorial videos which are embedded in the subpages.
 
 .. toctree::
     :maxdepth: 4

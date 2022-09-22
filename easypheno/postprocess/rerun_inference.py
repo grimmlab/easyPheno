@@ -12,7 +12,7 @@ from ..evaluation import eval_metrics
 
 if __name__ == "__main__":
     """
-    Run to apply the specified model on a dataset containing new samples.
+    Rerun inference using best hyperparameters on already-used data
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("-dd", "--data_dir", type=str, default=None,

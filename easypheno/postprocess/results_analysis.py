@@ -20,8 +20,8 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
 
         - at genotype-folder level within results directories (the one that was specified):
 
-            - Results_summary*DATASPLIT-PATTERN*.xlsx: .xlsx-file containing an overview of the performance of each model on each phenotype used for this genotype matrix with the specified datasplit-maf pattern
-            - Results_summary*DATASPLIT-PATTERN*.csv: only overview sheet of Results_summary*DATASPLIT-PATTERN*.xlsx
+            - Results_summary_all_phenotypes*DATASPLIT-PATTERN*.xlsx: .xlsx-file containing an overview of the performance of each model on each phenotype used for this genotype matrix with the specified datasplit-maf pattern
+            - Results_summary_all_phenotypes*DATASPLIT-PATTERN*.csv: only overview sheet of Results_summary*DATASPLIT-PATTERN*.xlsx
 
     :param results_directory_genotype_level: results directory at the level of the name of the genotype matrix
     """
