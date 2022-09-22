@@ -1,9 +1,9 @@
 HowTo: Integrate your own prediction model
 ==================================================
 In this tutorial, we will show you how to integrate your own new prediction model into easyPheno using an example.
-We recommend to watch the :ref:`Code Walkthrough Video` first for a better understanding of easyPheno's structure.
+We recommend to watch the :ref:`Code Walkthrough Video` first for a better understanding of easyPheno's structure first.
 
-We further recorded a video for this tutorial as well, which is embedded below.
+We further recorded a :ref:`Video tutorial` on how to integrate your own prediction model as well, which is embedded below .
 
 Overview
 """"""""""""""
@@ -12,9 +12,10 @@ The design of the model class makes easyPheno easy extendable with new predictio
 .. image:: https://raw.githubusercontent.com/grimmlab/easyPheno/main/docs/image/classoverview.png
     :width: 600
     :alt: structure of easypheno.model
+    :align: center
 
-All prediction models are either
-based on `BaseModel <https://github.com/grimmlab/easyPheno/blob/b9b5d5e588f4201f84eca8617601081e8d034f92/easypheno/model/_base_model.py>`_ or
+|
+All prediction models are either based on `BaseModel <https://github.com/grimmlab/easyPheno/blob/b9b5d5e588f4201f84eca8617601081e8d034f92/easypheno/model/_base_model.py>`_ or
 `ParamFreeBaseModel <https://github.com/grimmlab/easyPheno/blob/b9b5d5e588f4201f84eca8617601081e8d034f92/easypheno/model/_param_free_base_model.py>`_
 in case your model does not contain hyperparameters for optimization (or you do not want to optimize any).
 These two base models define some methods that are common for all prediction models as well as all methods that each prediction model needs to implement.
