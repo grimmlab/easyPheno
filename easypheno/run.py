@@ -19,21 +19,21 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Input Params #
     parser.add_argument("-dd", "--data_dir", type=str,
-                        default='/myhome/data/',
+                        default='/myhome/easyPheno/tutorials/tutorial_data/',
                         help="Provide the full path of your data directory (that contains the geno- and phenotype "
                              "files).")
     parser.add_argument("-sd", "--save_dir", type=str, default='/myhome/',
                         help="Provide the full path of the directory in which you want to save your results. "
                              "Default is same as data_dir")
-    parser.add_argument("-gm", "--genotype_matrix", type=str, default='ld_pruned_arabidopsis_10k.h5',
+    parser.add_argument("-gm", "--genotype_matrix", type=str, default='x_matrix.csv',
                         help="specify the name (including data type suffix) of the genotype matrix to be used. "
                              "Needs to be located in the specified data_dir."
                              "For more info regarding the required format see our documentation.")
-    parser.add_argument("-pm", "--phenotype_matrix", type=str, default='Simulation_10k_1-4.csv',
+    parser.add_argument("-pm", "--phenotype_matrix", type=str, default='y_matrix.csv',
                         help="specify the name (including data type suffix) of the phenotype matrix to be used. "
                               "Needs to be located in the specified data_dir."
                              "For more info regarding the required format see our documentation.")
-    parser.add_argument("-ph", "--phenotype", nargs='+', type=str, default=['FT10'],
+    parser.add_argument("-ph", "--phenotype", nargs='+', type=str, default=['continuous_values'],
                         help="specify the name of the phenotype to be predicted. "
                              "Multiple phenotypes can also be chosen if they are in the same phenotype matrix. "
                              "Just name the phenotypes, e.g. --phenotype FT10 FT16")
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     parser.add_argument("-valperc", "--val_set_size_percentage", type=int, default=20,
                         help="specify the size of the validation set in percentage. "
                              "Standard is 20, only relevant for 'train-val-test'")
-    parser.add_argument("-of", "--n_outerfolds", type=int, default=3,
+    parser.add_argument("-of", "--n_outerfolds", type=int, default=5,
                         help="specify the number of outerfolds to use for 'nested_cv'"
                              "Standard is 5, only relevant for 'nested_cv'")
     parser.add_argument("-folds", "--n_innerfolds", type=int, default=5,
@@ -67,7 +67,7 @@ if __name__ == '__main__':
                              "Multiple models can be selected by just naming multiple model names, "
                              "e.g. --models mlp xgboost. "
                              "The following are available: " + str(helper_functions.get_list_of_implemented_models()))
-    parser.add_argument("-tr", "--n_trials", type=int, default=200,
+    parser.add_argument("-tr", "--n_trials", type=int, default=10,
                         help="number of trials for optuna")
     parser.add_argument("-sf", "--save_final_model", type=lambda x: (str(x).lower() in ['true', '1', 'yes']),
                         default=False,
@@ -82,7 +82,9 @@ if __name__ == '__main__':
                         help="Only relevant for neural networks: define the number of epochs. If nothing is specified,"
                              "it will be considered as a hyperparameter for optimization")
 
-    parser.add_argument("-ofn", "--outerfold_number_to_run", type=int, default=None)
+    parser.add_argument("-ofn", "--outerfold_number_to_run", type=int, default=None,
+                        help="Use this parameter in case you only want to run the optimization for one outer fold, "
+                             "counting starts at 0")
 
     args = vars(parser.parse_args())
     phenotypes = args["phenotype"]

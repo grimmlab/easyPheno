@@ -17,7 +17,7 @@ Besides the written documentation, we recorded the tutorial video shown below wi
 
 Adjust prediction model
 """"""""""""""""""""""""""
-If you want to adjust the prediction model itself, you can change its definition in its implementation of *define_model()*.
+If you want to adjust the prediction model itself, you can change its definition in its implementation of ``define_model()``.
 Let's discuss an example using `LinearRegression <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/linearregression.py>`_:
 
     .. code-block::
@@ -40,8 +40,8 @@ Let's discuss an example using `LinearRegression <https://github.com/grimmlab/ea
                 alpha = self.suggest_hyperparam_to_optuna('alpha')
                 return sklearn.linear_model.ElasticNet(alpha=alpha, l1_ratio=l1_ratio, max_iter=10000, random_state=42)
 
-You can change the *penalty* term that is actually used by setting the related variable to a fixed value or suggest it as a hyperparameter for tuning (see below for information on how to add or adjust a hyperparameter or its range).
-The same applies for further hyperparameters such as *reg_c* and *alpha*. Beyond that, you could also adjust currently fixed parameters such as *max_iter*.
+You can change the ``penalty`` term that is actually used by setting the related variable to a fixed value or suggest it as a hyperparameter for tuning (see below for information on how to add or adjust a hyperparameter or its range).
+The same applies for further hyperparameters such as ``reg_c`` and ``alpha``. Beyond that, you could also adjust currently fixed parameters such as ``max_iter``.
 
 Another example can be found in `Mlp <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/mlp.py>`_:
 
@@ -65,11 +65,11 @@ Another example can be found in `Mlp <https://github.com/grimmlab/easyPheno/blob
             model.append(torch.nn.Linear(in_features=in_features, out_features=self.n_outputs))
             return torch.nn.Sequential(*model)
 
-Currently, the model consists of *n_layers* of a sequence of a Linear, BatchNorm and Dropout layer, finally followed by a Linear output layer.
-You can easily adjust this by e.g. adding further layers or setting *n_layers* to a fixed value.
-Furthermore, the dropout rate *p* is optimized during hyperparameter search and the same rate is used for each Dropout layer.
+Currently, the model consists of ``n_layers`` of a sequence of a Linear, BatchNorm and Dropout layer, finally followed by a Linear output layer.
+You can easily adjust this by e.g. adding further layers or setting ``n_layers`` to a fixed value.
+Furthermore, the dropout rate ``p`` is optimized during hyperparameter search and the same rate is used for each Dropout layer.
 You could set this to a fixed value or suggest a different value for each Dropout layer
-(e.g. by suggesting it via *self.suggest_hyperparam_to_optuna('dropout')* within the for-loop).
+(e.g. by suggesting it via ``self.suggest_hyperparam_to_optuna('dropout')`` within the ``for``-loop).
 Some hyperparameters are already defined in `TorchModel.common_hyperparams() <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/_torch_model.py#L196>`_ ,which you can directly use here.
 Furthermore, some of them are already suggested in `TorchModel <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/_torch_model.py>`_.
 
@@ -81,10 +81,10 @@ Adjust hyperparameters
 Besides changing the model definition, you can adjust the hyperparameters that are optimized as well as their ranges.
 To set a hyperparameter to a fixed value, comment its suggestion and directly set a value, as described above.
 If you want to optimize a hyperparameter which is currently set to a fixed value, do it the other way round.
-If the hyperparameter is not yet defined in *define_hyperparams_to_tune()*
-(or *common_hyperparams()* in case of `TorchModel <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/_torch_model.py>`_
+If the hyperparameter is not yet defined in ``define_hyperparams_to_tune()``
+(or ``common_hyperparams()`` in case of `TorchModel <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/_torch_model.py>`_
 and `TensorflowModel <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/_tensorflow_model.py>`_),
-you have to add it to *define_hyperparams_to_tune()*.
+you have to add it to ``define_hyperparams_to_tune()``.
 
 Let's have a look at an example using `Mlp <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/mlp.py>`_:
 
@@ -159,7 +159,7 @@ Let's have a look at an example using `Mlp <https://github.com/grimmlab/easyPhen
 
 There are multiple options to define a hyperparameter in easyPheno, see `define_hyperparams_to_tune() <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/_base_model.py#L88>`_ for more information regarding the format.
 In the example above, three parameters are optimized depending on the number of features, besides the ones which are defined in the parent class TorchModel in `common_hyperparams() <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/_torch_model.py#L196>`_.
-The method has to return a dictionary. So if you want to add a further hyperparameter, you need to add it to the dictionary with its name as the key and a dictionary defining its characteristics such as the *datatype* and *lower_bound* in case of a float or int as the value.
+The method has to return a dictionary. So if you want to add a further hyperparameter, you need to add it to the dictionary with its name as the key and a dictionary defining its characteristics such as the ``datatype`` and ``lower_bound`` in case of a float or int as the value.
 If you only want to change the range of an existing hyperparameter, you can just change the values in this method.
 
 
