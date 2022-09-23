@@ -7,5 +7,6 @@ On the following pages, we show several tutorials for the usage of easyPheno - o
 
     tutorials/tut_run_docker
     tutorials/tut_run_pip
+    tutorials/HowTo: Use easyPheno as a pip package.ipynb
     tutorials/tut_sum_results
     tutorials/tut_adv
