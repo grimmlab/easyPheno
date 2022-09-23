@@ -19,7 +19,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Input Params #
     parser.add_argument("-dd", "--data_dir", type=str,
-                        default='/myhome/easyPheno/tutorials/tutorial_data/',
+                        default='/myhome/easyPheno/docs/source/tutorials/tutorial_data/',
                         help="Provide the full path of your data directory (that contains the geno- and phenotype "
                              "files).")
     parser.add_argument("-sd", "--save_dir", type=str, default='/myhome/',
