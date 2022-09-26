@@ -1,12 +1,12 @@
 HowTo: Summarize prediction results with easyPheno
 ======================================================
 In the subpackage `postprocess <https://github.com/grimmlab/easyPheno/tree/main/easypheno/postprocess>`_, we included
-functions to analyze optimization results. We provide scripts to run each of these functions (prefix *run_*) with our :ref:`Docker Workflow`, on which we will also focus
+functions to analyze optimization results. We provide scripts to run each of these functions (prefix *run_*) with our :ref:`Docker workflow`, on which we will also focus
 in this tutorial. If you want to use the functions directly (e.g. with the pip installed package),
 please check the scripts and see which functions are called.
 
-Optimization results in easyPheno are saved using the following directory structure: *user_defined_save_dir/results/name_genotype_matrix/name_phenotyp_matrix/name_phenotype/*
-By running *run_summarize_results.py*, you can accumulate all optimization results for a genotype matrix:
+Optimization results in easyPheno are saved using the following directory structure: ``user_defined_save_dir/results/name_genotype_matrix/name_phenotyp_matrix/name_phenotype/``
+By running ``run_summarize_results.py``, you can accumulate all optimization results for a genotype matrix:
 
     .. code-block::
 
@@ -14,7 +14,7 @@ By running *run_summarize_results.py*, you can accumulate all optimization resul
 
 This leads to the creation of the summary files described in `summarize_results_per_phenotype_and_datasplit() <https://github.com/grimmlab/easyPheno/blob/main/easypheno/postprocess/results_analysis.py#L10>`_.
 
-Using a *Results_summary_all_phenotypes*DATASPLIT-PATTERN*.csv* file created by the command above, we provide scripts to visualize the results of several prediction models on different phenotypes:
+Using a ``Results_summary_all_phenotypes*DATASPLIT-PATTERN*.csv`` file created by the command above, we provide scripts to visualize the results of several prediction models on different phenotypes:
 
     .. code-block::
 

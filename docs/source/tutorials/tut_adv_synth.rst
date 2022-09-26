@@ -1,9 +1,16 @@
 HowTo: Create synthetic phenotype data
 ========================================
+lorem ipsum
 
-datenmodell beschreiben
+Besides the written tutorial, we recorded a :ref:`Video tutorial: Synthetic data generation`, which is embedded below.
 
-beschreiben wie man es anwendet + code-zeile dafür
-outcome beschreiben
-connection zu easypheno run
+Data model
+"""""""""""""""
+
+Create synthetic data in easyPheno
+""""""""""""""""""""""""""""""""""""""""
+
+
+Video tutorial: Synthetic data generation
+""""""""""""""""""""""""""""""""""""""""""""""
 

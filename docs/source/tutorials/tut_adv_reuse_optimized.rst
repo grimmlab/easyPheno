@@ -6,7 +6,7 @@ easyPheno enables the reuse of an optimized model for two use cases:
 
 - Retrain on new data using best hyperparameter combination of a previous optimization run
 
-We provide scripts to run these functions (prefix *run_*) with our :ref:`Docker Workflow`, on which we will also focus
+We provide scripts to run these functions (prefix *run_*) with our :ref:`Docker workflow`, on which we will also focus
 in this tutorial. If you want to use the functions directly (e.g. with the pip installed package),
 please check the scripts and see which functions are called.
 
