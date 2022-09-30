@@ -66,3 +66,7 @@ See `here <https://docs.docker.com/engine/reference/commandline/docker/>`_ for a
 
 Video tutorial: Docker workflow setup
 """""""""""""""""""""""""""""""""""""""""""""
+.. youtube:: ONC9MZic0n0
+    :width: 640
+    :height: 360
+    :aspect: 16:9

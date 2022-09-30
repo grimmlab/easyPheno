@@ -11,10 +11,7 @@ These range from classical models, such as regularized linear regression over en
 To enable automatic hyperparameter optimization, we leverage  state-of-the-art and efficient Bayesian optimization techniques.
 In addition, our framework is designed to allow an easy and straightforward integration of further prediction models.
 
-For more information, installation guides, tutorials and much more, see our documentation: https://easypheno.readthedocs.io/ 
-
-easyPheno and its documentation is currently under construction.
-The pip-package is not yet available, but feel free to already test the Docker workflow as described in our documentation: https://easypheno.readthedocs.io/en/latest/tutorials.html#howto-run-easypheno-using-docker
+For more information, installation guides, tutorials and much more, see our documentation: https://easypheno.readthedocs.io/
 
 ## Contributors
 This pipeline is developed and maintained by members of the [Bioinformatics lab](https://bit.cs.tum.de) lead by [Prof. Dr. Dominik Grimm](https://bit.cs.tum.de/team/dominik-grimm/):
