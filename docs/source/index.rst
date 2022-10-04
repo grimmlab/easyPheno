@@ -28,9 +28,13 @@ Citation
 ---------------------
 A manuscript for publishing easyPheno as a scientific paper is currently under preparation.
 
+Content
+---------------
+
 .. toctree::
-   :maxdepth: 4
+   :titlesonly:
 
    install
    tutorials
    data
+   API Documentation <autoapi/easypheno/index>

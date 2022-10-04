@@ -14,3 +14,4 @@ tensorflow==2.8.0
 XlsxWriter==3.0.3
 seaborn==0.11.2
 pyro-ppl==1.8.1
+nbsphinx
