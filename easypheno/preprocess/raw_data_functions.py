@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import h5py
-import os
 import pathlib
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import StratifiedKFold
