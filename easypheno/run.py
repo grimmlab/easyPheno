@@ -1,6 +1,4 @@
 import argparse
-import warnings
-from optuna.exceptions import ExperimentalWarning
 
 from easypheno.utils import helper_functions
 from easypheno.preprocess import encoding_functions
@@ -13,8 +11,6 @@ if __name__ == '__main__':
             Check and prepare data files
             Bayesian optimization for each chosen model
     """
-    warnings.simplefilter(action='ignore', category=FutureWarning)
-    warnings.simplefilter(action='ignore', category=ExperimentalWarning)
     # User Input #
     parser = argparse.ArgumentParser()
     # Input Params #
