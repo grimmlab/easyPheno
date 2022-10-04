@@ -1,6 +1,8 @@
 import datetime
 import pprint
 import pathlib
+import warnings
+from optuna.exceptions import ExperimentalWarning
 
 from easypheno.utils import check_functions, print_functions, helper_functions
 from easypheno.preprocess import raw_data_functions, base_dataset
@@ -37,6 +39,9 @@ def run(data_dir: str, genotype_matrix: str, phenotype_matrix: str, phenotype: s
     :param n_epochs: number of epochs for neural network models
     :param outerfold_number_to_run: outerfold to run in case you do not want to run all
     """
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+    warnings.simplefilter(action='ignore', category=ExperimentalWarning)
+
     if models is None:
         models = ['xgboost']
     if any(['fromR' in model for model in models]):
