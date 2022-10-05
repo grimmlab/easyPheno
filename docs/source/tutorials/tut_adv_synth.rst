@@ -32,7 +32,7 @@ where each simulation gets a unique number or ID (sim_id) to distinguish them fr
 :Simulation_{sim_id}.csv: Contains the sample IDs corresponding to the genotype matrix, a column for the simulated phenotype (e.g. ``sim1``) and one column with the same phenotype but shifted to get rid of negative values (``sim1_shift``)
 :Simulations_Overview.csv: Contains the sim_id and additional information such as number of samples, number of causal SNPs, etc. for each simulation
 
-and within another subfolder ``sim_configs`` three files containing additional information:
+And within another subfolder ``sim_configs`` three files containing additional information:
 
 :simulation_config_{sim_id}.csv: Contains detailed information of the phenotype such as the SNP ID and effect size of causal markers.
 :background_{sim_id}.csv: Contains all SNP IDs of the used background markers
@@ -64,7 +64,7 @@ If you use a gamma distribution you can additionally adjust the shape parameter 
 
 If you want to create several phenotypes with the same specifications at once, you can specify the number of simulations
 with ``--number_of_simulations``. Then the corresponding sim_id will contain the number of the first and last simulation,
-e.g. '10-15' for the six simulations '10', '11', '12', '13', '14', '15'
+e.g. '10-15' for the six simulations '10', '11', '12', '13', '14', '15'.
 
 To get an overview over the other options you can adjust when creating synthetic phenotypes with easyPheno,
 just use:
