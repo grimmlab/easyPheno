@@ -13,14 +13,14 @@ To create synthetic phenotypes, easyPheno uses an additive model
         y = X \beta + Z \gamma + \epsilon
 
 where the phenotype :math:`y` is given as the sum of one or more causal markers :math:`X`
-with effect sizes :math:`\beta`; random effects :math:`Z`with small effect sizes :math:`\gamma`
-drawn from a Gaussian distribution, which simulate the polygenic background; and some noise :math:`\epsilon`.
+with effect sizes :math:`\beta`; random effects :math:`Z` with small effect sizes :math:`\gamma` drawn from a Gaussian
+distribution, which simulate the polygenic background; and some noise :math:`\epsilon`.
 
 Create synthetic data in easyPheno
 """"""""""""""""""""""""""""""""""""""""
 To create a synthetic phenotype all you need is the path to the folder where your data is stored (``data_dir``)
 and the name of your genotype matrix (``name_of_genotype_matrix``).
-Please read our :ref:`Data Guide`: for more information on the data structure of the genotype matrix.
+Please read our :ref:`Data Guide` for more information on the data structure of the genotype matrix.
 
     .. code-block::
 
