@@ -36,3 +36,7 @@ If you want to start using your own data, please carefully read our :ref:`Data G
 
 Video tutorial: Run easyPheno with Docker
 """"""""""""""""""""""""""""""""""""""""""""""""""
+.. youtube:: uM-yJqzzIPo
+    :width: 640
+    :height: 360
+    :aspect: 16:9
