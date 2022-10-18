@@ -37,4 +37,6 @@ Content
    install
    tutorials
    data
+   models
+   simulation
    API Documentation <autoapi/easypheno/index>
