@@ -1,4 +1,4 @@
-HowTo: Create synthetic phenotype data
+Synthetic data
 ========================================
 I this tutorial we will show you how to use easyPheno to create synthetic phenotypes for real genotypes.
 
