@@ -14,6 +14,7 @@ Besides the written guides, we also provide some tutorial videos which are embed
 
 .. toctree::
     :maxdepth: 4
+    :hidden:
 
     install_docker
     install_pip

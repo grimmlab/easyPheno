@@ -9,11 +9,8 @@ easyPheno is a Python framework that enables the rigorous training, comparison a
 easyPheno includes multiple state-of-the-art prediction models.
 Besides common genomic selection approaches, such as best linear unbiased prediction (BLUP) and models from the Bayesian alphabet, our framework includes several machine learning methods.
 These range from classical models, such as regularized linear regression over ensemble learners, e.g. XGBoost, to deep learning-based architectures, such as Convolutional Neural Networks (CNN).
-To enable automatic hyperparameter optimization, we leverage  state-of-the-art and efficient Bayesian optimization techniques.
+To enable automatic hyperparameter optimization, we leverage state-of-the-art and efficient Bayesian optimization techniques.
 In addition, our framework is designed to allow an easy and straightforward integration of further prediction models.
-
-easyPheno and its documentation is currently under construction.
-The pip-package is not yet available, but feel free to already test the Docker workflow, see here: :ref:`HowTo: Run easyPheno using Docker`.
 
 
 Contributors
@@ -28,11 +25,9 @@ Citation
 ---------------------
 A manuscript for publishing easyPheno as a scientific paper is currently under preparation.
 
-Content
----------------
-
 .. toctree::
    :titlesonly:
+   :hidden:
 
    install
    quickstart
