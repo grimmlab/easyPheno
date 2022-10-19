@@ -35,6 +35,7 @@ Content
    :titlesonly:
 
    install
+   quickstart
    tutorials
    data
    models
