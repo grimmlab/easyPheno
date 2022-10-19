@@ -16,9 +16,14 @@ where the phenotype :math:`y` is given as the sum of one or more causal markers 
 with effect sizes :math:`\beta`; random effects :math:`Z` with small effect sizes :math:`\gamma` drawn from a Gaussian
 distribution, which simulate the polygenic background; and some noise :math:`\epsilon`.
 
+The noise can either follow a Gaussian distribution or, for skewed phenotypes, a gamma distribution.
+Additionally, the number of causal markers and of markers used to simulate the polygenic background, as well as
+the number of samples used for the simulation are adjustable. Further, the heritability, i.e. the amount of variance
+that can be explained by the polygenic background, and the variance explained by the causal markers can both be altered by the user.
+
 Create synthetic data in easyPheno
 """"""""""""""""""""""""""""""""""""""""
-To create a synthetic phenotype all you need is the path to the folder where your data is stored (``data_dir``)
+To create a synthetic phenotype using the command line, all you need is the path to the folder where your data is stored (``data_dir``)
 and the name of your genotype matrix (``name_of_genotype_matrix``).
 Please read our :ref:`Data Guide` for more information on the data structure of the genotype matrix.
 
