@@ -18,8 +18,8 @@ class Cnn(_torch_model.TorchModel):
 
         Architecture:
 
-            - N_LAYERS of (Conv1d + BatchNorm + Dropout + MaxPool1d)
-            - Flatten, Linear, BatchNorm, Dropout
+            - N_LAYERS of (Conv1d + BatchNorm + Dropout)
+            - MaxPool1d, Flatten, Linear, BatchNorm, Dropout
             - Linear output layer
 
         Kernel sizes for convolutional and max pooling layers may be fixed or optimized.
