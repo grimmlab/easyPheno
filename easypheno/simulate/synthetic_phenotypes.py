@@ -286,7 +286,7 @@ def save_simulation(save_dir: str, genotype_matrix_name: str, number_of_sim: int
         new_seed = seed + sim_names[i]
         simulated_phenotype, sample_ids_sampled, causal_snps_ids, background_snp_ids, betas_background, beta, c = \
             get_simulation(X, sample_ids, snp_ids, number_of_samples, number_causal_snps, explained_variance, maf,
-                           heritability, seed, number_background_snps, distribution, shape)
+                           heritability, new_seed, number_background_snps, distribution, shape)
 
         causal_markers.append(causal_snps_ids)
         seeds.append(new_seed)

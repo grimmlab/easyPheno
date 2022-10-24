@@ -1,13 +1,13 @@
 HowTo: Integrate your own prediction model
 ==================================================
 In this tutorial, we will show you how to integrate your own new prediction model into easyPheno using an example.
-We recommend to watch the :ref:`Code walkthrough video` first for a better understanding of easyPheno's structure first.
+We recommend to first watch the :ref:`Code walkthrough video` for a better understanding of easyPheno's structure.
 
-We further recorded a :ref:`Video tutorial: Integrate new model` as well, which is embedded below .
+We further recorded a :ref:`Video tutorial: Integrate new model`, which is embedded below .
 
 Overview
 """"""""""""""
-The design of the model class makes easyPheno easy extendable with new prediction models. The subsequent figure gives an overview on its structure.
+The design of the model class makes easyPheno easily extendable with new prediction models. The subsequent figure gives an overview on its structure.
 
 .. image:: https://raw.githubusercontent.com/grimmlab/easyPheno/main/docs/image/classoverview.png
     :width: 600
