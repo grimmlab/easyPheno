@@ -10,11 +10,11 @@ To create synthetic phenotypes, easyPheno uses an additive model
 
     .. math::
 
-        y = X \beta + Z \gamma + \epsilon
+        \mathbf{y} = \mathbf{X \beta} + \mathbf{Z \gamma} + \mathbf{\epsilon}
 
-where the phenotype :math:`y` is given as the sum of one or more causal markers :math:`X`
-with effect sizes :math:`\beta`; random effects :math:`Z` with small effect sizes :math:`\gamma` drawn from a Gaussian
-distribution, which simulate the polygenic background; and some noise :math:`\epsilon`.
+where the phenotype :math:`\mathbf{y}` is given as the sum of one or more causal markers :math:`\mathbf{X}`
+with effect sizes :math:`\mathbf{\beta}`; random effects :math:`\mathbf{Z}` with small effect sizes :math:`\mathbf{\gamma}` drawn
+from a Gaussian distribution, which simulate the polygenic background; and some noise :math:`\mathbf{\epsilon}`.
 
 The noise can either follow a Gaussian distribution or, for skewed phenotypes, a gamma distribution.
 Additionally, the number of causal markers and of markers used to simulate the polygenic background, as well as
