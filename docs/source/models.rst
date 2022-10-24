@@ -2,6 +2,7 @@ Prediction Models
 ===================
 easyPheno includes various phenotype prediction models, both classical genomic selection approaches as well as machine and deep learning-based methods.
 In the following pages, we will give some details for all of the currently implemented models.
+We further included a subpage explaining the Bayesian optimization that we use for our automatic hyperparameter search.
 
 We provide both a workflow running easyPheno with a command line interface using Docker and as a pip package, see the following tutorials for more details:
 
@@ -106,3 +107,4 @@ If you want to integrate your own prediction model: :ref:`HowTo: Integrate your 
     models/mlp
     models/cnn
     models/localcnn
+    models/hyperparam_optim
