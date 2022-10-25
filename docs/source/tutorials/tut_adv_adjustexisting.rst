@@ -8,7 +8,7 @@ We will therefore focus on these two methods in this tutorial.
 
 If you want to create your own model, see :ref:`HowTo: Integrate your own prediction model`.
 
-We already integrated several predictions models,
+We already integrated several prediction models (see :ref:`Prediction Models`),
 e.g. `LinearRegression <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/linearregression.py>`_
 and `Mlp <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/mlp.py>`_, which we will use
 for demonstration purposes in this HowTo.
@@ -65,16 +65,16 @@ Another example can be found in `Mlp <https://github.com/grimmlab/easyPheno/blob
             model.append(torch.nn.Linear(in_features=in_features, out_features=self.n_outputs))
             return torch.nn.Sequential(*model)
 
-Currently, the model consists of ``n_layers`` of a sequence of a Linear, BatchNorm and Dropout layer, finally followed by a Linear output layer.
+Currently, the model consists of ``n_layers`` of a sequence of a ``Linear()``, ``BatchNorm()`` and ``Dropout()`` layer, finally followed by a ``Linear()`` output layer.
 You can easily adjust this by e.g. adding further layers or setting ``n_layers`` to a fixed value.
 Furthermore, the dropout rate ``p`` is optimized during hyperparameter search and the same rate is used for each Dropout layer.
-You could set this to a fixed value or suggest a different value for each Dropout layer
+You could set this to a fixed value or suggest a different value for each ``Dropout()`` layer
 (e.g. by suggesting it via ``self.suggest_hyperparam_to_optuna('dropout')`` within the ``for``-loop).
-Some hyperparameters are already defined in `TorchModel.common_hyperparams() <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/_torch_model.py#L196>`_ ,which you can directly use here.
+Some hyperparameters are already defined in `TorchModel.common_hyperparams() <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/_torch_model.py#L196>`_ , which you can directly use here in its child class.
 Furthermore, some of them are already suggested in `TorchModel <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/_torch_model.py>`_.
 
 Beyond that, you can also change the complete architecture of the model if you prefer to do so,
-maybe by copying the file and adding your changes there (see also :ref:`HowTo: Integrate your own prediction model`).
+e.g. by copying the file and adding your changes there (see also :ref:`HowTo: Integrate your own prediction model`).
 
 Adjust hyperparameters
 """""""""""""""""""""""""
