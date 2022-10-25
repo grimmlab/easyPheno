@@ -3,20 +3,20 @@ XGBoost
 Subsequently, we give details on our implementation of extreme gradient Boosting, usually abbreviated with XGBoost.
 Depending on the machine learning task that was detected (``'classification'`` or ``'regression'``), easyPheno automatically
 switches between both implementations.
-References for a more detailed theoretical background can be found at the end of this page, which were also used for writing this page.
+References for a more detailed theoretical background can be found at the end of this page, which were also used for writing this text.
 For our implementation, we use the library `xgboost <https://xgboost.readthedocs.io/en/stable/>`_,
 which also provides a `user guide <https://xgboost.readthedocs.io/en/stable/python/index.html>`_.
 
 XGBoost applies a technique called Boosting. Similar to Random Forest, XGBoost is also an ensemble learner, i.e. trying to
 build a strong prediction model based on multiple weak learners.
 But as a conceptual difference, weak learners in XGBoost are not independent. Instead, they are constructed
-sequentially, with putting more focus on the errors of the current ensemble. With Gradient Boosting, the
+sequentially, with putting more focus on the errors of the current ensemble for the training of a new weak learner. With Gradient Boosting, the
 sequential construction of the ensemble is formalized as a gradient descent algorithm on a loss function that needs to be minimized.
 
 In comparison with Bagging, which is employed in Random Forest, Boosting aims to reduce bias instead of variance.
-This might lead to overfitting, against which a couple of measures exist. One example is constraining the weak learners,
-so e.g. limiting the number of estimators or depth of Decision Trees. Further methods against overfitting
-are similar to concepts of bagging, with random subsets of samples and features for the training of each weak learner.
+This might lead to overfitting, which is aimed to be prevented by certain measures. One example is constraining the weak learners,
+so e.g. limiting the number of estimators or the depth of the Decision Trees. Further methods against overfitting
+are similar to concepts of bagging, e.g. using random subsets of samples and features for the training of each weak learner.
 Besides this, for XGBoost a learning rate shrinking the weights update for correcting ensemble errors during the learning process is typically used.
 
 XGBoost is an efficient implementation that leverages Gradient Boosting, for which further details can be found in the
@@ -24,7 +24,7 @@ XGBoost is an efficient implementation that leverages Gradient Boosting, for whi
 
 
 For XGBoost, we use a specific library that is also available as a Python package. In the code block below,
-you can see our implementation. In ``define_model()``, we again distinguish between the classification and regression case.
+you can see our implementation. In ``define_model()``, we distinguish between the ``classification`` and ``regression`` case.
 Furthermore, we optimize several hyperparameters, such as the number of weak learners (``n_estimators``) or the ``learning_rate``.
 A full explanation of all XGBoost parameters can be found in their documentation:
 `XGBoost Parameter Guide <https://xgboost.readthedocs.io/en/stable/parameter.html>`_
