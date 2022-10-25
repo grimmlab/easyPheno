@@ -24,7 +24,7 @@ XGBoost is an efficient implementation that leverages Gradient Boosting, for whi
 
 
 For XGBoost, we use a specific library that is also available as a Python package. In the code block below,
-you can see our implementation. In ``define_model()``, we distinguish between the ``classification`` and ``regression`` case.
+you can see our implementation. In ``define_model()``, we distinguish between the ``'classification'`` and ``'regression'`` case.
 Furthermore, we optimize several hyperparameters, such as the number of weak learners (``n_estimators``) or the ``learning_rate``.
 A full explanation of all XGBoost parameters can be found in their documentation:
 `XGBoost Parameter Guide <https://xgboost.readthedocs.io/en/stable/parameter.html>`_
