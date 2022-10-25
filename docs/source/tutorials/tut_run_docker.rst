@@ -32,7 +32,7 @@ to start it in interactive mode again. If you did not create a container yet, go
 
 
 Feel free to test easyPheno, e.g. with other prediction models.
-If you want to start using your own data, please carefully read our :ref:`Data Guide`: to ensure that your data fulfills all requirements.
+If you want to start using your own data, please carefully read our :ref:`Data Guide` to ensure that your data fulfills all requirements.
 
 Video tutorial: Run easyPheno with Docker
 """"""""""""""""""""""""""""""""""""""""""""""""""
