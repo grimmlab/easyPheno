@@ -3,25 +3,22 @@ Support Vector Machine / Regression
 Subsequently, we give details on the Support Vector Machine (SVM) respective Support Vector Regression (SVR) integrated in easyPheno.
 Depending on the machine learning task that was detected (``'classification'`` or ``'regression'``), easyPheno automatically
 switches between SVM and SVR.
-References for a more detailed theoretical background can be found at the end of this page, which were also used for writing this page.
+References for a more detailed theoretical background can be found at the end of this page, which were also used for writing this text.
 For our implementation, we use the machine learning framework scikit-learn, which also provides a `user guide for these models <https://scikit-learn.org/stable/modules/svm.html>`_.
 
 **Support Vector Machine**
 
 A SVM aims to find a hyperplane that optimally separates samples belonging to different classes, i.e. a hyperplane reflecting the maximum margin between the classes.
-To address the non-linear-separable case, SVM introduces two of its main concepts, namely soft margin and the kernel trick.
+To address the non-linear-separable case, SVM introduces two of its main concepts, namely a soft margin and the kernel trick.
 
 With a so-called soft margin, mis-classifications are tolerated up to a certain degree.
 Mathematically, this is realized by introducing a penalty term consisting of the so-called slack variables, which give the distance to the corresponding class margin and are set to zero in case of a correct classification.
 The influence of this penalty term - and consequently "the degree of tolerance" - is controlled by a weighting factor usually called :math:`C`,
 which is an important hyperparameter.
 Larger values for :math:`C` lead to a stronger penalization of model errors, which might lead to a more accurate model, but is also more prone to overfitting.
-In contrast, smaller :math:`C` values put less emphasis on wrong predictions. This has a regularizing effect lowering the risk of overfitting, but might also lead to underfitting.
+In contrast, smaller :math:`C` values put less emphasis on wrong predictions. This has a regularizing effect lowering the risk of overfitting, but could also cause underfitting. The so-called kernel trick enables a transformation via kernel functions into a higher-dimensional space and consequently to find a solution for the separating hyperplane there. Hence, the selection of the kernel function to use as well as the values of the related hyperparameters are important during model optimization.
 
-The so-called kernel trick enables a transformation via kernel functions into a higher-dimensional space and consequently to find a solution for the separating hyperplane there.
-Hence, the selection of the kernel function to use as well as the related hyperparameters are important during model training.
-
-In the code bock below, you can see our implementation for the SVM respective SVR, which is implemented in the same class
+In the code bock below, you can see our implementation for the SVM respective SVR, which are included in the same class
 and chosen based on the determined task (``if self.task == 'classification': ... else: ...``).
 Furthermore, one can see that depending on the suggested ``kernel``, we are deciding which further hyperparameters need to be suggested.
 
@@ -95,9 +92,9 @@ Furthermore, one can see that depending on the suggested ``kernel``, we are deci
 
 The concept of SVR is pretty similar, but instead of optimizing for a separating hyperplane,
 the goal is to find a function that is within a certain threshold around the target values of the training samples.
-Apart from that, similar concepts such as the kernel-trick are used, leading to similar hyperparameters that need to be optimized.
+Apart from that, similar concepts such as the kernel-trick are used, leading to the same hyperparameters that need to be optimized.
 
-As already mentioned, you can find our implementation in the code block above, as SVM and SVR are implemented in the same class.
+As already mentioned, you can find our implementation in the code block above, as SVM and SVR are integrated in the same class.
 
 **References**
 
