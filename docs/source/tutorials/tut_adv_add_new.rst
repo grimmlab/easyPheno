@@ -194,4 +194,7 @@ We are always happy to welcome new contributors and appreciate if you help impro
 
 Video tutorial: Integrate new model
 """"""""""""""""""""""""""""""""""""
-
+.. youtube:: UjTSKr9bnVc
+    :width: 640
+    :height: 360
+    :aspect: 16:9
