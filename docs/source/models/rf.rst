@@ -3,14 +3,14 @@ Random Forest
 Subsequently, we give details on our implementation of Random Forest.
 Depending on the machine learning task that was detected (``'classification'`` or ``'regression'``), easyPheno automatically
 switches between both implementations.
-References for a more detailed theoretical background can be found at the end of this page, which were also used for writing this page.
+References for a more detailed theoretical background can be found at the end of this page, which were also used for writing this text.
 For our implementation, we use the machine learning framework scikit-learn,
 which also provides a `user guide for Random Forests <https://scikit-learn.org/stable/modules/ensemble.html#forests-of-randomized-trees>`_.
 
 A Random Forest is a so-called ensemble learner, which uses multiple weak learners - in this case Decision Trees - to
 derive a final prediction. Random Forests use a technique called Bootstrap aggregating, usually abbreviated with Bagging.
 With this technique, a random subsample with replacement (bootstrap samples) of the whole training data is used to
-construct each Decision Tree, and finally the predictions of these are aggregated. As a further measure to prevent overfitting,
+construct each Decision Tree, and finally the predictions of these are aggregated. Beyond that,
 the algorithm was extended by not using all features for training each weak learner, but also a random subset.
 The goal of both techniques is to prevent overfitting, which Decision Trees tend to, by decreasing variance of the ensemble.
 
@@ -23,10 +23,6 @@ and then averaged across the whole ensemble. Finally, the class with the largest
 As you can see in the code block below, we use ``RandomForestClassifier`` respective ``RandomForestRegressor``
 from scikit-learn. Besides the strategy for determining the ``max_features`` per Decision Tree,
 we optimize hyperparameters such as the number of trees in the whole ensemble (``n_estimators``).
-For further information on all hyperparameters, we refer to the documentation of scikit-learn:
-`Random Forest Classifier <https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html#sklearn.ensemble.RandomForestClassifier>`_ and
-`Random Forest Regressor <https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html#sklearn.ensemble.RandomForestRegressor>`_
-
 
     .. code-block::
 
@@ -88,6 +84,9 @@ For further information on all hyperparameters, we refer to the documentation of
                     }
                 }
 
+For further information on all hyperparameters, we refer to the documentation of scikit-learn:
+`Random Forest Classifier <https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html#sklearn.ensemble.RandomForestClassifier>`_ and
+`Random Forest Regressor <https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html#sklearn.ensemble.RandomForestRegressor>`_.
 
 **References**
 
