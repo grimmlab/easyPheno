@@ -1,14 +1,14 @@
 Docker workflow
 ======================
 If you want to do phenotype prediction without the need of integrating parts of your own pipeline,
-we recommend the :ref:`Docker Workflow`: due to its easy-to-use interface and ready-to-use working environment
+we recommend the :ref:`Docker Workflow` due to its easy-to-use interface and ready-to-use working environment
 within a `Docker <https://www.docker.com/>`_ container. Besides the written tutorial, we provide a :ref:`Video tutorial: Docker workflow setup` embedded below.
 
 Requirements
 """""""""""""""""""""""""""""""""""""""""""""""
 For the :ref:`Docker Workflow`, `Docker <https://www.docker.com/>`_ needs to be installed and running on your machine,
 see the `Installation Guidelines at the Docker website <https://docs.docker.com/get-docker/>`_.
-On Ubuntu, you can use ``docker run hello-world`` to check if Docker works
+On Ubuntu, you can use ``docker run hello-world`` or ```docker --version`` to check if Docker works
 (Caution: add sudo if you are not in the docker group).
 
 If you want to use GPU support, you need to install `nvidia-docker-2 <https://github.com/NVIDIA/nvidia-docker>`_ (see this `nvidia-docker Installation Guide <https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#setting-up-nvidia-container-toolkit>`_)
