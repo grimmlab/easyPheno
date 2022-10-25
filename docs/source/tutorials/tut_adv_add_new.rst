@@ -100,7 +100,7 @@ As an example, we will integrate `k-nearest-neighbors (knn) <https://scikit-lear
 First, we copy the template file into the folder containing easyPheno's subpackage *model* and rename it to *knn.py*.
 Further, we rename the class within the file to ``Knn`` and add ``"knn"`` to ``__all__`` in `easypheno.model.__init__.py <https://github.com/grimmlab/easyPheno/blob/b9b5d5e588f4201f84eca8617601081e8d034f92/easypheno/model/__init__.py>`_.
 
-So with updated comments (with ``:obj:`` references for linking in the auto-generated API documentation), our file now contains the following code:
+So with updated comments (including ``:obj:`` references for linking in the auto-generated API documentation), our file now contains the following code:
 
     .. code-block::
 
@@ -135,7 +135,7 @@ So with updated comments (with ``:obj:`` references for linking in the auto-gene
                 ...
 
 Now we need to define the two attributes and implement the two methods. We will use the standard ``'012'`` encoding in this case (see `here <https://github.com/grimmlab/easyPheno/blob/b9b5d5e588f4201f84eca8617601081e8d034f92/easypheno/preprocess/encoding_functions.py>`_ for information on the encodings).
-Further, we optimize the two hyperparameters ``n_neighbors`` and ``weights``. These need to be suggested to optuna via ``self.suggest_hyperparam_to_optuna(PARAM_NAME`` in ``define_model()`` and defined with their ranges in ``define_hyperparams_to_tune()`` (see `here <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/_base_model.py#L88>`_ for more information regarding the format and possible options for hyperparameter definition).
+Further, we optimize the two hyperparameters ``n_neighbors`` and ``weights``. These need to be suggested to Optuna via ``self.suggest_hyperparam_to_optuna(PARAM_NAME`` in ``define_model()`` and defined with their ranges in ``define_hyperparams_to_tune()`` (see `here <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/_base_model.py#L88>`_ for more information regarding the format and possible options for hyperparameter definition).
 Finally, we distinguish between ``'classification'`` and ``'regression'`` by using the inherited attribute ``self.task``.
 
     .. code-block::
@@ -186,10 +186,10 @@ Finally, we distinguish between ``'classification'`` and ``'regression'`` by usi
                     }
                 }
 
-Now we are able to test our new prediction model with toy data by calling ``python3 -m easyPheno.run`` with the option ``-mod knn`` (see :ref:`HowTo: Run easyPheno using Docker`).
+Now we are able to test our new prediction model with toy data by calling ``python3 -m easypheno.run`` with the option ``-mod knn`` (see :ref:`HowTo: Run easyPheno using Docker`).
 
 This example gives an overview on how to integrate your own prediction model. Feel free to get guidance from existing prediction models as well.
-We are always happy to welcome new contributors and appreciate if you help improving easyPheno by providing your code.
+We are always happy to welcome new contributors and appreciate if you help improving easyPheno by providing your prediction model.
 
 
 Video tutorial: Integrate new model
