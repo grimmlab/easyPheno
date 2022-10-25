@@ -1,7 +1,7 @@
 Local Convolutional Neural Network
 =============================================
 Subsequently, we give details on our implementation of a Local Convolutional Neural Network (LCNN).
-References for a more detailed theoretical background can be found at the end of this page, which were also used for writing this page.
+References for a more detailed theoretical background can be found at the end of this page, which were also used for writing this text.
 We use TensorFlow for our implementation. For more information on specific TensorFlow objects that we use,
 e.g. layers, see the `TensorFlow documentation <https://www.tensorflow.org/api_docs/python/tf>`_.
 
@@ -13,7 +13,7 @@ For LCNN, we one-hot encoded the data, as this data can be easily processed by a
 This type of encoding preserves the whole nucleotide information and might thus lead to a smaller information loss than other encodings.
 
 Some of the methods and attributes relevant for the LCNN are already defined in its parent class `TensorflowModel <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/_tensorflow_model.py>`_.
-There, you can e.g. find the epoch- and batch-wise training loop. In the code block below, we show the constructor of TensorflowModel.
+There, you can e.g. find the epoch- and batch-wise training loop. In the code block below, we show the constructor of ``TensorflowModel``.
 
     .. code-block::
 
@@ -41,15 +41,15 @@ There, you can e.g. find the epoch- and batch-wise training loop. In the code bl
                 self.model.compile(self.optimizer, loss=self.loss_fn)
 
 We define attributes and suggest hyperparameters that are relevant for all neural network implementations,
-e.g. the optimizer to use and learning rate to apply.
-Some attributes are also set to fixed values, for instance the loss function depending on the detected machine learning task.
+e.g. the ``optimizer`` to use and the ``learning_rate`` to apply.
+Some attributes are also set to fixed values, for instance the loss function (``self.loss_fn``) depending on the detected machine learning task.
 Furthermore, early stopping is parametrized, which we use as a measure to prevent overfitting. With early stopping,
 the validation loss is monitored and if it does not improve for a certain number of epochs (``self.early_stopping_patience``),
 the training process is stopped. When working with our LCNN implementation, it is important to keep in mind
-that some relevant code and hyperparameters can also be found in TensorflowModel.
+that some relevant code and hyperparameters can also be found in ``TensorflowModel``.
 
-The definition of the model itself as well as of some specific hyperparameters and ranges can be found in the `LocalCnn class <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/cnn.py>`_.
-In the code block below, we show its ``define_model()``. The architecture of our LCNN model starts with a
+The definition of the LCNN model itself as well as of some specific hyperparameters and ranges can be found in the `LocalCnn class <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/cnn.py>`_.
+In the code block below, we show its ``define_model()`` method. The architecture of our LCNN model starts with a
 ``LocallyConnected1D`` layer, for which the ``kernel_size`` and ``stride`` are optimized during hyperparameter search.
 This layer is followed by a ``BatchNormalization``, ``Dropout``, ``MaxPool`` and ``Flatten`` layer.
 This output is forwarded to ``n_layers`` of blocks, which include a ``Dense()``, ``BatchNormalization()`` and ``Dropout`` layer.
