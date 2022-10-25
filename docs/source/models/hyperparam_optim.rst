@@ -1,9 +1,9 @@
 Hyperparameter optimization
 ===========================================
 Subsequently, we give details on our implementation of Bayesian optimization for the automatic hyperparameter search.
-References for a more detailed theoretical background can be found at the end of this page, which were also used for writing this page.
+References for a more detailed theoretical background can be found at the end of this page, which were also used for writing this text.
 For our implementation, we use the optimization framework `Optuna <https://optuna.readthedocs.io/en/stable/>`_,
-for which its developers also provide a comprehensive online documentation.
+for which its developers also provide a comprehensive `online documentation <https://optuna.readthedocs.io/en/stable/>`_.
 
 Common hyperparameter optimization methods, e.g. Grid Search or Random Search, do not make use of information gained
 during the optimization process. However, Bayesian optimization uses this knowledge and tries to direct
@@ -16,9 +16,9 @@ needed for the selection of parameter candidates.
 
 Our implementation can be found in the class `OptunaOptim <https://github.com/grimmlab/easyPheno/blob/main/easypheno/optimization/optuna_optim.py>`_.
 Besides results saving, the main part of this class can be found in the ``objective()`` method.
-This method is called for each new trial. At the beginning of each new trial, a prediction model using the new parameter
+This method is called for each new trial. At the beginning of a new trial, a prediction model using the suggested parameter
 set is defined. Then, we loop over the whole training and validation data to retrieve the objective value. In case of
-multiple validation sets, we use the mean value.
+multiple validation sets, we take the mean value.
 
 To improve efficiency, we implemented pruning based on intermediate results - so results on validation sets within the cross-validation -
 and stop a trial if the intermediate result is worse than the 80th percentile of previous ones at the same time.
