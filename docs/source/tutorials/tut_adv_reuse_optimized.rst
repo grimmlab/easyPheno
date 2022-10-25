@@ -2,7 +2,7 @@ HowTo: Reuse optimized model
 ==================================================
 easyPheno enables the reuse of an optimized model for two use cases:
 
-- Run inference using final model on new data (SNP ids of old and new data (after filtering etc.) have to match exactly)
+- Run inference using final model on new data (SNP ids of old and new data (after preprocessing, e.g. MAF and duplicate filtering) have to match exactly)
 
 - Retrain on new data using best hyperparameter combination of a previous optimization run
 
