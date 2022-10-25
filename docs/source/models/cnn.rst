@@ -1,7 +1,7 @@
 Convolutional Neural Network
 =============================================
 Subsequently, we give details on our implementation of a Convolutional Neural Network (CNN).
-References for a more detailed theoretical background can be found at the end of this page, which were also used for writing this page.
+References for a more detailed theoretical background can be found at the end of this page, which were also used for writing this text.
 We use PyTorch for our implementation. For more information on specific PyTorch objects that we use,
 e.g. layers, see the `PyTorch documentation <https://pytorch.org/docs/stable/index.html>`_.
 
@@ -34,20 +34,20 @@ There, you can e.g. find the epoch- and batch-wise training loop. In the code bl
                 self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 We define attributes and suggest hyperparameters that are relevant for all neural network implementations,
-e.g. the optimizer to use and learning rate to apply.
-Some attributes are also set to fixed values, for instance the loss function depending on the detected machine learning task.
+e.g. the ``optimizer`` to use and the ``learning_rate`` to apply.
+Some attributes are also set to fixed values, for instance the loss function (``self.loss_fn``) depending on the detected machine learning task.
 Furthermore, early stopping is parametrized, which we use as a measure to prevent overfitting. With early stopping,
 the validation loss is monitored and if it does not improve for a certain number of epochs (``self.early_stopping_patience``),
 the training process is stopped. When working with our CNN implementation, it is important to keep in mind
 that some relevant code and hyperparameters can also be found in TorchModel.
 
-The definition of the model itself as well as of some specific hyperparameters and ranges can be found in the `Cnn class <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/cnn.py>`_.
-In the code block below, we show its ``define_model()``. Our CNN model consists of ``n_layers`` of blocks, which
+The definition of the CNN model itself as well as of some specific hyperparameters and ranges can be found in the `Cnn class <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/cnn.py>`_.
+In the code block below, we show its ``define_model()`` method. Our CNN model consists of ``n_layers`` of blocks, which
 include a ``Conv1d()``, ``BatchNorm()`` and ``Dropout`` layer.
 The last of these blocks is followed by a ``MaxPool1d`` and ``Flatten`` layer.
-This is followed by a ``Linear``, ``BatchNorm`` and ``Dropout`` layer, before the final output layer.
+This output is further processed by a ``Linear``, ``BatchNorm`` and ``Dropout`` layer, before the final  ``Linear()`` output layer.
 The ``kernel_size`` and ``stride`` of the convolutional layers are two important hyperparameters that are optimized.
-The number of output channels of the first layer and the frequency of doubling the number of output channels are currently
+The number of output channels of the first layer (``out_channels``) and the frequency of doubling the number of output channels (``frequency_out_channels_doubling``) are currently
 set, but can also be defined as an hyperparameter.
 The number of outputs in the first linear layer after the convolutional blocks is defined by a hyperparameter (``n_initial_units_factor``),
 that is multiplied with current dimensionality.
