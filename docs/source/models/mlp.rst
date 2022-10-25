@@ -1,7 +1,7 @@
 Multilayer Perceptron
 ===============================
 Subsequently, we give details on our implementation of a Multilayer Perceptron (MLP, also known as feedforward neural network).
-References for a more detailed theoretical background can be found at the end of this page, which were also used for writing this page.
+References for a more detailed theoretical background can be found at the end of this page, which were also used for writing this text.
 We use PyTorch for our implementation. For more information on specific PyTorch objects that we use,
 e.g. layers, see the `PyTorch documentation <https://pytorch.org/docs/stable/index.html>`_.
 
@@ -31,16 +31,16 @@ There, you can e.g. find the epoch- and batch-wise training loop. In the code bl
                 self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 We define attributes and suggest hyperparameters that are relevant for all neural network implementations,
-e.g. the optimizer to use and learning rate to apply.
-Some attributes are also set to fixed values, for instance the loss function depending on the detected machine learning task.
+e.g. the ``optimizer`` to use and the ``learning_rate`` to apply.
+Some attributes are also set to fixed values, for instance the loss function (``self.loss_fn``) depending on the detected machine learning task.
 Furthermore, early stopping is parametrized, which we use as a measure to prevent overfitting. With early stopping,
 the validation loss is monitored and if it does not improve for a certain number of epochs (``self.early_stopping_patience``),
 the training process is stopped. When working with our MLP implementation, it is important to keep in mind
 that some relevant code and hyperparameters can also be found in TorchModel.
 
-The definition of the model itself as well as of some specific hyperparameters and ranges can be found in the `Mlp class <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/mlp.py>`_.
-In the code block below, we show its ``define_model()``. Our MLP model consists of ``n_layers`` of blocks, which
-include a ``Linear()``, ``BatchNorm()`` and ``Dropout`` layer. The last of these blocks is followed by a linear output layer.
+The definition of the MLP model itself as well as of some specific hyperparameters and ranges can be found in the `Mlp class <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/mlp.py>`_.
+In the code block below, we show its ``define_model()`` method. Our MLP model consists of ``n_layers`` of blocks, which
+include a ``Linear()``, ``BatchNorm()`` and ``Dropout`` layer. The last of these blocks is followed by a ``Linear()`` output layer.
 The number of outputs in the first layers is defined by a hyperparameter (``n_initial_units_factor``),
 that is multiplied with the number of inputs. Then, with each of the above-mentioned blocks, the number of outputs
 decreases by a percentage parameter ``perc_decrease``.
