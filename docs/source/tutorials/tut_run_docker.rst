@@ -1,14 +1,14 @@
 HowTo: Run easyPheno using Docker
 ======================================
-We assume that you succesfully did all steps described in :ref:`Docker workflow`: to setup easyPheno using Docker.
+We assume that you succesfully did all steps described in :ref:`Docker workflow` to set up easyPheno using Docker.
 Besides this written tutorial, we recorded a :ref:`Video tutorial: Run easyPheno with Docker` embedded below.
 
 Workflow
 """""""""""
 You are at the **root directory within your Docker container**, i.e. after step 5 of the setup at :ref:`Docker workflow`:.
 
-If you closed the Docker container you created at the end of the installation, just use ``docker start -i CONTAINERNAME``
-to start it in interactive mode again. If you did not create a container yet, go back to step 5 of the setup.
+If you closed the Docker container that you created at the end of the installation, just use ``docker start -i CONTAINERNAME``
+to start it in interactive mode again. If you did not create a container yet, go back to step 5 of the :ref:`Docker workflow`.
 
 1. Navigate to the directory where the easyPheno repository is placed within your container
 
@@ -16,7 +16,7 @@ to start it in interactive mode again. If you did not create a container yet, go
 
         cd /REPO_DIRECTORY/IN/CONTAINER/easyPheno
 
-2. Run easyPheno (as module). By default, easyPheno starts the optimization procedure for 10 trials with XGBoost and a 5-fold nested cross-validation using the data we provide in ``tutorials/tutorial_data``.
+2. Run easyPheno (as module). By default, easyPheno starts the optimization procedure for 10 trials with XGBoost and a 5-fold nested cross-validation using the data we provide in ``docs/source/tutorials/tutorial_data``.
 
     .. code-block::
 
