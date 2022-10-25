@@ -3,12 +3,12 @@ Linear and Logistic Regression
 Subsequently, we give details on the regularized linear respective logistic regression approaches that are integrated in easyPheno.
 First, we outline the regularized linear regression models, which can be used for predicting continuous traits.
 Then, we describe the closely related logistic regression approaches suitable for discrete phenotypes.
-References for a more detailed theoretical background can be found at the end of this page, which were also used for writing this page.
+References for a more detailed theoretical background can be found at the end of this page, which were also used for writing this text.
 For our implementation, we use the machine learning framework scikit-learn, which also provides a `user guide for these models <https://scikit-learn.org/stable/modules/linear_model.html>`_.
 
 **Regularized linear regression for continuous traits**
 
-We provide regularized linear regressions models, for which the model weights can be optimized by minimizing
+With respect to regularized linear regressions models, the model weights can be optimized by minimizing
 the deviation between predicted and true phenotypic values, often with considering an additive penalty term for regularization:
 
     .. math::
@@ -18,13 +18,13 @@ In case of the Least Absolute Shrinkage and Selection Operator, usually abbrevia
 the L1-norm, so the sum of the absolute value of the weights, is used for regularization. This constraint
 usually leads to sparse solutions forcing unimportant weights to zero. Intuitively speaking, this can be seen as an automatic feature selection.
 The L2-norm, also known as the Euclidean norm, is defined as the square root of the summed up quadratic weights.
-Regularized linear regression using the L2-norm is usually called Ridge Regression. This penalty term has the effect
+Regularized linear regression using the L2-norm is called Ridge Regression. This penalty term has the effect
 of grouping correlated features. Elastic Net combines both the L1- and the L2-norm, introducing a further hyperparameter
 controlling the influence of each of the two parts.
 
 All these three approaches - LASSO, Ridge and Elastic Net Regression - are currently implemented in easyPheno.
-However, as the feature selection effect of LASSO seems to be profitable considering often large genotype matrices,
-LASSO and Elastic Net Regression are activated by a variable for selecting the penalty term.
+However, as the feature selection effect of LASSO seems to be profitable considering the often large genotype matrices,
+LASSO and Elastic Net Regression are configured by a variable for selecting the penalty term.
 
 The following code block shows the implementation of LASSO in `linearregression.py <https://github.com/grimmlab/easyPheno/blob/main/easypheno/model/linearregression.py>`_.
 
