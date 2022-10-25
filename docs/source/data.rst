@@ -6,7 +6,7 @@ easyPheno is designed to work with several genotype and phenotype file types.
 Genotype files
 ----------------
 Independent of the original file type, when loading it the first time, the genotype data will be saved to the data directory
-in a unified H5 file with the same prefix to simplify further processing and future runs.
+in a unified H5 file with the same prefix as the original genotype file to simplify further processing and future runs.
 easyPheno accepts the following genotype file types:
 
 HDF5 / H5 / H5PY
@@ -26,13 +26,13 @@ with *samples* as *rows* and *markers* as *columns*
 PLINK
 ~~~~~~~
 To use PLINK data, a **.map** and **.ped** file with the same prefix need to be in the data directory.
-To run the Framework with PLINK files, you can use PREFIX.map or PREFIX.ped as option for the genotype file.
+To run the framework with PLINK files, you can use PREFIX.map or PREFIX.ped as option for the genotype file.
 (See `PLINK <https://www.cog-genomics.org/plink/>`_ for more info on the file type)
 
 binary PLINK
 ~~~~~~~~~~~~~~
 To use binary PLINK data, a **.bed**, **.bim** and **.fam** file with the same prefix need to be in the data directory.
-To run the Framework with binary PLINK files, you can use PREFIX.bed, PREFIX.bim or PREFIX.fam as option for the
+To run the framework with binary PLINK files, you can use PREFIX.bed, PREFIX.bim or PREFIX.fam as option for the
 genotype file. (See `PLINK <https://www.cog-genomics.org/plink/>`_ for more info on the file type)
 
 Phenotype file
