@@ -80,4 +80,7 @@ just use:
 
 Video tutorial: Synthetic data generation
 """"""""""""""""""""""""""""""""""""""""""""""
-
+.. youtube:: pMLzgD1hJnM
+    :width: 640
+    :height: 360
+    :aspect: 16:9
