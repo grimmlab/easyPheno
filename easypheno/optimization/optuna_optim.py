@@ -102,14 +102,15 @@ class OptunaOptim:
                      self.user_input_params["phenotype"] + '-MAF' + str(self.user_input_params["maf_percentage"]) + \
                      '-SPLIT' + self.dataset.datasplit + self.datasplit_subpath + \
                      '-MODEL' + self.current_model_name + '-TRIALS' + str(self.user_input_params["n_trials"])
-        storage = optuna.storages.RDBStorage(
-            "sqlite:////" + str(self.save_path.joinpath('Optuna_DB.db')), heartbeat_interval=60, grace_period=120,
-            failed_trial_callback=optuna.storages.RetryFailedTrialCallback(max_retry=3)
-        )
+        # storage = optuna.storages.RDBStorage(
+        #     "sqlite:////" + str(self.save_path.joinpath('Optuna_DB.db')), heartbeat_interval=60, grace_period=120,
+        #    failed_trial_callback=optuna.storages.RetryFailedTrialCallback(max_retry=3)
+        #)
         # TPE Sampler with seed for reproducibility
         # Percentile pruner if minimum 20 trials exist and intermediate result is worse than 80th percentile
         study = optuna.create_study(
-            storage=storage, study_name=study_name,
+            #storage=storage, 
+            study_name=study_name,
             direction='minimize' if self.task == 'regression' else 'maximize', load_if_exists=True,
             sampler=optuna.samplers.TPESampler(seed=42),
             pruner=optuna.pruners.PercentilePruner(percentile=80, n_min_trials=20)
