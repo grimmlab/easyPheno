@@ -7,7 +7,7 @@ from matplotlib.patches import Rectangle
 from ..utils import helper_functions, check_functions
 
 
-def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_level: str):
+def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_level: str, eval_metric: str = None):
     """
     Summarize the results for each phenotype and datasplit for all models and save in a file.
 
@@ -21,9 +21,13 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
         - at genotype-folder level within results directories (the one that was specified):
 
             - Results_summary_all_phenotypes*DATASPLIT-PATTERN*.xlsx: .xlsx-file containing an overview of the performance of each model on each phenotype used for this genotype matrix with the specified datasplit-maf pattern
-            - Results_summary_all_phenotypes*DATASPLIT-PATTERN*.csv: only overview sheet of Results_summary*DATASPLIT-PATTERN*.xlsx
+            - Results_summary_all_phenotypes*EVALMETRIC*DATASPLIT-PATTERN*.csv: only overview sheet of Results_summary*DATASPLIT-PATTERN*.xlsx
 
     :param results_directory_genotype_level: results directory at the level of the name of the genotype matrix
+    :param eval_metric: eval metric to use for summary. Options (default given first):
+            Regression: explained_variance, r2_score, rmse, mse.
+            Classification: mcc, f1_score, accuracy, precision, recall.
+
     """
     results_directory_genotype_level = pathlib.Path(results_directory_genotype_level)
 
@@ -34,6 +38,10 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
     if not results_directory_genotype_level.parts[-2] == 'results':
         raise Exception("Problems with specified directory: " + str(results_directory_genotype_level) +
                         "\n Make sure the results directory is at the level fo the genotype matrix name.")
+    if eval_metric is not None:
+        if eval_metric not in ["explained_variance", "r2_score", "rmse", "mse",
+                               "mcc", "f1_score", "accuracy", "precision", "recall"]:
+            raise Exception("Invalid eval metric: " + eval_metric)
 
     for phenotype_matrix in helper_functions.get_all_subdirectories_non_recursive(results_directory_genotype_level):
         results_directory_phenotype_matrix_level = results_directory_genotype_level.joinpath(phenotype_matrix)
@@ -139,8 +147,11 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
                 index=False
             )
             phenotype = results_summary_path.parts[-2]
-            eval_metric = 'test_explained_variance' \
-                if any(['test_explained_variance' in col for col in results_summary.columns]) else 'test_f1_score'
+            if eval_metric is None:
+                eval_metric = 'test_explained_variance' \
+                    if any(['test_explained_variance' in col for col in results_summary.columns]) else 'test_f1_score'
+            else:
+                eval_metric = 'test_' + eval_metric
             if 'nested' in pattern:
                 for row in results_summary.iterrows():
                     overview_sheet.at[phenotype, row[1]['model']] = "{:.3f} +- {:.3f}".format(
@@ -151,7 +162,9 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
         overview_sheet.dropna(axis=1, inplace=True, how='all')  # drop model column if all results are missing
         overview_sheet.to_excel(writer, sheet_name='Overview')
         overview_sheet.to_csv(
-            results_directory_genotype_level.joinpath('Results_summary_all_phenotypes_' + pattern + '.csv')
+            results_directory_genotype_level.joinpath(
+                'Results_summary_all_phenotypes_' + eval_metric[5:] + '_' + pattern + '.csv'
+            )
         )
         writer.sheets['Overview'].activate()
         writer.save()
