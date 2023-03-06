@@ -149,7 +149,7 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
             phenotype = results_summary_path.parts[-2]
             if eval_metric is None:
                 eval_metric = 'test_explained_variance' \
-                    if any(['test_explained_variance' in col for col in results_summary.columns]) else 'test_f1_score'
+                    if any(['test_explained_variance' in col for col in results_summary.columns]) else 'test_mcc'
             else:
                 eval_metric = 'test_' + eval_metric
             if 'nested' in pattern:
