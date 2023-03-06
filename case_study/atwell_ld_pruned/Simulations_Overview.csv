@@ -1,0 +1,4 @@
+simulation,seed,heritability,MAF,samples,causal_SNPs,background_SNPs,explained_var,distribution,shape
+1,43,80,10,500,1,1000,20,normal,
+2,44,70,10,1000,5,1000,30,gamma,1.0
+3,45,90,10,1000,5,1000,30,normal,

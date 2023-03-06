@@ -1,0 +1,2 @@
+simulation,seed,heritability,samples,SNPs,explained_var,causal_marker,causal_beta,distribution,shape
+1,43,80,500,1,[0.2],['Chr5_1059618'],[2.272748980172097],normal,

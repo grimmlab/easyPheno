@@ -14,6 +14,11 @@ In addition, our framework is designed to allow an easy and straightforward inte
 ## Documentation
 For more information, installation guides, tutorials and much more, see our documentation: https://easypheno.readthedocs.io/
 
+## Case Study
+In the folder `case_study`, you can find all data that we used for the case study included as supplementary for our publication.  
+For more information on this case study, see our publication and its supplementary given below.  
+For general information, see our documentation given above. 
+
 ## Contributors
 This pipeline is developed and maintained by members of the [Bioinformatics lab](https://bit.cs.tum.de) lead by [Prof. Dr. Dominik Grimm](https://bit.cs.tum.de/team/dominik-grimm/):
 - [Florian Haselbeck, M.Sc.](https://bit.cs.tum.de/team/florian-haselbeck/)
