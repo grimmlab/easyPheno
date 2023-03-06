@@ -114,6 +114,8 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
                             runtime_file = \
                                 pd.read_csv(path.joinpath(current_model, current_model + '_runtime_overview.csv'))
                             runtime_file.to_excel(writer, sheet_name=current_model + '_runtime', index=False)
+                if overview_df is None:
+                    continue
                 overview_df.to_excel(writer, sheet_name='Overview_results', index=False)
                 overview_df.to_csv(phenotype_folder.joinpath('Results_summary_' + phenotype + '_' + pattern + '.csv'))
                 writer.sheets['Overview_results'].activate()
