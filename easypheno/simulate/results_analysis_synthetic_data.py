@@ -248,6 +248,8 @@ def featimps_vs_simulation(results_directory_genotype_level: str, sim_config_dir
 
     datasplit_maf_patterns = []
     for phenotype_matrix in helper_functions.get_all_subdirectories_non_recursive(results_directory_genotype_level):
+        if 'Simulation' not in phenotype_matrix.name:
+            continue
         for phenotype_folder in \
                 helper_functions.get_all_subdirectories_non_recursive(phenotype_matrix):
             subdirs = [fullpath.parts[-1]
