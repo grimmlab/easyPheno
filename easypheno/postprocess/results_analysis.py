@@ -162,7 +162,7 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
                 for row in results_summary.iterrows():
                     overview_sheet.at[phenotype, row[1]['model']] = "{:.3f}".format(row[1][eval_metric + '_mean'])
         overview_sheet.dropna(axis=1, inplace=True, how='all')  # drop model column if all results are missing
-        overview_sheet = overview_sheet.sort_index
+        overview_sheet = overview_sheet.sort_index()
         overview_sheet.to_excel(writer, sheet_name='Overview')
         overview_sheet.to_csv(
             results_directory_genotype_level.joinpath(
