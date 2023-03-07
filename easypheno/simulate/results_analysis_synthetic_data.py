@@ -56,6 +56,8 @@ def gather_feature_importances(results_dir: pathlib.Path, save_dir: pathlib.Path
 
     all_feat_imps = pd.DataFrame(columns=['sim_id', 'model', 'snp_id', 'feat_imp'])
     for phenotype_matrix in helper_functions.get_all_subdirectories_non_recursive(results_dir):
+        if 'Simulation' not in phenotype_matrix.name:
+            continue
         for phenotype_folder in \
                 helper_functions.get_all_subdirectories_non_recursive(phenotype_matrix):
             phenotype = phenotype_folder.parts[-1]
@@ -183,7 +185,8 @@ def generate_scatterplots_featimps_vs_simulation(all_feat_imps: pd.DataFrame, al
     for single_model in models_total:
         iter_models.append([single_model])
     iter_models.append([single_model for single_model in models_total])
-    for models in iter_models:
+    for index_itermodels, models in enumerate(iter_models):
+        full_plot = True if index_itermodels == len(iter_models) - 1 else False
         print(models)
         rows = int(np.ceil(len(set(sim_ids)) / 3))
         fig = plt.figure(figsize=(16, rows*3))
@@ -191,7 +194,8 @@ def generate_scatterplots_featimps_vs_simulation(all_feat_imps: pd.DataFrame, al
             ax = fig.add_subplot(rows, min(3, len(set(sim_ids))), plot_nr + 1)
             sim_info_for_id = sim_infos[sim_infos['sim_id'] == sim_id]
             feat_info_for_id = all_feat_imps[all_feat_imps['sim_id'] == sim_id]
-            for model in models:
+            for index_model, model in enumerate(models):
+                color_index = index_itermodels if index_itermodels != len(iter_models) - 1 else index_model
                 feat_info_for_model = feat_info_for_id[feat_info_for_id['model'] == model]
                 plot_info = sim_info_for_id.iloc[:, 1:].join(feat_info_for_model.iloc[:, 2:].set_index('snp_id'),
                                                              on=['snp_id']).fillna(0)
@@ -207,8 +211,10 @@ def generate_scatterplots_featimps_vs_simulation(all_feat_imps: pd.DataFrame, al
                 plot_info_causal = plot_info_non_zero[plot_info_non_zero['type'] == 'causal']
                 alpha_offset = 0.2 if len(models) == 1 else 0
                 ax.scatter(x=plot_info_background['feat_imp'], y=plot_info_background['beta'],
+                           color=plt.cm.get_cmap("tab10")(color_index/10),
                            alpha=0.3 + alpha_offset, label=model + '(' + str(round(corr, 2)) + ')')
                 ax.scatter(x=plot_info_causal['feat_imp'], y=plot_info_causal['beta'],
+                           color=plt.cm.get_cmap("tab10")(color_index/10),
                            alpha=0.7, label='_nolegend_', edgecolors='black')
             ax.set(xscale="log", yscale="log")
             ax.set_xlim(0.00001, 1 + np.exp(0.2))
