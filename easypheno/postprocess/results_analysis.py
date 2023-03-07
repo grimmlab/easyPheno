@@ -151,7 +151,8 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
                 eval_metric = 'test_explained_variance' \
                     if any(['test_explained_variance' in col for col in results_summary.columns]) else 'test_mcc'
             else:
-                eval_metric = 'test_' + eval_metric
+                if 'test' not in eval_metric:
+                    eval_metric = 'test_' + eval_metric
             if 'nested' in pattern:
                 for row in results_summary.iterrows():
                     overview_sheet.at[phenotype, row[1]['model']] = "{:.3f} +- {:.3f}".format(
