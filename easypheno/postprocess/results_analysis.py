@@ -43,7 +43,8 @@ def summarize_results_per_phenotype_and_datasplit(results_directory_genotype_lev
                                "mcc", "f1_score", "accuracy", "precision", "recall"]:
             raise Exception("Invalid eval metric: " + eval_metric)
 
-    for phenotype_matrix in helper_functions.get_all_subdirectories_non_recursive(results_directory_genotype_level):
+    for phenotype_matrix in \
+            sorted(helper_functions.get_all_subdirectories_non_recursive(results_directory_genotype_level)):
         results_directory_phenotype_matrix_level = results_directory_genotype_level.joinpath(phenotype_matrix)
         for phenotype_folder in \
                 helper_functions.get_all_subdirectories_non_recursive(results_directory_phenotype_matrix_level):
