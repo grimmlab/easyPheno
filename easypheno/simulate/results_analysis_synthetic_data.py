@@ -177,7 +177,7 @@ def generate_scatterplots_featimps_vs_simulation(all_feat_imps: pd.DataFrame, al
     :param datasplit_maf_pattern: datasplit maf pattern to search on
     """
     pd.options.mode.chained_assignment = None
-    sim_ids = set(all_feat_imps['sim_id'])
+    sim_ids = sorted(set(all_feat_imps['sim_id']))
     sim_infos = all_sim_configs[all_sim_configs['sim_id'].isin(sim_ids)]
     beta_max = sim_infos[sim_infos['beta'] != 0]['beta'].astype(float).abs().max()
     models_total = set(all_feat_imps['model'])
