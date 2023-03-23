@@ -25,4 +25,9 @@ This pipeline is developed and maintained by members of the [Bioinformatics lab]
 - [Maura John, M.Sc.](https://bit.cs.tum.de/team/maura-john/)
 
 ## Citation
-A manuscript for publishing easyPheno as a scientific paper is currently under preparation.
+When using easyPheno, please cite our publication:  
+
+**easyPheno: An easy-to-use and easy-to-extend Python framework for phenotype prediction using Bayesian optimization.**  
+Florian Haselbeck*, Maura John* and Dominik G Grimm.    
+*Bioinformatics Advances, 2023.* [doi: 10.1093/bioadv/vbad035](https://doi.org/10.1093/bioadv/vbad035)  
+*These authors have contributed equally to this work and share first authorship.
