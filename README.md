@@ -16,7 +16,7 @@ For more information, installation guides, tutorials and much more, see our docu
 
 ## Case Study
 In the folder `case_study`, you can find all data that we used for the case study included as supplementary for our publication.  
-For more information on this case study, see our publication and its supplementary given below.  
+For more information on this case study, see our publication and its supplementary given below ([doi: 10.1093/bioadv/vbad035](https://doi.org/10.1093/bioadv/vbad035)).
 For general information, see our documentation given above. 
 
 ## Contributors
@@ -30,4 +30,4 @@ When using easyPheno, please cite our publication:
 **easyPheno: An easy-to-use and easy-to-extend Python framework for phenotype prediction using Bayesian optimization.**  
 Florian Haselbeck*, Maura John* and Dominik G Grimm.    
 *Bioinformatics Advances, 2023.* [doi: 10.1093/bioadv/vbad035](https://doi.org/10.1093/bioadv/vbad035)  
-*These authors have contributed equally to this work and share first authorship.
+**These authors have contributed equally to this work and share first authorship.*
