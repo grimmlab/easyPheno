@@ -15,8 +15,8 @@ if __name__ == "__main__":
                              "files you want to predict on")
     parser.add_argument("-ngm", "--new_genotype_matrix", type=str,
                         help="Provide the name of the new genotype matrix you want to predict on")
-    parser.add_argument("-npm", "--new_phenotype_matrix", type=str,
-                        help="Provide the name of the new phenotype matrix you want to predict on")
+    parser.add_argument("-npm", "--new_phenotype_matrix", type=str, default=None,
+                        help="Optional: Provide the name of the new phenotype matrix you want to predict on - if available - to directly get metrics of your prediction model.")
     parser.add_argument("-sd", "--save_dir", type=str,
                         help="Define the save directory for the results.")
     parser.add_argument("-rd", "--results_dir_model", type=str,

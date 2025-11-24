@@ -7,12 +7,13 @@ from ..utils import helper_functions
 from . import raw_data_functions, encoding_functions
 
 
-class Dataset:
+class Basedata:
     """
-    Class containing dataset ready for optimization (e.g. geno/phenotype matched).
+    Parent class for all dataset classes.
 
     **Attributes**
 
+        - inference_only (*bool*): set to True if only inference is requested
         - encoding (*str*): the encoding to use (standard encoding or user-defined)
         - X_full (*numpy.array*): all (matched, maf- and duplicated-filtered) SNPs
         - y_full (*numpy.array*): all target values
@@ -23,44 +24,24 @@ class Dataset:
 
     :param data_dir: data directory where the phenotype and genotype matrix are stored
     :param genotype_matrix_name: name of the genotype matrix including datatype ending
-    :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
-    :param phenotype: name of the phenotype to predict
-    :param datasplit: datasplit to use. Options are: nested-cv, cv-test, train-val-test
-    :param n_outerfolds: number of outerfolds relevant for nested-cv
-    :param n_innerfolds: number of folds relevant for nested-cv and cv-test
-    :param test_set_size_percentage: size of the test set relevant for cv-test and train-val-test
-    :param val_set_size_percentage: size of the validation set relevant for train-val-test
-    :param maf_percentage: threshold for MAF filter as percentage value
     :param encoding: the encoding to use (standard encoding or user-defined)
+    :param maf_percentage: threshold for MAF filter as percentage value
     :param do_snp_filters: specify if SNP filters (e.g. duplicates, maf etc.) should be applied
     """
 
-    def __init__(self, data_dir: pathlib.Path, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
-                 datasplit: str, n_outerfolds: int, n_innerfolds: int, test_set_size_percentage: int,
-                 val_set_size_percentage: int, encoding: str, maf_percentage: int, do_snp_filters: bool = True):
+    def __init__(self, data_dir: pathlib.Path, genotype_matrix_name: str, encoding: str, maf_percentage: int,
+                 do_snp_filters: bool = True):
+        self.inference_only = False
         self.encoding = encoding
-        self.datasplit = datasplit
-        self.index_file_name = self.get_index_file_name(
-                genotype_matrix_name=genotype_matrix_name, phenotype_matrix_name=phenotype_matrix_name,
-                phenotype=phenotype
-        )
-        self.X_full, self.y_full, self.sample_ids_full, self.snp_ids = self.load_match_raw_data(
-            data_dir=data_dir, genotype_matrix_name=genotype_matrix_name, do_snp_filters=do_snp_filters)
-        if do_snp_filters:
-            self.maf_filter_raw_data(data_dir=data_dir, maf_percentage=maf_percentage)
-            self.filter_duplicate_snps()
-        self.check_and_save_filtered_snp_ids(data_dir=data_dir, maf_percentage=maf_percentage)
-        self.datasplit_indices = self.load_datasplit_indices(
-            data_dir=data_dir, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
-            test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage
-        )
-        self.check_datasplit(
-            n_outerfolds=1 if datasplit != 'nested-cv' else n_outerfolds,
-            n_innerfolds=1 if datasplit == 'train-val-test' else n_innerfolds
-        )
+        self.index_file_name = None
+        self.X_full = None
+        self.y_full = None
+        self.sample_ids_full = None
+        self.snp_ids = None
+        self.datasplit = None
+        self.datasplit_indices = None
 
-    def load_match_raw_data(self, data_dir: pathlib.Path, genotype_matrix_name: str, do_snp_filters: bool = True) \
-            -> (np.ndarray, np.ndarray, np.ndarray):
+    def load_match_raw_data(self, data_dir: pathlib.Path, genotype_matrix_name: str, do_snp_filters: bool = True):
         """
         Load the full genotype and phenotype matrices specified and match them
 
@@ -73,11 +54,12 @@ class Dataset:
         print('Load and match raw data')
         with h5py.File(data_dir.joinpath(self.index_file_name), "r") as f:
             # Load information from index file
-            y = f['matched_data/y'][:]  # TODO change if multiple phenotypes
-            if helper_functions.test_likely_categorical(y):
-                if y.dtype.type is np.float64:
-                    y = y.astype(int)
-                y = sklearn.preprocessing.LabelEncoder().fit_transform(y)
+            if not self.inference_only:
+                y = f['matched_data/y'][:]  # TODO change if multiple phenotypes
+                if helper_functions.test_likely_categorical(y):
+                    if y.dtype.type is np.float64:
+                        y = y.astype(int)
+                    y = sklearn.preprocessing.LabelEncoder().fit_transform(y)
             sample_ids = f['matched_data/matched_sample_ids'][:].astype(str)
             non_informative_filter = f['matched_data/non_informative_filter'][:]
             X_index = f['matched_data/X_index'][:]
@@ -101,7 +83,10 @@ class Dataset:
         raw_data_functions.check_genotype_shape(X=X, sample_ids=sample_ids, snp_ids=snp_ids)
         if raw_data_functions.check_duplicate_samples(sample_ids=sample_ids):
             raise Exception('The genotype matrix contains duplicate samples. Please check again.')
-        return X, np.reshape(y, (-1, 1)), np.reshape(sample_ids, (-1, 1)), snp_ids
+        if not self.inference_only:
+            return X, np.reshape(y, (-1, 1)), np.reshape(sample_ids, (-1, 1)), snp_ids
+        else:
+            return X, np.reshape(sample_ids, (-1, 1)), snp_ids
 
     def maf_filter_raw_data(self, data_dir: pathlib.Path, maf_percentage: int):
         """
@@ -150,6 +135,78 @@ class Dataset:
             elif f'maf_{maf_percentage}_snp_ids' not in f[f'matched_data/final_snp_ids/{self.encoding}']:
                 f.create_dataset(f'matched_data/final_snp_ids/{self.encoding}/maf_{maf_percentage}_snp_ids',
                                  data=self.snp_ids.astype(bytes), chunks=True, compression="gzip")
+
+    @staticmethod
+    def get_index_file_name(genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str) -> str:
+        """
+        Get the name of the file containing the indices for maf filters and data splits
+
+        :param genotype_matrix_name: name of the genotype matrix including datatype ending
+        :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
+        :param phenotype: name of the phenotype to predict
+
+        :return: name of index file
+        """
+        if phenotype_matrix_name is not None:
+            return genotype_matrix_name.split('.')[0] + '-' + phenotype_matrix_name.split('.')[0] + '-' + phenotype + '.h5'
+        else:
+            return genotype_matrix_name.split('.')[0] + '-inference_only.h5'
+
+
+class Dataset(Basedata):
+    """
+    Class containing dataset ready for optimization (e.g. geno/phenotype matched). Based on parent class Basedata
+
+    **Attributes**
+
+        - inference_only (*bool*): False
+        - encoding (*str*): the encoding to use (standard encoding or user-defined)
+        - X_full (*numpy.array*): all (matched, maf- and duplicated-filtered) SNPs
+        - y_full (*numpy.array*): all target values
+        - sample_ids_full (*numpy.array*):all sample ids
+        - snp_ids (*numpy.array*): SNP ids
+        - datasplit (*str*): datasplit to use
+        - datasplit_indices (*dict*): dictionary containing all indices for the specified datasplit
+
+    :param data_dir: data directory where the phenotype and genotype matrix are stored
+    :param genotype_matrix_name: name of the genotype matrix including datatype ending
+    :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
+    :param phenotype: name of the phenotype to predict
+    :param datasplit: datasplit to use. Options are: nested-cv, cv-test, train-val-test
+    :param n_outerfolds: number of outerfolds relevant for nested-cv
+    :param n_innerfolds: number of folds relevant for nested-cv and cv-test
+    :param test_set_size_percentage: size of the test set relevant for cv-test and train-val-test
+    :param val_set_size_percentage: size of the validation set relevant for train-val-test
+    :param maf_percentage: threshold for MAF filter as percentage value
+    :param encoding: the encoding to use (standard encoding or user-defined)
+    :param do_snp_filters: specify if SNP filters (e.g. duplicates, maf etc.) should be applied
+    """
+
+    def __init__(self, data_dir: pathlib.Path, genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str,
+                 datasplit: str, n_outerfolds: int, n_innerfolds: int, test_set_size_percentage: int,
+                 val_set_size_percentage: int, encoding: str, maf_percentage: int, do_snp_filters: bool = True):
+
+        super().__init__(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name, encoding=encoding,
+                         maf_percentage=maf_percentage, do_snp_filters=do_snp_filters)
+        self.index_file_name = self.get_index_file_name(genotype_matrix_name=genotype_matrix_name,
+                                                        phenotype_matrix_name=phenotype_matrix_name,
+                                                        phenotype=phenotype)
+        self.datasplit = datasplit
+        self.X_full, self.y_full, self.sample_ids_full, self.snp_ids = self.load_match_raw_data(
+            data_dir=data_dir, genotype_matrix_name=genotype_matrix_name, do_snp_filters=do_snp_filters)
+        if do_snp_filters:
+            self.maf_filter_raw_data(data_dir=data_dir, maf_percentage=maf_percentage)
+            self.filter_duplicate_snps()
+        self.check_and_save_filtered_snp_ids(data_dir=data_dir, maf_percentage=maf_percentage)
+        self.datasplit_indices = self.load_datasplit_indices(
+            data_dir=data_dir, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
+            test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage
+        )
+        self.check_datasplit(
+            n_outerfolds=1 if datasplit != 'nested-cv' else n_outerfolds,
+            n_innerfolds=1 if datasplit == 'train-val-test' else n_innerfolds
+        )
+
 
     def load_datasplit_indices(self, data_dir: pathlib.Path, n_outerfolds: int, n_innerfolds: int,
                                test_set_size_percentage: int, val_set_size_percentage: int) -> dict:
@@ -260,15 +317,41 @@ class Dataset:
                                 'not all sample ids are in one of the outerfold test sets')
         print('Checked datasplit for all folds.')
 
-    @staticmethod
-    def get_index_file_name(genotype_matrix_name: str, phenotype_matrix_name: str, phenotype: str) -> str:
-        """
-        Get the name of the file containing the indices for maf filters and data splits
 
-        :param genotype_matrix_name: name of the genotype matrix including datatype ending
-        :param phenotype_matrix_name: name of the phenotype matrix including datatype ending
-        :param phenotype: name of the phenotype to predict
+class Datasetinfonly(Basedata):
+    """
+    Class containing dataset for inference only. Based on parent class Basedata
 
-        :return: name of index file
-        """
-        return genotype_matrix_name.split('.')[0] + '-' + phenotype_matrix_name.split('.')[0] + '-' + phenotype + '.h5'
+    **Attributes**
+
+        - inference_only (*bool*): True
+        - encoding (*str*): the encoding to use (standard encoding or user-defined)
+        - X_full (*numpy.array*): all (matched, maf- and duplicated-filtered) SNPs
+        - sample_ids_full (*numpy.array*):all sample ids
+        - snp_ids (*numpy.array*): SNP ids
+        - y_full (*numpy.array*): None
+        - datasplit (*str*): None
+        - datasplit_indices (*dict*): None
+
+    :param data_dir: data directory where the phenotype and genotype matrix are stored
+    :param genotype_matrix_name: name of the genotype matrix including datatype ending
+    :param maf_percentage: threshold for MAF filter as percentage value
+    :param encoding: the encoding to use (standard encoding or user-defined)
+    :param do_snp_filters: specify if SNP filters (e.g. duplicates, maf etc.) should be applied
+    """
+
+    def __init__(self, data_dir: pathlib.Path, genotype_matrix_name: str, encoding: str, maf_percentage: int,
+                 do_snp_filters: bool = True):
+
+        super().__init__(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name, encoding=encoding,
+                         maf_percentage=maf_percentage, do_snp_filters=do_snp_filters)
+        self.inference_only = True
+        self.index_file_name = self.get_index_file_name(genotype_matrix_name=genotype_matrix_name,
+                                                        phenotype_matrix_name=None, phenotype=None)
+        self.X_full, self.sample_ids_full, self.snp_ids = self.load_match_raw_data(
+            data_dir=data_dir, genotype_matrix_name=genotype_matrix_name, do_snp_filters=do_snp_filters)
+        if do_snp_filters:
+            self.maf_filter_raw_data(data_dir=data_dir, maf_percentage=maf_percentage)
+            self.filter_duplicate_snps()
+        self.check_and_save_filtered_snp_ids(data_dir=data_dir, maf_percentage=maf_percentage)
+        

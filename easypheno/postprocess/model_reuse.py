@@ -12,7 +12,7 @@ from . import feat_importance, results_analysis
 
 
 def apply_final_model(results_directory_model: str, old_data_dir: str, new_data_dir: str,
-                      new_genotype_matrix: str, new_phenotype_matrix: str, save_dir: str = None):
+                      new_genotype_matrix: str, new_phenotype_matrix: str = None, save_dir: str = None):
     """
     Apply a final model on a new dataset. It will be applied to the whole dataset.
     So the main purpose of this function is, if you get new samples you want to predict on.
@@ -27,7 +27,7 @@ def apply_final_model(results_directory_model: str, old_data_dir: str, new_data_
     :param old_data_dir: directory that contains the data that the model was trained on
     :param new_data_dir: directory that contains the new genotype and phenotype matrix
     :param new_genotype_matrix: new genotype matrix (incl. file suffix)
-    :param new_phenotype_matrix: new phenotype matrix (incl. file suffix)
+    :param new_phenotype_matrix: optional - new phenotype matrix (incl. file suffix) to directly get metrics for predictions.
     :param save_dir: directory to store the results
     """
     results_directory_model = pathlib.Path(results_directory_model)
@@ -47,18 +47,17 @@ def apply_final_model(results_directory_model: str, old_data_dir: str, new_data_
     if 'fromR' in model_name:
         import easypheno.model
         easypheno.model.__all__.extend(['_bayesfromR', 'bayesAfromR', 'bayesBfromR', 'bayesCfromR'])
+    print("DEBUGGING")
+    print(result_folder_name)
     datasplit, n_outerfolds, n_innerfolds, val_set_size_percentage, test_set_size_percentage, maf_perc = \
         helper_functions.get_datasplit_config_info_for_resultfolder(resultfolder=result_folder_name)
     nested_offset = -1 if 'nested' in datasplit else 0
     phenotype = results_directory_model.parts[-3 + nested_offset]
     old_genotype_matrix = results_directory_model.parts[-5 + nested_offset]
     old_phenotype_matrix = results_directory_model.parts[-4 + nested_offset]
-    if not check_functions.check_exist_files(
-            list_of_files=[
-                new_data_dir.joinpath(new_phenotype_matrix), new_data_dir.joinpath(new_genotype_matrix),
-                old_data_dir.joinpath(base_dataset.Dataset.get_index_file_name(
-                    genotype_matrix_name=old_genotype_matrix, phenotype_matrix_name=old_phenotype_matrix,
-                    phenotype=phenotype))]):
+    list_of_files = [] if new_phenotype_matrix is None else [new_data_dir.joinpath(new_phenotype_matrix)]
+    list_of_files.extend([new_data_dir.joinpath(new_genotype_matrix), old_data_dir.joinpath(base_dataset.Dataset.get_index_file_name(genotype_matrix_name=old_genotype_matrix, phenotype_matrix_name=old_phenotype_matrix,phenotype=phenotype))])
+    if not check_functions.check_exist_files(list_of_files=list_of_files):
         raise Exception("See output above. Problems with specified files.")
 
     # Prepare the new data
@@ -70,12 +69,15 @@ def apply_final_model(results_directory_model: str, old_data_dir: str, new_data_
         models=[model_name], user_encoding=None, maf_percentage=maf_perc
     )
     encoding = helper_functions.get_mapping_name_to_class()[model_name].standard_encoding
-    new_dataset = base_dataset.Dataset(
-        data_dir=new_data_dir, genotype_matrix_name=new_genotype_matrix, phenotype_matrix_name=new_phenotype_matrix,
-        phenotype=phenotype, datasplit=datasplit, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
-        test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage,
-        encoding=encoding, maf_percentage=maf_perc, do_snp_filters=False
-    )
+    if new_phenotype_matrix is None:
+        new_dataset = base_dataset.Datasetinfonly(data_dir=new_data_dir, genotype_matrix_name=new_genotype_matrix, encoding=encoding, maf_percentage=maf_perc, do_snp_filters=False)
+    else:
+        new_dataset = base_dataset.Dataset(
+            data_dir=new_data_dir, genotype_matrix_name=new_genotype_matrix, phenotype_matrix_name=new_phenotype_matrix,
+            phenotype=phenotype, datasplit=datasplit, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
+            test_set_size_percentage=test_set_size_percentage, val_set_size_percentage=val_set_size_percentage,
+            encoding=encoding, maf_percentage=maf_perc, do_snp_filters=False
+        )
 
     # Check and filter SNPids in comparison with old dataset
     with h5py.File(old_data_dir.joinpath(
@@ -97,6 +99,8 @@ def apply_final_model(results_directory_model: str, old_data_dir: str, new_data_
     results_file_path = \
         results_directory_model.parents[0 - nested_offset].joinpath('Results_overview_' + '_'.join(models) + '.csv')
     full_model_path = results_directory_model.joinpath("final_retrained_model")
+    print("DEBUGGING")
+    print(full_model_path)
     if full_model_path.is_file():
         print("Loading saved model")
         model = _model_functions.load_model(path=results_directory_model, filename=full_model_path.parts[-1])
@@ -120,33 +124,39 @@ def apply_final_model(results_directory_model: str, old_data_dir: str, new_data_
     print('-----------------------------------------------')
     print("Inference on new data for " + model_name)
     y_pred_new_dataset = model.predict(X_in=new_dataset.X_full)
-    eval_scores = \
-        eval_metrics.get_evaluation_report(y_pred=y_pred_new_dataset, y_true=new_dataset.y_full, task=model.task,
-                                           prefix='test_')
-    print('New dataset: ')
-    print(eval_scores)
-    if results_file_path.is_file():
-        print('Old dataset: ')
-        results = pd.read_csv(results_file_path)
-        results = results[results[results.columns[0]] == 'outerfold_' + str(outerfold_number)] \
-            if datasplit == 'nested-cv' else results
-        results = results.loc[:, [model_name in col for col in results.columns]]
-        eval_dict_saved = results_analysis.result_string_to_dictionary(
-            result_string=results[model_name + '___eval_metrics'][outerfold_number]
-        )
-        print(eval_dict_saved)
-    final_results = pd.DataFrame(index=range(0, new_dataset.y_full.shape[0]))
+    final_results = pd.DataFrame(index=range(0, new_dataset.X_full.shape[0]))
     final_results.at[0:len(new_dataset.sample_ids_full) - 1, 'sample_ids'] = new_dataset.sample_ids_full.flatten()
     final_results.at[0:len(y_pred_new_dataset) - 1, 'y_pred_test'] = y_pred_new_dataset.flatten()
-    final_results.at[0:len(new_dataset.y_full) - 1, 'y_true_test'] = new_dataset.y_full.flatten()
-    for metric, value in eval_scores.items():
-        final_results.at[0, metric] = value
+    print("Predictions")
+    print(final_results)
+    if new_phenotype_matrix is not None:
+        eval_scores = \
+            eval_metrics.get_evaluation_report(y_pred=y_pred_new_dataset, y_true=new_dataset.y_full, task=model.task,
+                                               prefix='test_')
+        print('New dataset: ')
+        print(eval_scores)
+        if results_file_path.is_file():
+            print('Old dataset: ')
+            results = pd.read_csv(results_file_path)
+            results = results[results[results.columns[0]] == 'outerfold_' + str(outerfold_number)] \
+                if datasplit == 'nested-cv' else results
+            results = results.loc[:, [model_name in col for col in results.columns]]
+            eval_dict_saved = results_analysis.result_string_to_dictionary(
+                result_string=results[model_name + '___eval_metrics'][outerfold_number]
+            )
+            print(eval_dict_saved)
+        final_results.at[0:len(new_dataset.y_full) - 1, 'y_true_test'] = new_dataset.y_full.flatten()
+        for metric, value in eval_scores.items():
+            final_results.at[0, metric] = value
     final_results.at[0, 'base_model_path'] = results_directory_model
     models_start_time = model_name + '_' + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     final_results.to_csv(save_dir.joinpath(
         'predict_results_on-' + new_dataset.index_file_name.split('.')[0] + '-' + models_start_time + '.csv'),
         sep=',', decimal='.', float_format='%.10f', index=False
     )
+    print("Results saved")
+    print("Directory: ")
+    print(save_dir.joinpath('predict_results_on-' + new_dataset.index_file_name.split('.')[0] + '-' + models_start_time + '.csv'))
 
 
 def retrain_on_new_data(results_directory_model: str, data_dir: str, genotype_matrix: str, phenotype_matrix: str,
