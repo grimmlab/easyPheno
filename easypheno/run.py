@@ -66,7 +66,7 @@ if __name__ == '__main__':
     parser.add_argument("-tr", "--n_trials", type=int, default=10,
                         help="number of trials for optuna")
     parser.add_argument("-sf", "--save_final_model", type=lambda x: (str(x).lower() in ['true', '1', 'yes']),
-                        default=False,
+                        default=True,
                         help="save the final model to hard drive "
                              "(caution: some models may use a lot of disk space, "
                              "unfitted models that can be retrained are already saved by default)")

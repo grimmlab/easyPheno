@@ -44,29 +44,40 @@ def prepare_data_files(data_dir: pathlib.Path, genotype_matrix_name: str, phenot
         print("Found same file name with ending .h5")
         print("Assuming that the raw file was already prepared using our pipepline. Will continue with the .h5 file.")
         genotype_matrix_name = genotype_matrix_name.split('.')[0] + '.h5'
-    suffix = genotype_matrix_name.split('.')[-1]
-    if suffix in ('h5', 'hdf5', 'h5py'):
-        # Genotype matrix has standard file format -> check information in the file
-        check_genotype_h5_file(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
-                               encodings=enc.get_encoding(models=models, user_encoding=user_encoding))
-        print('Genotype file available in required format, check index file now.')
-        # Check / create index files
-        if check_index_file(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
-                            phenotype_matrix_name=phenotype_matrix_name, phenotype=phenotype):
-            print('Index file ' + genotype_matrix_name.split('.')[0] + '-'
-                    + phenotype_matrix_name.split('.')[0] + '-' + phenotype + '.h5' + ' already exists.'
-                    ' Will append required filters and data splits now.')
-            append_index_file(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
-                              phenotype_matrix_name=phenotype_matrix_name, phenotype=phenotype,
-                              maf_percentage=maf_percentage,
-                              datasplit=datasplit, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
-                              test_set_size_percentage=test_set_size_percentage,
-                              val_set_size_percentage=val_set_size_percentage)
-            print('Done checking data files. All required datasets are available.')
+    if phenotype_matrix_name is not None:
+        suffix = genotype_matrix_name.split('.')[-1]
+        if suffix in ('h5', 'hdf5', 'h5py'):
+            # Genotype matrix has standard file format -> check information in the file
+            check_genotype_h5_file(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
+                                   encodings=enc.get_encoding(models=models, user_encoding=user_encoding))
+            print('Genotype file available in required format')
+            # Check / create index files
+            print('Check index file now')
+            if check_index_file(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
+                                phenotype_matrix_name=phenotype_matrix_name, phenotype=phenotype):
+                print('Index file ' + genotype_matrix_name.split('.')[0] + '-'
+                        + phenotype_matrix_name.split('.')[0] + '-' + phenotype + '.h5' + ' already exists.'
+                        ' Will append required filters and data splits now.')
+                append_index_file(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
+                                  phenotype_matrix_name=phenotype_matrix_name, phenotype=phenotype,
+                                  maf_percentage=maf_percentage,
+                                  datasplit=datasplit, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
+                                  test_set_size_percentage=test_set_size_percentage,
+                                  val_set_size_percentage=val_set_size_percentage)
+                print('Done checking data files. All required datasets are available.')
+            else:
+                print('Index file ' + genotype_matrix_name.split('.')[0] + '-' + phenotype_matrix_name.split('.')[0]
+                      + '-' + phenotype + '.h5' + ' does not fulfill requirements. '
+                                                  'Will load genotype and phenotype matrix and create new index file.')
+                save_all_data_files(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
+                                    phenotype_matrix_name=phenotype_matrix_name, phenotype=phenotype,
+                                    models=models, user_encoding=user_encoding, maf_percentage=maf_percentage,
+                                    datasplit=datasplit, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
+                                    test_set_size_percentage=test_set_size_percentage,
+                                    val_set_size_percentage=val_set_size_percentage)
+                print('Done checking data files. All required datasets are available.')
         else:
-            print('Index file ' + genotype_matrix_name.split('.')[0] + '-' + phenotype_matrix_name.split('.')[0]
-                  + '-' + phenotype + '.h5' + ' does not fulfill requirements. '
-                                              'Will load genotype and phenotype matrix and create new index file.')
+            print('Genotype file not in required format. Will load genotype matrix and save as .h5 file.')
             save_all_data_files(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
                                 phenotype_matrix_name=phenotype_matrix_name, phenotype=phenotype,
                                 models=models, user_encoding=user_encoding, maf_percentage=maf_percentage,
@@ -75,15 +86,8 @@ def prepare_data_files(data_dir: pathlib.Path, genotype_matrix_name: str, phenot
                                 val_set_size_percentage=val_set_size_percentage)
             print('Done checking data files. All required datasets are available.')
     else:
-        print('Genotype file not in required format. Will load genotype matrix and save as .h5 file. Will also create '
-              'required index file.')
-        save_all_data_files(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
-                            phenotype_matrix_name=phenotype_matrix_name, phenotype=phenotype,
-                            models=models, user_encoding=user_encoding, maf_percentage=maf_percentage,
-                            datasplit=datasplit, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
-                            test_set_size_percentage=test_set_size_percentage,
-                            val_set_size_percentage=val_set_size_percentage)
-        print('Done checking data files. All required datasets are available.')
+        prepare_data_inf_only(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name, models=models,
+                              user_encoding=user_encoding, maf_percentage=maf_percentage)
 
 
 def check_genotype_h5_file(data_dir: pathlib.Path, genotype_matrix_name: str, encodings: list):
@@ -165,19 +169,20 @@ def save_all_data_files(data_dir: pathlib.Path, genotype_matrix_name: str, pheno
     print('Load genotype file ' + str(data_dir.joinpath(genotype_matrix_name)))
     X, X_ids, _ = check_transform_format_genotype_matrix(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
                                                       models=models, user_encoding=user_encoding)
-    print('Have genotype matrix. Load phenotype ' + phenotype + ' from ' + str(data_dir.joinpath(phenotype_matrix_name)))
-    y = check_and_load_phenotype_matrix(data_dir=data_dir,
-                                        phenotype_matrix_name=phenotype_matrix_name, phenotype=phenotype)
-    print('Have phenotype vector. Start matching genotype and phenotype.')
-    X, y, sample_ids, X_index, y_index = genotype_phenotype_matching(X=X, X_ids=X_ids, y=y)
-    print('Done matching genotype and phenotype. Create index file now.')
-    create_index_file(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
-                      phenotype_matrix_name=phenotype_matrix_name, phenotype=phenotype,
-                      datasplit=datasplit, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
-                      test_set_size_percentage=test_set_size_percentage,
-                      val_set_size_percentage=val_set_size_percentage,
-                      maf_percentage=maf_percentage, X=X, y=y, sample_ids=sample_ids, X_index=X_index, y_index=y_index
-                      )
+    if phenotype_matrix_name is not None:
+        print('Have genotype matrix. Load phenotype ' + phenotype + ' from ' + str(data_dir.joinpath(phenotype_matrix_name)))
+        y = check_and_load_phenotype_matrix(data_dir=data_dir,
+                                            phenotype_matrix_name=phenotype_matrix_name, phenotype=phenotype)
+        print('Have phenotype vector. Start matching genotype and phenotype.')
+        X, y, sample_ids, X_index, y_index = genotype_phenotype_matching(X=X, X_ids=X_ids, y=y)
+        print('Done matching genotype and phenotype. Create index file now.')
+        create_index_file(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
+                          phenotype_matrix_name=phenotype_matrix_name, phenotype=phenotype,
+                          datasplit=datasplit, n_outerfolds=n_outerfolds, n_innerfolds=n_innerfolds,
+                          test_set_size_percentage=test_set_size_percentage,
+                          val_set_size_percentage=val_set_size_percentage,
+                          maf_percentage=maf_percentage, X=X, y=y, sample_ids=sample_ids, X_index=X_index, y_index=y_index
+                          )
 
 
 def check_transform_format_genotype_matrix(data_dir: pathlib.Path, genotype_matrix_name: str, models,
@@ -969,3 +974,140 @@ def make_train_test_split(y: np.array, test_size: int, val_size=None, val=False,
         x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=val_size/100, stratify=y_train,
                                                           random_state=random)
         return x_train, x_val, x_test
+
+
+## additional functions needed for inference only
+def prepare_data_inf_only(data_dir: pathlib.Path, genotype_matrix_name: str, models, user_encoding: str,
+                          maf_percentage: int):
+    """
+    Prepare data files for inference only: genotype file and index file.
+    Save index file for inference only as genotype_matrix_name-inference_only.h5
+
+    :param data_dir: data directory where the phenotype and genotype matrix are stored
+    :param genotype_matrix_name: name of the genotype matrix including datatype ending
+    :param models: models to consider
+    :param user_encoding: encoding specified by the user
+    :param maf_percentage: threshold for MAF filter as percentage value
+    """
+    suffix = genotype_matrix_name.split('.')[-1]
+    if suffix in ('h5', 'hdf5', 'h5py'):
+        # Genotype matrix has standard file format -> check information in the file
+        check_genotype_h5_file(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
+                               encodings=enc.get_encoding(models=models, user_encoding=user_encoding))
+        print('Genotype file available in required format, check index file now.')
+        if check_index_inf_only(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name):
+            print('Index file ' + genotype_matrix_name.split('.')[0] + '-inference_only.h5 already exists.'
+                                                                       ' Will append required filters now.')
+            append_index_inf_only(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,
+                                  maf_percentage=maf_percentage)
+            print('Done checking data files. All required datasets are available.')
+        else:
+            print('Index file ' + genotype_matrix_name.split('.')[0] + '-inference_only.h5 does not fulfill '
+                                                                       'requirements. Will load genotype and '
+                                                                       'create new index file.')
+            # load and save genotype
+            print('Load genotype file ' + str(data_dir.joinpath(genotype_matrix_name)))
+            X, X_ids, _ = check_transform_format_genotype_matrix(data_dir=data_dir,
+                                                                 genotype_matrix_name=genotype_matrix_name,
+                                                                 models=models, user_encoding=user_encoding)
+            print('Have genotype matrix. Create index file now.')
+            # create index file
+            create_index_inf_only(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name,maf_percentage=maf_percentage, X=X, sample_ids=X_ids, X_index=np.arange(0,len(X_ids)))
+    else:
+        # load and save genotype
+        print('Load genotype file ' + str(data_dir.joinpath(genotype_matrix_name)))
+        X, X_ids, _ = check_transform_format_genotype_matrix(data_dir=data_dir,
+                                                             genotype_matrix_name=genotype_matrix_name,
+                                                             models=models, user_encoding=user_encoding)
+        print('Have genotype matrix. Create index file now.')
+        # create index file
+        create_index_inf_only(data_dir=data_dir, genotype_matrix_name=genotype_matrix_name, maf_percentage=maf_percentage, X=X, sample_ids=X_ids, X_index=np.arange(0,len(X_ids)))
+
+
+def check_index_inf_only(data_dir: pathlib.Path, genotype_matrix_name: str):
+    """
+    Check if index file for inference only exists and if the datasets 'matched_sample_ids', 'X_index', and
+    'ma_frequency' exist.
+
+    :param data_dir: data directory where the genotype matrix is stored
+    :param genotype_matrix_name: name of the genotype matrix including datatype ending
+    """
+    index_file = data_dir.joinpath(genotype_matrix_name.split('.')[0] + '-inference_only.h5')
+    if index_file.is_file():
+        matched_datasets = ['matched_sample_ids', 'X_index', 'non_informative_filter', 'ma_frequency']
+        with h5py.File(index_file, 'a') as f:
+            if 'matched_data' in f and all(z in f['matched_data'] for z in matched_datasets):
+                return True
+            else:
+                return False
+    else:
+        return False
+
+
+def append_index_inf_only(data_dir: pathlib.Path, genotype_matrix_name: str, maf_percentage: int):
+    """
+    Check index file for inference only and append missing maf filter if needed
+
+    :param data_dir: data directory where the genotype matrix is stored
+    :param genotype_matrix_name: name of the genotype matrix including datatype ending
+    :param maf_percentage: threshold for MAF filter as percentage value
+    """
+    with h5py.File(data_dir.joinpath(genotype_matrix_name.split('.')[0] + '-inference_only.h5'), 'a') as f:
+        # check if group 'maf_filter' is available and if user input maf is available,
+        # if not: create group/dataset
+        if 'maf_filter' not in f:
+            maf = f.create_group('maf_filter')
+            tmp = (create_maf_filter(maf=maf_percentage, freq=f['matched_data/ma_frequency'][:]))
+            maf.create_dataset(f'maf_{maf_percentage}', data=tmp, chunks=True, compression="gzip")
+        elif f'maf_{maf_percentage}' not in f['maf_filter']:
+            tmp = (create_maf_filter(maf=maf_percentage, freq=f['matched_data/ma_frequency'][:]))
+            f.create_dataset(f'maf_filter/maf_{maf_percentage}', data=tmp, chunks=True, compression="gzip")
+
+
+def create_index_inf_only(data_dir: pathlib.Path, genotype_matrix_name: str, maf_percentage: int,
+                          X: np.array, sample_ids: np.array, X_index: np.array):
+    """
+    Create the .h5 index file for inference only containing the maf filters for the genotype matrix.
+    It will be created using standard values additionally to user inputs for the maf filters.
+
+    Unified format of .h5 file containing the maf filters:
+
+    .. code-block:: python
+
+            'matched_data': {
+                    'matched_sample_ids': sample ids of genotype,
+                    'X_index': indices of genotype matrix,
+                    'ma_frequency': minor allele frequency of each SNP of genotype file to create new MAF filters
+                    'non_informative_filter': indices of monomorphi SNPs
+                    }
+            'maf_filter': {
+                    'maf_{maf_percentage}': indices of SNPs to delete  # (with MAF < maf_percentage),
+                    ...
+                    }
+    Standard values for the maf thresholds: 1, 3, 5
+
+    :param data_dir: data directory where the phenotype and genotype matrix are stored
+    :param genotype_matrix_name: name of the genotype matrix including datatype ending
+    :param maf_percentage: threshold for MAF filter as percentage value
+    :param X: genotype in additive encoding to create ma-frequencies
+    :param sample_ids: matched sample ids of genotype/phenotype
+    :param X_index: index file of genotype to redo matching
+    """
+    X, non_informative_filter = filter_non_informative_snps(X=X)
+    freq = get_minor_allele_freq(X=X)
+    maf_threshold = [0, 1, 3, 5]  # standard values for maf threshold
+    if maf_percentage not in maf_threshold:  # add user input if needed
+        maf_threshold.append(maf_percentage)
+
+    with h5py.File(data_dir.joinpath(genotype_matrix_name.split('.')[0] + '-inference_only.h5'), 'w') as f:
+        # all data needed to create new mafs
+        data = f.create_group('matched_data')
+        data.create_dataset('matched_sample_ids', data=sample_ids.astype(bytes), chunks=True, compression="gzip")
+        data.create_dataset('X_index', data=X_index, chunks=True, compression="gzip")
+        data.create_dataset('non_informative_filter', data=non_informative_filter, chunks=True, compression="gzip")
+        data.create_dataset('ma_frequency', data=freq, chunks=True, compression="gzip")
+        # create and save standard mafs and maf according to user input
+        maf = f.create_group('maf_filter')
+        for threshold in maf_threshold:
+            tmp = (create_maf_filter(maf=threshold, freq=freq))
+            maf.create_dataset(f'maf_{threshold}', data=tmp, chunks=True, compression="gzip")
